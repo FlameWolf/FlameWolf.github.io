@@ -35,7 +35,7 @@
 			/*<![CDATA[*/
 			document.addEventListener("DOMContentLoaded", function() {
 				let cropper = null;
-				document.getElementById("crop-result").addEventListener("load", function() {
+				document.getElementById("imageToCrop").addEventListener("load", function() {
 					cropper = jsCrop.initialise(this, { "outputCanvas": document.getElementById("crop-result"), "startInCropMode": false });
 				});
 				document.getElementById("crop-button").addEventListener("click", function() {
