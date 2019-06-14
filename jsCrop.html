@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Declare the character encoding used in the page -->
+		<meta charset="UTF-8"/>
+		<!-- Page title -->
+		<title>JavaScript Image Cropper</title>
+		<!-- Import style sheet -->
+		<link rel="stylesheet" href="https://raw.githubusercontent.com/FlameWolf/jsCrop/master/js-crop.css"/>
+		<!-- Style definitions -->
+		<style type="text/css">
+			/*<![CDATA[*/
+			/* Page content wrapper styles */
+			.page-container { padding: 10px; }
+			/* Image container styles */
+			.image-container { display: inline-block; }
+			/* Output canvas container styles */
+			.canvas-container { display: inline-block; outline: dashed 1px #808080; }
+			/* Output canvas styles */
+			.canvas-container > canvas { display: table; transition: opacity 125ms ease-in-out; }
+			/* Button styles */
+			button { background-color: #E0E0E0; vertical-align: top; padding: 10px; border-style: outset; }
+			button:active { border-style: inset; }
+			/* Crop button normal state styles */
+			.crop-button { background-image: url("Images/crop-icon.png"); background-size: contain; width: 50px; height: 50px; padding: 0; position: relative; }
+			/* Crop button pressed state styles */
+			.crop-button.pressed { background-color: #E8E8E8; background-image: none; border-style: inset; }
+			.crop-button.pressed::after { content: ""; background-image: url("Images/crop-icon.png"); background-size: contain; width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0.6; }
+			/*]]>*/
+		</style>
+		<!-- Import script -->
+		<script type="application/javascript" src="https://raw.githubusercontent.com/FlameWolf/jsCrop/master/js-crop.js"></script>
+		<!-- Script definitions -->
+		<script type="application/javascript">
+			/*<![CDATA[*/
+			document.addEventListener("DOMContentLoaded", function() {
+				let cropper = jsCrop.initialise(document.getElementById("imageToCrop"), { "outputCanvas": document.getElementById("crop-result"), "startInCropMode": false });
+				document.getElementById("crop-button").addEventListener("click", function() {
+					cropper.enableCropMode(this.classList.toggle("pressed"));
+				});
+				document.getElementById("download-button").addEventListener("click", function() {
+					cropper.downloadCroppedImage();
+				});
+				document.getElementById("set-crop-region-button").addEventListener("click", function() {
+					cropper.setCropRegion(10, 10, 150, 250);
+				});
+				document.getElementById("destroy-button").addEventListener("click", function() {
+					cropper.destroy();
+				});
+			});
+			/*]]>*/
+		</script>
+	</head>
+	<body>
+		<!-- Page content wrapper -->
+		<div class="page-container">
+			<!-- Wrapper DIV that will display its contents as an inline block -->
+			<div class="image-container">
+				<!-- The image to be cropped -->
+				<img id="imageToCrop" src="Images/img-001.jpg" alt="Image"/>
+			</div>
+			<span>&#xA0;</span>
+			<!-- Wrapper DIV that will display its contents as an inline block -->
+			<div class="canvas-container">
+				<!-- The output canvas -->
+				<canvas id="crop-result" width="200" height="300"></canvas>
+			</div>
+			<div>&#xA0;</div>
+			<!-- Toggle button to enter/leave crop mode -->
+			<button id="crop-button" class="crop-button"></button>
+			<span>&#xA0;</span>
+			<!-- Download the cropped image -->
+			<button id="download-button">Download Cropped Image</button>
+			<span>&#xA0;</span>
+			<!-- Set the crop region -->
+			<button id="set-crop-region-button">Set Crop Region</button>
+			<span>&#xA0;</span>
+			<!-- Destroy the cropper -->
+			<button id="destroy-button">Destroy</button>
+		</div>
+	</body>
+</html>
