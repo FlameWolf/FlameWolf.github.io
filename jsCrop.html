@@ -34,7 +34,9 @@
 		<script type="application/javascript">
 			/*<![CDATA[*/
 			document.addEventListener("DOMContentLoaded", function() {
-				let cropper = jsCrop.initialise(document.getElementById("imageToCrop"), { "outputCanvas": document.getElementById("crop-result"), "startInCropMode": false });
+				document.getElementById("crop-result").addEventListener("load", function() {
+					let cropper = jsCrop.initialise(this, { "outputCanvas": document.getElementById("crop-result"), "startInCropMode": false });
+				});
 				document.getElementById("crop-button").addEventListener("click", function() {
 					cropper.enableCropMode(this.classList.toggle("pressed"));
 				});
