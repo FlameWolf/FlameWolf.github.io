@@ -54,9 +54,11 @@
 						cropper.setCropRegion(10, 10, 150, 250);
 				});
 				document.getElementById("destroy-button").addEventListener("click", function() {
-					cropper.destroy();
-					cropButton.classList.remove("pressed");
-					cropper = null;
+					if(cropper) {
+						cropper.destroy();
+						cropButton.classList.remove("pressed");
+						cropper = null;
+					}
 				});
 				window.addEventListener("unload", function() {
 					cropButton = null;
