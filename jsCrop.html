@@ -6,7 +6,7 @@
 		<!-- Page title -->
 		<title>JavaScript Image Cropper</title>
 		<!-- Import style sheet -->
-		<link rel="stylesheet" href="CSS/js-crop.css"/>
+		<link rel="stylesheet" href="js-crop.css"/>
 		<!-- Style definitions -->
 		<style type="text/css">
 			/*<![CDATA[*/
@@ -15,7 +15,7 @@
 			/* Image container styles */
 			.image-container { display: inline-block; }
 			/* Output canvas container styles */
-			.canvas-container { display: inline-block; width: 200px; outline: dashed 1px #808080; }
+			.canvas-container { display: inline-block; outline: dashed 1px #808080; }
 			/* Output canvas styles */
 			.canvas-container > canvas { display: table; transition: opacity 125ms ease-in-out; }
 			/* Button styles */
@@ -30,19 +30,28 @@
 			/*]]>*/
 		</style>
 		<!-- Import script -->
-		<script type="application/javascript" src="JavaScript/js-crop.js"></script>
+		<script type="application/javascript" src="js-crop.js"></script>
 		<!-- Script definitions -->
 		<script type="application/javascript">
 			/*<![CDATA[*/
 			document.addEventListener("DOMContentLoaded", function() {
 				let cropper = null;
+				let imageToCrop = document.getElementById("imageToCrop");
 				let cropButton = document.getElementById("crop-button");
+				let cropResult = document.getElementById("crop-result");
+				imageToCrop.addEventListener("load", function() {
+					let imageWidth = this.offsetWidth;
+					cropResult.parentElement.style.width = `${imageWidth}px`;
+					cropResult.width = imageWidth;
+					cropResult.height = this.offsetHeight;
+					document.getElementById("control-panel").querySelectorAll("button").forEach(x => x.removeAttribute("disabled"));
+				});
 				cropButton.addEventListener("click", function() {
 					if(cropper)
 						cropper.enableCropMode(this.classList.toggle("pressed"));
 					else {
 						this.classList.add("pressed");
-						cropper = jsCrop.initialise(document.getElementById("imageToCrop"), { "outputCanvas": document.getElementById("crop-result"), "startInCropMode": true })
+						cropper = jsCrop.initialise(imageToCrop, { "outputCanvas": cropResult, "startInCropMode": true })
 					}
 				});
 				document.getElementById("download-button").addEventListener("click", function() {
@@ -61,7 +70,9 @@
 					}
 				});
 				window.addEventListener("unload", function() {
+					cropResult = null;
 					cropButton = null;
+					imageToCrop = null;
 					cropper = null;
 				});
 			});
@@ -80,20 +91,23 @@
 			<!-- Wrapper DIV that will display its contents as an inline block -->
 			<div class="canvas-container">
 				<!-- The output canvas -->
-				<canvas id="crop-result" width="200" height="300"></canvas>
+				<canvas id="crop-result"></canvas>
 			</div>
 			<div>&#xA0;</div>
-			<!-- Toggle button to enter/leave crop mode -->
-			<button id="crop-button" class="crop-button"></button>
-			<span>&#xA0;</span>
-			<!-- Download the cropped image -->
-			<button id="download-button">Download Cropped Image</button>
-			<span>&#xA0;</span>
-			<!-- Set the crop region -->
-			<button id="set-crop-region-button">Set Crop Region</button>
-			<span>&#xA0;</span>
-			<!-- Destroy the cropper -->
-			<button id="destroy-button">Destroy</button>
+			<!-- Wrapper DIV for command buttons -->
+			<div id="control-panel">
+				<!-- Toggle button to enter/leave crop mode -->
+				<button id="crop-button" class="crop-button" disabled="true"></button>
+				<span>&#xA0;</span>
+				<!-- Download the cropped image -->
+				<button id="download-button" disabled="true">Download Cropped Image</button>
+				<span>&#xA0;</span>
+				<!-- Set the crop region -->
+				<button id="set-crop-region-button" disabled="true">Set Crop Region</button>
+				<span>&#xA0;</span>
+				<!-- Destroy the cropper -->
+				<button id="destroy-button" disabled="true">Destroy</button>
+			</div>
 		</div>
 	</body>
 </html>
