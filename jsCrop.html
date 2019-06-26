@@ -51,7 +51,7 @@
 						cropper.enableCropMode(this.classList.toggle("pressed"));
 					else {
 						this.classList.add("pressed");
-						cropper = jsCrop.initialise(imageToCrop, { "outputCanvas": cropResult, "startInCropMode": true })
+						cropper = jsCrop.initialise(imageToCrop, { "outputCanvas": cropResult, "startInCropMode": true });
 					}
 				});
 				document.getElementById("download-button").addEventListener("click", function() {
