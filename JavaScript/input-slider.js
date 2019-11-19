@@ -41,6 +41,7 @@ customElements.define("input-slider", class extends HTMLElement {
 			}
 		});
 		Object.seal(this);
+		Object.freeze(this.__proto__);
 		this.outputHolder.style.float = "right";
 		this.button.style.float = "right";
 		this.attachShadow({ "mode": "open" });
