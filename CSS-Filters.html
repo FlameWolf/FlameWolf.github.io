@@ -24,17 +24,17 @@
 			"use strict";
 			const emptyString = "";
 			document.addEventListener("DOMContentLoaded", function() {
-				const mainImage = document.getElementById("main-image");
-				const defaultFilters = { "brightness": "100%",
-					"contrast": "100%",
-					"saturate": "100%",
-					"drop-shadow": "0 0 0px #000000",
-					"grayscale": "0%",
-					"sepia": "0%",
-					"invert": "0%",
-					"opacity": "100%",
-					"hue-rotate": "0deg",
-					"blur": "0px" };
+				let mainImage = document.getElementById("main-image");
+				let filterSliders = [...document.querySelectorAll("input-slider[data-filter-function]")];
+				let resetImageButton = document.getElementById("reset-image-button");
+				const getFilter = function(element) {
+					const filterFunction = element.dataset.filterFunction;
+					const filterValue = element.value;
+					return {
+						[filterFunction]: (filterFunction === "drop-shadow" ? `0 0 ${filterValue} #000000` : filterValue)
+					};
+				};
+				const defaultFilters = Object.assign({}, ...filterSliders.map(getFilter));
 				const filters = Object.assign({}, defaultFilters);
 				const isActive = function([key, value]) {
 					return (defaultFilters[key] !== value);
@@ -44,47 +44,22 @@
 				};
 				const updateFilters = function(event) {
 					let output = emptyString;
-					switch(event.target.getAttribute("name")) {
-						case "sld-brightness":
-							filters["brightness"] = `${event.detail.position}%`;
-							break;
-						case "sld-contrast":
-							filters["contrast"] = `${event.detail.position}%`;
-							break;
-						case "sld-saturation":
-							filters["saturate"] = `${event.detail.position}%`;
-							break;
-						case "sld-drop-shadow":
-							filters["drop-shadow"] = `0 0 ${event.detail.position}px #000000`;
-							break;
-						case "sld-greyscale":
-							filters["grayscale"] = `${event.detail.position}%`;
-							break;
-						case "sld-sepia":
-							filters["sepia"] = `${event.detail.position}%`;
-							break;
-						case "sld-inversion":
-							filters["invert"] = `${event.detail.position}%`;
-							break;
-						case "sld-opacity":
-							filters["opacity"] = `${event.detail.position}%`;
-							break;
-						case "sld-hue-rotation":
-							filters["hue-rotate"] = `${event.detail.position}deg`;
-							break;
-						case "sld-blurriness":
-							filters["blur"] = `${event.detail.position}px`;
-							break;
-						default:
-							break;
-					}
+					Object.assign(filters, getFilter(event.target));
 					output = Object.entries(filters).filter(isActive).reduce(buildFilterString, emptyString).trim();
 					mainImage.style.filter = output;
-					document.getElementById("output-textarea").textContent = (output !== emptyString ? `filter: ${output};` : output);
+					document.getElementById("output-textarea").textContent = (output !== emptyString ? `filter: ${output};` : emptyString);
 				};
-				[...document.getElementsByTagName("input-slider")].forEach(x => x.addEventListener("update", updateFilters));
-				document.getElementById("reset-image-button").addEventListener("click", function() {
-					[...document.getElementsByTagName("input-slider")].forEach(x => x.reset());
+				const removeFilters = function() {
+					filterSliders.forEach(x => x.reset());
+				};
+				filterSliders.forEach(x => x.addEventListener("update", updateFilters));
+				resetImageButton.addEventListener("click", removeFilters);
+				window.addEventListener("unload", function() {
+					resetImageButton.removeEventListener("click", removeFilters);
+					filterSliders.forEach(x => x.removeEventListener("update", updateFilters));
+					resetImageButton = null;
+					filterSliders = null;
+					mainImage = null;
 				});
 			});
 			/*]]>*/
@@ -105,16 +80,16 @@
 					<button id="reset-image-button" class="btn-reset">Reset Image</button>
 				</section>
 				<section class="right-column">
-					<input-slider name="sld-brightness" text="Brightness" min="0" max="200" value-suffix="%"></input-slider>
-					<input-slider name="sld-contrast" text="Contrast" min="0" max="200" value-suffix="%"></input-slider>
-					<input-slider name="sld-saturation" text="Saturation" min="0" max="200" value-suffix="%"></input-slider>
-					<input-slider name="sld-drop-shadow" text="Drop Shadow" min="0" max="50" default="0" value-suffix="px"></input-slider>
-					<input-slider name="sld-greyscale" text="Greyscale" min="0" max="100" default="0" value-suffix="%"></input-slider>
-					<input-slider name="sld-sepia" text="Sepia" min="0" max="100" default="0" value-suffix="%"></input-slider>
-					<input-slider name="sld-inversion" text="Inversion" min="0" max="100" default="0" value-suffix="%"></input-slider>
-					<input-slider name="sld-opacity" text="Opacity" min="0" max="100" default="100" value-suffix="%"></input-slider>
-					<input-slider name="sld-hue-rotation" text="Hue Rotation" min="0" max="360" default="0" value-suffix="deg"></input-slider>
-					<input-slider name="sld-blurriness" text="Blurriness" min="0" max="50" default="0" value-suffix="px"></input-slider>
+					<input-slider name="sld-brightness" text="Brightness" min="0" max="200" unit="%" data-filter-function="brightness"></input-slider>
+					<input-slider name="sld-contrast" text="Contrast" min="0" max="200" unit="%" data-filter-function="contrast"></input-slider>
+					<input-slider name="sld-saturation" text="Saturation" min="0" max="200" unit="%" data-filter-function="saturate"></input-slider>
+					<input-slider name="sld-drop-shadow" text="Drop Shadow" min="0" max="50" default="0" unit="px" data-filter-function="drop-shadow"></input-slider>
+					<input-slider name="sld-greyscale" text="Greyscale" min="0" max="100" default="0" unit="%" data-filter-function="grayscale"></input-slider>
+					<input-slider name="sld-sepia" text="Sepia" min="0" max="100" default="0" unit="%" data-filter-function="sepia"></input-slider>
+					<input-slider name="sld-inversion" text="Inversion" min="0" max="100" default="0" unit="%" data-filter-function="invert"></input-slider>
+					<input-slider name="sld-opacity" text="Opacity" min="0" max="100" default="100" unit="%" data-filter-function="opacity"></input-slider>
+					<input-slider name="sld-hue-rotation" text="Hue Rotation" min="0" max="360" default="0" unit="deg" data-filter-function="hue-rotate"></input-slider>
+					<input-slider name="sld-blurriness" text="Blurriness" min="0" max="50" default="0" unit="px" data-filter-function="blur"></input-slider>
 				</section>
 			</article>
 		</main>
