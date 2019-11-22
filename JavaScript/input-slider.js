@@ -1,6 +1,5 @@
 "use strict";
 (function() {
-	const emptyString = "";
 	customElements.define("input-slider", class extends HTMLElement {
 		constructor() {
 			super();
@@ -32,7 +31,7 @@
 					"enumerable": true
 				},
 				"unit": {
-					"value": emptyString,
+					"value": "",
 					"writable": true,
 					"enumerable": true
 				},
