@@ -47,10 +47,9 @@
 				}
 			});
 			Object.seal(this);
-			Object.freeze(this.__proto__);
+			Object.freeze(Object.getPrototypeOf(this));
 			this.outputHolder.style.float = "right";
 			this.button.style.float = "right";
-			this.attachShadow({ "mode": "open" });
 		}
 		reset() {
 			this.dirty = false;
@@ -90,7 +89,6 @@
 				let container = document.createElement("p");
 				this.label.setAttribute("for", this.getAttribute("name"));
 				this.label.textContent = this.getAttribute("text");
-				this.input.setAttribute("name", this.getAttribute("name"));
 				this.input.setAttribute("type", "range");
 				this.input.setAttribute("min", this.getAttribute("min"));
 				this.input.setAttribute("max", this.getAttribute("max"));
@@ -99,7 +97,8 @@
 					this.dispatchEvent(new CustomEvent("update", {
 						"detail": {
 							"value": this.value
-						}
+						},
+						"bubbles": true
 					}));
 				}).bind(this));
 				this.input.addEventListener("change", (function(event) {
@@ -116,7 +115,7 @@
 				container.appendChild(document.createElement("br"));
 				container.appendChild(this.input);
 				container.appendChild(this.button);
-				this.shadowRoot.appendChild(container);
+				this.appendChild(container);
 				container = null;
 			}
 		}

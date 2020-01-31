@@ -23,7 +23,7 @@
 			/*<![CDATA[*/
 			"use strict";
 			const emptyString = "";
-			document.addEventListener("DOMContentLoaded", function() {
+			document.addEventListener("DOMContentLoaded", function(event) {
 				let mainImage = document.getElementById("main-image");
 				let filterSliders = [...document.querySelectorAll("input-slider[data-filter-function]")];
 				let resetImageButton = document.getElementById("reset-image-button");
