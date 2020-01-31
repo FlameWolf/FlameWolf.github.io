@@ -86,7 +86,6 @@
 		}
 		connectedCallback() {
 			if(this.isConnected) {
-				let container = document.createElement("p");
 				this.label.setAttribute("for", this.getAttribute("name"));
 				this.label.textContent = this.getAttribute("text");
 				this.input.setAttribute("type", "range");
@@ -110,13 +109,11 @@
 				this.button.addEventListener("click", (function(event) {
 					this.reset();
 				}).bind(this));
-				container.appendChild(this.label);
-				container.appendChild(this.outputHolder);
-				container.appendChild(document.createElement("br"));
-				container.appendChild(this.input);
-				container.appendChild(this.button);
-				this.appendChild(container);
-				container = null;
+				this.appendChild(this.label);
+				this.appendChild(this.outputHolder);
+				this.appendChild(document.createElement("br"));
+				this.appendChild(this.input);
+				this.appendChild(this.button);
 			}
 		}
 	});
