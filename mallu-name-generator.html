@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Mallu Name Generator</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"/>
+		<style type="text/css">
+			.header {
+				display: flex;
+				justify-content: space-between;
+			}
+		</style>
+		<script type="application/javascript">
+			/*<![CDATA[*/
+			function generateMalluNames(randomise = false) {
+				const alphabet = new Array(26);
+				const vowels = ["a", "e", "i", "o", "u"];
+				const softConsonants = ["b", "c", "d", "g", "j", "k", "p", "r", "s", "t", "z"];
+				for (let i = 0; i < 26; i++) {
+					alphabet[i] = String.fromCharCode(i + 97);
+					if (i === 16) {
+						alphabet[i] += "u";
+					}
+				}
+				const girls = ["ajeesha", "ajisha", "ancy", "aneesha", "anisha", "anjana", "anjisha", "anjita", "anjusha", "anya", "aruna", "avya", "azha", "azhita", "eena", "eeta", "eetu", "eeva", "ejina", "ejisha", "hanya", "haranya", "havya", "heeba", "herly", "hiba", "hibi", "hita", "ibi", "ibina", "ida", "idya", "iji", "ijina", "ijisha", "ijosha", "imila", "imina", "imisha", "ina", "incy", "ineesha", "inisha", "inita", "inosha", "inya", "isha", "iss", "issy", "ita", "itu", "ivina", "ivya", "iya", "iza", "jina", "jisha", "josha", "neesha", "nisha", "nita", "njana", "njisha", "njita", "njusha", "nosha", "nu", "ojina", "ojisha", "onisha", "onita", "osha", "sha"];
+				const boys = ["aiju", "ajeesh", "ajesh", "aji", "ajish", "aneesh", "anesh", "anish", "aran", "ari", "arun", "bi", "bu", "eet", "eevan", "eji", "ejin", "elson", "haran", "hari", "harun", "hibin", "hibu", "hijo", "ibin", "ibu", "ijeesh", "ijesh", "ijin", "ijo", "ijosh", "ijoy", "iju", "imesh", "ineesh", "inesh", "ini", "inish", "inosh", "into", "inu", "iran", "ish", "ivin", "ji", "jin", "jo", "neesh", "nesh", "ni", "nish", "nosh", "obi", "obu", "oji", "ojin", "ojo", "oni", "onish", "onu", "osh"];
+				const generateNames = source => {
+					const output = [];
+					for (const firstChar of alphabet) {
+						for (const remainder of source) {
+							const remainderFirstChar = remainder[0];
+							const skip = ((vowels.includes(firstChar) && vowels.includes(remainderFirstChar)) || (!vowels.includes(firstChar) && !vowels.includes(remainderFirstChar))) && !(softConsonants.includes(firstChar) && remainderFirstChar == "h");
+							if (!skip) {
+								output.push(`${firstChar}${remainder}`);
+							}
+						}
+					}
+					if (randomise) {
+						for (let i = output.length - 1; i > 0; i--) {
+							const j = Math.floor(Math.random() * (i + 1));
+							[output[i], output[j]] = [output[j], output[i]];
+						}
+					}
+					return output;
+				};
+				return {
+					girls: generateNames(girls),
+					boys: generateNames(boys)
+				};
+			}
+			function displayNames(randomise = false) {
+				const names = generateMalluNames(randomise);
+				const writeNames = (source, target) => {
+					while (target.firstChild) {
+						target.removeChild(target.lastChild);
+					}
+					const table = document.createElement("table");
+					for (let i = 0; i < source.length; i += 4) {
+						const row = document.createElement("tr");
+						for (let j = 0; j < 4; j++) {
+							const cell = document.createElement("td");
+							const value = source[i + j];
+							cell.innerText = value || "";
+							row.appendChild(cell);
+						}
+						table.appendChild(row);
+					}
+					target.appendChild(table);
+				};
+				writeNames(names.girls, document.getElementById("girl-names"));
+				writeNames(names.boys, document.getElementById("boy-names"));
+			}
+			function toggleRandomise(event) {
+				displayNames(event.target.checked);
+			}
+			document.addEventListener("DOMContentLoaded", () => {
+				displayNames(false);
+				document.getElementById("ramdomise").addEventListener("click", toggleRandomise);
+			});
+			/*]]>*/
+		</script>
+	</head>
+	<body>
+		<main>
+			<div class="header">
+				<h1>Mallu Name Generator</h1>
+				<div>
+					<input id="ramdomise" type="checkbox"/>
+					<label for="ramdomise">Randomise</label>
+				</div>
+			</div>
+			<hr/>
+			<h2>Girls</h2>
+			<div id="girl-names"></div>
+			<h2>Boys</h2>
+			<div id="boy-names"></div>
+		</main>
+	</body>
+</html>
