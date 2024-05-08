@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="charset" value="UTF-8"/>
+		<title>The Modern JavaScript</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css"/>
+		<style type="text/css">
+			/*<![CDATA[*/
+			dialog::backdrop {
+				background: rgba(144, 149, 156, 0.5);
+			}
+			dialog {
+				background: var(--background-body);
+			}
+			/*]]>*/
+		</style>
+		<script type="application/ecmascript">
+			/*<![CDATA[*/
+			"use strict";
+			document.addEventListener("DOMContentLoaded", () => {
+			});
+			/*]]>*/
+		</script>
+	</head>
+	<body>
+		<h4>Operators, primitives, and objects</h4>
+		<ul>
+			<li><code>typeof</code>operator returns incorrect responses for <code>null</code> and functions:<br/><pre><code>typeof null; // "object" instead of "null"&#x0A;typeof alert; // "function" instead of "object"</code></pre></li>
+			<li>Values that are falsy:<br/><pre><code>""&#x0A;0&#x0A;null&#x0A;undefined&#x0A;NaN&#x0A;false</code></pre></li>
+			<li>String comparisons happen in Unicode order, thus: <code>"a" > "A"; // true</code></li>
+			<li>The values <code>null</code> and <code>undefined</code> equal <code>==</code> each other and do not equal any other value</li>
+			<li><code>||</code> returns the first truthy value and <code>&&</code> returns the first falsy value among the operands, evaluated from left to right order</li>
+			<li>Difference between <code>||</code> and <code>??</code>: <code>||</code> returns the first truthy (i.e., not equal to <code>""</code>, <code>0</code>, <code>null</code>, <code>undefined</code>, <code>NaN</code>, or <code>false</code>) value, while <code>??</code> returns the first defined (i.e., not equal to <code>null</code> or <code>undefined</code>) value</li>
+			<li>Mixing <code>??</code> with <code>&&</code> or <code>||</code> will result in a syntax error, unless parantheses are used to distinguish operands:<br/><pre><code>let x = 1 && 2 ?? 3; // syntax error&#x0A;let x = 1 && (2 ?? 3); // no error&#x0A;let x = (1 && 2) ?? 3; // no error</code></pre></li>
+			<li>A <code>break</code> can be used to jump out of any named code block, not just loops; but a <code>continue</code> can be used only inside a loop</li>
+			<li>Object properties with integer keys <em>(keys that stay the same after a conversion to integer and back to string, and don't contain a decimal character)</em> are sorted in numerical order of keys; the rest appear in order of creation</li>
+			<li>The method <code>structuredClone</code> can be used to deep-clone objects, provided it doesn't contain any function properties</li>
+		</ul>
+		<h4>Constructor functions</h4>
+		<ul>
+			<li>What happens when a function is invoked with the <code>new</code> keyword:<br/><pre><code>function User(name) {&#x0A;&#x09;// this = {};  (implicitly)&#x0A;&#x9;this.name = name;&#x0A;&#x9;this.isAdmin = false;&#x0A;&#x9;// return this;  (implicitly)&#x0A;}</code></pre></li>
+			<li>When a function is invoked with the <code>new</code> keyword, it will have a <code>new.target</code> property, which will be the function itself</li>
+			<li>When a function is invoked with the <code>new</code> keyword, it cannot return a primitive value (including <code>null</code> and <code>undefined</code>); it will return either <code>this</code> (implicitly or explicitly), or another <code>object</code></li>
+		</ul>
+		<h4>Symbols</h4>
+		<ul>
+			<li><code>structuredClone</code> will not copy <code>Symbol</code> properties, but <code>Object.assign</code> will</li>
+		</ul>
+		<h4>Implicit object-to-primitive conversion</h4>
+		<ul><li>An object can include a function with the following syntax to support implicit conversion into a JavaScript primitive type:<br/><pre><code>[Symbol.toPrimitive](hint) {&#x0A;&#x09;// hint = one of "string", "number", "default"&#x0A;&#x09;// return a primitive&#x0A;}</code></pre><blockquote>Situations that invoke the "default" hint include: passing as a parameter to the <code>Date()</code> constructor, addition using the binary plus <code>+</code> operator, and comparison using the non-strict equality <code>==</code> operator. All built-in objects except <code>Date</code> implement "default" conversion the same way as "number", hence it is considered a good pattern to follow.</blockquote>Example:<pre><code>let user = {&#x0A;&#x09;name: "Jane Doe",&#x0A;&#x09;age: 36,&#x0A;&#x09;post: "Developer",&#x0A;&#x09;[Symbol.toPrimitive](hint) {&#x0A;&#x09;&#x09;switch(hint) {&#x0A;&#x09;&#x09;&#x09;case "string":&#x0A;&#x09;&#x09;&#x09;&#x09;return this.name;&#x0A;&#x09;&#x09;&#x09;case "number":&#x0A;&#x09;&#x09;&#x09;case "default":&#x0A;&#x09;&#x09;&#x09;&#x09;return this.age;&#x0A;&#x09;&#x09;&#x09;default:&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0A;&#x09;&#x09;}&#x0A;&#x09;}&#x0A;};&#x0A;&#x0A;let a = user / 2; // hint = "number", a = 18&#x0A;let b = ["Hello", user].join(" "); // hint = "string", b = "Hello Jane Doe"&#x0A;let c = 18 + user; // hint = "default", c = 54</code></pre></li>
+		</ul>
+	</body>
+</html>
