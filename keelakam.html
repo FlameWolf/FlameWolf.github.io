@@ -46,6 +46,8 @@
 					var input = txtInput.value.trim();
 					if (input) {
 						txtOutput.value = encDec(input);
+					} else {
+						txtOutput.value = "";
 					}
 				});
 				btnCopy.addEventListener("click", () => {

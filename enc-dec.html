@@ -121,7 +121,7 @@
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const btnCopyIv = document.getElementById("copy-iv");
 				const btnPasteInput = document.getElementById("paste-plain-text");
-				const btnConvert = document.getElementById("convert");
+				const btnEncrypt = document.getElementById("encrypt");
 				const btnCopyEncrypted = document.getElementById("copy-encrypted");
 				const btnPasteIv = document.getElementById("paste-iv");
 				const btnPasteEncrypted = document.getElementById("paste-encrypted");
@@ -169,12 +169,14 @@
 						txtPlainText.value = clipboardText;
 					}
 				});
-				btnConvert.addEventListener("click", async () => {
+				btnEncrypt.addEventListener("click", async () => {
 					const input = txtPlainText.value.trim();
 					if (input) {
 						const encryptedText = await encryptMessage(encryptionKey, initVector, await unicodeToBase64(input));
 						const bufferAsString = new Uint8Array(encryptedText).reduce((prev, curr) => `${prev}${String.fromCharCode(curr + 255)}`, "");
 						txtEncryptedOutput.value = bufferAsString;
+					} else {
+						txtEncryptedOutput.value = "";
 					}
 				});
 				btnCopyEncrypted.addEventListener("click", async () => {
@@ -202,6 +204,8 @@
 					if (cipherText) {
 						const decryptedText = await decryptMessage(encryptionKey, await gunzip(Uint8Array.from(atob(iv).split(","))), Uint8Array.from(stringAsArray));
 						txtDecryptedOutput.value = await base64ToUnicode(decryptedText);
+					} else {
+						txtDecryptedOutput.value = "";
 					}
 				});
 				btnCopyDecrypted.addEventListener("click", async () => {
@@ -253,7 +257,7 @@
 							</td>
 							<td class="align-end">
 								<button id="paste-plain-text">Paste</button>
-								<button id="convert">Convert</button>
+								<button id="encrypt">Encrypt</button>
 							</td>
 						</tr>
 					</thead>
