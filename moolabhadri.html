@@ -36,13 +36,20 @@
 		<script type="text/javascript">
 			"use strict";
 
-			document.addEventListener("DOMContentLoaded", () => {
+			document.addEventListener("DOMContentLoaded", async () => {
+				const btnPaste = document.getElementById("paste");
 				const btnConvert = document.getElementById("convert");
 				const btnCopy = document.getElementById("copy");
 				const txtInput = document.getElementById("input");
 				const txtOutput = document.getElementById("output");
-				const spnhidden = document.getElementById("hidden");
-				btnConvert.addEventListener("click", () => {
+				const spnHidden = document.getElementById("hidden");
+				btnPaste.addEventListener("click", async () => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						txtInput.value = clipboardText;
+					}
+				});
+				btnConvert.addEventListener("click", async () => {
 					var input = txtInput.value.trim();
 					if (input) {
 						txtOutput.value = encDec(input);
@@ -50,12 +57,12 @@
 						txtOutput.value = "";
 					}
 				});
-				btnCopy.addEventListener("click", () => {
+				btnCopy.addEventListener("click", async () => {
 					var output = txtOutput.value;
 					navigator.clipboard.writeText(output);
-					spnhidden.classList.remove("hidden");
+					spnHidden.classList.remove("hidden");
 					setTimeout(() => {
-						spnhidden.classList.add("hidden");
+						spnHidden.classList.add("hidden");
 					}, 1500);
 				});
 			});
@@ -69,6 +76,7 @@
 						<h4>Input</h4>
 					</td>
 					<td class="align-end">
+						<button id="paste">Paste</button>
 						<button id="convert">Convert</button>
 					</td>
 				</tr>
