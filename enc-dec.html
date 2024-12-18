@@ -60,7 +60,6 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
-				const initVector = crypto.getRandomValues(new Uint8Array(64));
 				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
 				const encryptionKey = await crypto.subtle.generateKey(
 					{
@@ -119,22 +118,27 @@
 				const base64ToUnicode = async input => decoder.decode(await gunzip(Uint8Array.from(Array.from(atob(input)).map(x => x.charCodeAt(0)))));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
-				const btnCopyIv = document.getElementById("copy-iv");
+				const dlgErrorAlert = document.getElementById("error-alert");
+				const btncloseErrorAlert = document.getElementById("close-error-alert");
+				const btnPasteEncryptKey = document.getElementById("paste-encrypt-key");
+				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
 				const btnPasteInput = document.getElementById("paste-plain-text");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnCopyEncrypted = document.getElementById("copy-encrypted");
-				const btnPasteIv = document.getElementById("paste-iv");
+				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
+				const btnCopyDecryptKey = document.getElementById("copy-decrypt-key");
 				const btnPasteEncrypted = document.getElementById("paste-encrypted");
 				const btnDecrypt = document.getElementById("decrypt");
 				const btnCopyDecrypted = document.getElementById("copy-decrypted");
-				const txtEncryptIv = document.getElementById("encrypt-iv");
+				const txtEncryptKey = document.getElementById("encrypt-key");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncryptedOutput = document.getElementById("encrypted-output");
-				const txtDecryptIv = document.getElementById("decrypt-iv");
+				const txtDecryptKey = document.getElementById("decrypt-key");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecryptedOutput = document.getElementById("decrypted-output");
-				const spnHiddenIv = document.getElementById("hidden-iv");
+				const spnHiddenEncryptKey = document.getElementById("hidden-encrypt-key");
 				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
+				const spnHiddenDecryptKey = document.getElementById("hidden-decrypt-key");
 				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
 				const flashElement = elem => {
 					elem.classList.remove("hidden");
@@ -148,20 +152,28 @@
 						btn.addEventListener("click", () => {
 							tabBarButtons.forEach(x => x.classList.remove("active"));
 							tc.querySelectorAll(".tab-panel").forEach(tp => tp.style.removeProperty("display"));
-							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`).style.setProperty("display", "block");
+							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.style.setProperty("display", "block");
 							btn.classList.add("active");
 						});
 					});
 					const defaultPanelName = tc.getAttribute("data-default");
 					if (defaultPanelName) {
-						tc.querySelector(`[data-href="${defaultPanelName}"]`).dispatchEvent(new Event("click"));
+						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
-				txtEncryptIv.value = btoa(await gzip(initVector));
-				btnCopyIv.addEventListener("click", async () => {
-					const encodedIv = txtEncryptIv.value;
+				btncloseErrorAlert.addEventListener("click", async () => {
+					dlgErrorAlert.close();
+				});
+				btnPasteEncryptKey.addEventListener("click", async () => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						txtEncryptKey.value = clipboardText;
+					}
+				});
+				btnCopyEncryptKey.addEventListener("click", async () => {
+					const encodedIv = txtEncryptKey.value;
 					navigator.clipboard.writeText(encodedIv);
-					flashElement(spnHiddenIv);
+					flashElement(spnHiddenEncryptKey);
 				});
 				btnPasteInput.addEventListener("click", async () => {
 					const clipboardText = await navigator.clipboard.readText();
@@ -170,9 +182,14 @@
 					}
 				});
 				btnEncrypt.addEventListener("click", async () => {
+					const encryptKey = txtEncryptKey.value.trim();
+					if (!encryptKey) {
+						dlgErrorAlert.showModal();
+						return;
+					}
 					const input = txtPlainText.value.trim();
 					if (input) {
-						const encryptedText = await encryptMessage(encryptionKey, initVector, await unicodeToBase64(input));
+						const encryptedText = await encryptMessage(encryptionKey, encoder.encode(encryptKey), await unicodeToBase64(input));
 						const bufferAsString = new Uint8Array(encryptedText).reduce((prev, curr) => `${prev}${String.fromCharCode(curr + 255)}`, "");
 						txtEncryptedOutput.value = bufferAsString;
 					} else {
@@ -184,11 +201,16 @@
 					navigator.clipboard.writeText(output);
 					flashElement(spnHiddenEncrypted);
 				});
-				btnPasteIv.addEventListener("click", async () => {
+				btnPasteDecryptKey.addEventListener("click", async () => {
 					const clipboardText = await navigator.clipboard.readText();
 					if (clipboardText) {
-						txtDecryptIv.value = clipboardText;
+						txtDecryptKey.value = clipboardText;
 					}
+				});
+				btnCopyDecryptKey.addEventListener("click", async () => {
+					const output = txtDecryptKey.value;
+					navigator.clipboard.writeText(output);
+					flashElement(spnHiddenDecryptKey);
 				});
 				btnPasteEncrypted.addEventListener("click", async () => {
 					const clipboardText = await navigator.clipboard.readText();
@@ -197,12 +219,15 @@
 					}
 				});
 				btnDecrypt.addEventListener("click", async () => {
-					debugger;
-					const iv = txtDecryptIv.value;
+					const decryptKey = txtDecryptKey.value;
+					if (!decryptKey) {
+						dlgErrorAlert.showModal();
+						return;
+					}
 					const cipherText = txtCipherText.value;
 					const stringAsArray = cipherText.split("").map(x => x.charCodeAt(0) - 255);
 					if (cipherText) {
-						const decryptedText = await decryptMessage(encryptionKey, await gunzip(Uint8Array.from(atob(iv).split(","))), Uint8Array.from(stringAsArray));
+						const decryptedText = await decryptMessage(encryptionKey, encoder.encode(decryptKey), Uint8Array.from(stringAsArray));
 						txtDecryptedOutput.value = await base64ToUnicode(decryptedText);
 					} else {
 						txtDecryptedOutput.value = "";
@@ -217,6 +242,12 @@
 		</script>
 	</head>
 	<body>
+		<dialog id="error-alert">
+			<header>Error:</header>
+			<p>Key must be a non-empty string.</p>
+			<br/>
+			<button id="close-error-alert">Close</button>
+		</dialog>
 		<div class="tab-container" data-default="tab-encrypt">
 			<div class="tab-bar">
 				<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
@@ -227,24 +258,22 @@
 					<thead>
 						<tr>
 							<td>
-								<h4>
-									<span>Key</span>
-									<span>(REQUIRED FOR DECRYPTION)</span>
-								</h4>
+								<h4>Key</h4>
 							</td>
 							<td class="align-end">
-								<span id="hidden-iv" class="toggle hidden">
+								<span id="hidden-encrypt-key" class="toggle hidden">
 									<span>Copied!</span>
 									<span>&#xA0;</span>
 								</span>
-								<button id="copy-iv">Copy</button>
+								<button id="paste-encrypt-key">Paste</button>
+								<button id="copy-encrypt-key">Copy</button>
 							</td>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
 							<td colspan="2">
-								<textarea id="encrypt-iv" class="iv" readonly="readonly"></textarea>
+								<textarea id="encrypt-key" class="iv"></textarea>
 							</td>
 						</tr>
 					</tbody>
@@ -301,14 +330,19 @@
 								<h4>Key</h4>
 							</td>
 							<td class="align-end">
-								<button id="paste-iv">Paste</button>
+								<span id="hidden-decrypt-key" class="toggle hidden">
+									<span>Copied!</span>
+									<span>&#xA0;</span>
+								</span>
+								<button id="paste-decrypt-key">Paste</button>
+								<button id="copy-decrypt-key">Copy</button>
 							</td>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
 							<td colspan="2">
-								<textarea id="decrypt-iv" class="iv"></textarea>
+								<textarea id="decrypt-key" class="iv"></textarea>
 							</td>
 						</tr>
 					</tbody>
