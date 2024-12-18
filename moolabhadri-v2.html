@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Moolabhadri</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			/*<![CDATA[*/
+			* {
+				box-sizing: border-box;
+			}
+			table {
+				width: 100%;
+			}
+			.toggle {
+				transition: all 0.5s ease-in-out;
+			}
+			.hidden {
+				visibility: hidden;
+				opacity: 0;
+			}
+			.align-start {
+				text-align: start;
+			}
+			.align-end {
+				text-align: end;
+			}
+			textarea {
+				width: 100%;
+				min-height: 480pt;
+				resize: none;
+			}
+			/*]]>*/
+		</style>
+		<script type="text/javascript" src="JavaScript/moolabhadri-v2.js"></script>
+		<script type="text/javascript">
+			"use strict";
+
+			document.addEventListener("DOMContentLoaded", () => {
+				const btnConvert = document.getElementById("convert");
+				const btnCopy = document.getElementById("copy");
+				const txtInput = document.getElementById("input");
+				const txtOutput = document.getElementById("output");
+				const spnhidden = document.getElementById("hidden");
+				btnConvert.addEventListener("click", () => {
+					var input = txtInput.value.trim();
+					if (input) {
+						txtOutput.value = encDec(input);
+					}
+				});
+				btnCopy.addEventListener("click", () => {
+					var output = txtOutput.value;
+					navigator.clipboard.writeText(output);
+					spnhidden.classList.remove("hidden");
+					setTimeout(() => {
+						spnhidden.classList.add("hidden");
+					}, 1500);
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<h4>Input</h4>
+					</td>
+					<td class="align-end">
+						<button id="convert">Convert</button>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td colspan="2">
+						<textarea id="input"></textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>&#xA0;</p>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<h4>Output</h4>
+					</td>
+					<td class="align-end">
+						<span id="hidden" class="toggle hidden">
+							<span>Text copied!</span>
+							<span>&#xA0;</span>
+						</span>
+						<button id="copy">Copy</button>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td colspan="2">
+						<textarea id="output" readonly="readonly"></textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</body>
+</html>
