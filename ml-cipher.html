@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Moolabhadri</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			/*<![CDATA[*/
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: auto;
+			}
+			.tab-bar {
+				display: flex;
+			}
+			.tab-bar .tab-btn {
+				margin-block-end: 2pt;
+				margin-inline-end: 2pt;
+				cursor: pointer;
+			}
+			.tab-bar .tab-btn.active {
+				background-color: blue;
+				color: antiquewhite;
+			}
+			.tab-panel {
+				display: none;
+				margin-block-start: 1pt;
+			}
+			.tab-bar,
+			#cipher-description {
+				display: flex;
+				place-items: center;
+				place-content: center;
+			}
+			#cipher-description {
+				text-align: center;
+				min-height: 60pt;
+				padding: 0.5rem;
+				border-radius: 0.5rem;
+				box-shadow: var(--box-shadow);
+			}
+			table {
+				width: 100%;
+			}
+			.toggle {
+				transition: all 0.5s ease-in-out;
+			}
+			.hidden {
+				visibility: hidden;
+				opacity: 0;
+			}
+			.align-start {
+				text-align: start;
+			}
+			.align-centre {
+				text-align: center;
+			}
+			.align-end {
+				text-align: end;
+			}
+			textarea {
+				width: 100%;
+				min-height: 480pt;
+				resize: none;
+			}
+			/*]]>*/
+		</style>
+		<script type="text/javascript" src="JavaScript/ml-cipher.js"></script>
+		<script type="text/javascript">
+			"use strict";
+
+			document.addEventListener("DOMContentLoaded", async () => {
+				const selectCipherTabContainer = document.getElementById("select-cipher");
+				const selectCipherTabBar = selectCipherTabContainer.querySelector(".tab-bar");
+				const cipherDescription = document.getElementById("cipher-description");
+				const btnPaste = document.getElementById("paste");
+				const btnConvert = document.getElementById("convert");
+				const btnCopy = document.getElementById("copy");
+				const txtInput = document.getElementById("input");
+				const txtOutput = document.getElementById("output");
+				const spnHidden = document.getElementById("hidden");
+				for (const schemeId in cipherSchemes) {
+					const scheme = cipherSchemes[schemeId];
+					const btnCipher = document.createElement("button");
+					btnCipher.setAttribute("class", "tab-btn");
+					btnCipher.dataset["schemeId"] = schemeId;
+					btnCipher.dataset["schemeName"] = scheme.name;
+					btnCipher.dataset["schemeDescription"] = scheme.description;
+					btnCipher.textContent = scheme.name;
+					selectCipherTabBar.appendChild(btnCipher);
+				}
+				const selectCipherTabBarButtons = selectCipherTabBar.querySelectorAll(".tab-btn");
+				selectCipherTabBarButtons.forEach(btn => {
+					btn.addEventListener("click", () => {
+						const prevSchemeName = activeCipherScheme.name;
+						activeCipherScheme = cipherSchemes[btn.dataset["schemeId"]];
+						const currSchemeName = activeCipherScheme.name;
+						if (currSchemeName !== prevSchemeName) {
+							txtOutput.value = "";
+							localStorage.setItem("schemeName", currSchemeName);
+						}
+						selectCipherTabBarButtons.forEach(x => x.classList.remove("active"));
+						cipherDescription.textContent = btn.dataset["schemeDescription"];
+						btn.classList.add("active");
+					});
+				});
+				btnPaste.addEventListener("click", async () => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						txtInput.value = clipboardText;
+					}
+				});
+				btnConvert.addEventListener("click", async () => {
+					var input = txtInput.value.trim();
+					if (input) {
+						txtOutput.value = encDec(input);
+					}
+				});
+				btnCopy.addEventListener("click", async () => {
+					var output = txtOutput.value;
+					navigator.clipboard.writeText(output);
+					spnHidden.classList.remove("hidden");
+					setTimeout(() => {
+						spnHidden.classList.add("hidden");
+					}, 1500);
+				});
+				const schemeName = localStorage.getItem("schemeName");
+				if (schemeName) {
+					const schemeButton = [...selectCipherTabBarButtons].find(x => x.dataset["schemeName"] === schemeName) ?? selectCipherTabBarButtons[0];
+					schemeButton.dispatchEvent(new Event("click"));
+				} else {
+					selectCipherTabBarButtons[0].dispatchEvent(new Event("click"));
+				}
+				txtOutput.value = "";
+			});
+		</script>
+	</head>
+	<body>
+		<div id="select-cipher" class="tab-container" data-default="moolabhadri">
+			<p class="align-centre">Choose an encryption scheme</p>
+			<div class="tab-bar"></div>
+			<p id="cipher-description" data-name="cipher-description"></p>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<h4>Input</h4>
+					</td>
+					<td class="align-end">
+						<button id="paste">Paste</button>
+						<button id="convert">Convert</button>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td colspan="2">
+						<textarea id="input"></textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>&#xA0;</p>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<h4>Output</h4>
+					</td>
+					<td class="align-end">
+						<span id="hidden" class="toggle hidden">
+							<span>Text copied!</span>
+							<span>&#xA0;</span>
+						</span>
+						<button id="copy">Copy</button>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td colspan="2">
+						<textarea id="output" readonly="readonly"></textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>&#xA0;</p>
+	</body>
+</html>
