@@ -14,15 +14,15 @@
 			}
 			.tab-bar {
 				display: flex;
-			}
-			.tab-bar .tab-btn {
-				margin-block-end: 2pt;
-				margin-inline-end: 2pt;
-				cursor: pointer;
-			}
-			.tab-bar .tab-btn.active {
-				background-color: blue;
-				color: antiquewhite;
+				.tab-btn {
+					margin-block-end: 2pt;
+					margin-inline-end: 2pt;
+					cursor: pointer;
+					&.active {
+						background-color: blue;
+						color: antiquewhite;
+					}
+				}
 			}
 			.tab-panel {
 				display: none;
