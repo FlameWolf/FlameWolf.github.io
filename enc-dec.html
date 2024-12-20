@@ -25,6 +25,11 @@
 				display: none;
 				margin-block-start: 1pt;
 			}
+			#message {
+				padding: 0.5rem;
+				border-radius: 0.5rem;
+				box-shadow: var(--box-shadow);
+			}
 			table {
 				width: 100%;
 			}
@@ -45,16 +50,22 @@
 				width: 100%;
 				min-height: 480pt;
 				resize: none;
+				&.key {
+					min-height: 50pt;
+				}
 			}
-			textarea.iv {
-				min-height: 50pt;
+			.qr-holder {
+				width: 25%;
 			}
 			/*]]>*/
 		</style>
+		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const ivLength = 8;
+				const imgDim = 256;
 				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
 				const encryptionKey = await crypto.subtle.generateKey(
 					{
@@ -64,6 +75,12 @@
 					true,
 					["encrypt", "decrypt"]
 				);
+				const exportedKey = JSON.stringify(await crypto.subtle.exportKey("jwk", encryptionKey));
+				const encryptKeyQr = QRCode({
+					msg: exportedKey,
+					dim: imgDim,
+					pal: ["#000000", "#FFFFFF"]
+				});
 				const getEncryptionParams = (key, iv, data) => [
 					{
 						name: "AES-GCM",
@@ -135,6 +152,10 @@
 				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
 				const spnHiddenDecryptKey = document.getElementById("hidden-decrypt-key");
 				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
+				const imgOutputQrCode = document.getElementById("output-qr-code");
+				const canOutputQrCode = document.createElement("canvas");
+				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
+				const tmpImgOutputQrCode = new Image();
 				const flashElement = elem => {
 					elem.classList.remove("hidden");
 					setTimeout(() => {
@@ -156,6 +177,14 @@
 						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
+				txtEncryptKey.value = exportedKey;
+				tmpImgOutputQrCode.addEventListener("load", async () => {
+					canOutputQrCode.height = imgDim;
+					canOutputQrCode.width = imgDim;
+					ctxCanOutputQrCode.drawImage(tmpImgOutputQrCode, 0, 0, imgDim, imgDim);
+					imgOutputQrCode.src = canOutputQrCode.toDataURL();
+				});
+				tmpImgOutputQrCode.src = `data:image/svg+xml;base64,${btoa(encryptKeyQr.outerHTML)}`;
 				btncloseErrorAlert.addEventListener("click", async () => {
 					dlgErrorAlert.close();
 				});
@@ -177,15 +206,14 @@
 					}
 				});
 				btnEncrypt.addEventListener("click", async () => {
-					const encryptKey = txtEncryptKey.value.trim();
-					if (!encryptKey) {
-						dlgErrorAlert.showModal();
-						return;
-					}
+					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 					const input = txtPlainText.value.trim();
 					if (input) {
-						const encryptedText = await encryptMessage(encryptionKey, encoder.encode(encryptKey), await unicodeToBase64(input));
-						const bufferAsString = new Uint8Array(encryptedText).reduce((prev, curr) => `${prev}${String.fromCharCode(curr + 255)}`, "");
+						const encryptedText = await encryptMessage(encryptionKey, encryptIv, await unicodeToBase64(input));
+						const combinedArray = new Uint8Array(ivLength + encryptedText.byteLength);
+						combinedArray.set(encryptIv, 0);
+						combinedArray.set(new Uint8Array(encryptedText), ivLength);
+						const bufferAsString = combinedArray.reduce((prev, curr) => `${prev}${String.fromCharCode(curr + 255)}`, "");
 						txtEncryptedOutput.value = bufferAsString;
 					} else {
 						txtEncryptedOutput.value = "";
@@ -219,10 +247,12 @@
 						dlgErrorAlert.showModal();
 						return;
 					}
+					const importedKey = await crypto.subtle.importKey("jwk", JSON.parse(decryptKey), "AES-GCM", true, ["encrypt", "decrypt"]);
 					const cipherText = txtCipherText.value;
-					const stringAsArray = cipherText.split("").map(x => x.charCodeAt(0) - 255);
+					const stringAsArray = Uint8Array.from(cipherText.split("").map(x => x.charCodeAt(0) - 255));
 					if (cipherText) {
-						const decryptedText = await decryptMessage(encryptionKey, encoder.encode(decryptKey), Uint8Array.from(stringAsArray));
+						const decryptIv = stringAsArray.slice(0, ivLength);
+						const decryptedText = await decryptMessage(importedKey, decryptIv, stringAsArray.slice(ivLength));
 						txtDecryptedOutput.value = await base64ToUnicode(decryptedText);
 					} else {
 						txtDecryptedOutput.value = "";
@@ -267,8 +297,14 @@
 					</thead>
 					<tbody>
 						<tr>
-							<td colspan="2">
-								<textarea id="encrypt-key" class="iv"></textarea>
+							<td>
+								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+								<div id="message">
+									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only using the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
+								</div>
+							</td>
+							<td class="qr-holder align-end">
+								<img id="output-qr-code"/>
 							</td>
 						</tr>
 					</tbody>
@@ -337,7 +373,7 @@
 					<tbody>
 						<tr>
 							<td colspan="2">
-								<textarea id="decrypt-key" class="iv"></textarea>
+								<textarea id="decrypt-key" class="key"></textarea>
 							</td>
 						</tr>
 					</tbody>
