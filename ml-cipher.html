@@ -6,6 +6,11 @@
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
 			/*<![CDATA[*/
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.5rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.24);
+			}
 			* {
 				box-sizing: border-box;
 			}
@@ -15,18 +20,21 @@
 			.tab-bar {
 				display: flex;
 				.tab-btn {
-					margin-block-end: 2pt;
-					margin-inline-end: 2pt;
+					margin-bottom: 2pt;
+					margin-right: 2pt;
 					cursor: pointer;
 					&.active {
 						background-color: blue;
 						color: antiquewhite;
 					}
 				}
+				.tab-btn:last-child {
+					margin-right: unset;
+				}
 			}
 			.tab-panel {
 				display: none;
-				margin-block-start: 1pt;
+				margin-top: 1pt;
 			}
 			.tab-bar,
 			#cipher-description {
@@ -37,8 +45,8 @@
 			#cipher-description {
 				text-align: center;
 				min-height: 60pt;
-				padding: 0.5rem;
-				border-radius: 0.5rem;
+				padding: var(--padding);
+				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
 			}
 			table {
@@ -63,6 +71,9 @@
 			textarea {
 				width: 100%;
 				min-height: 480pt;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
 				resize: none;
 			}
 			/*]]>*/
@@ -163,7 +174,7 @@
 				</tr>
 			</tbody>
 		</table>
-		<p>&#xA0;</p>
+		<br/>
 		<table>
 			<thead>
 				<tr>

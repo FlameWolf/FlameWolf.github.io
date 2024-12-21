@@ -6,32 +6,52 @@
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
 			/*<![CDATA[*/
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.5rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.24);
+				--margin: 0.5rem;
+			}
 			* {
 				box-sizing: border-box;
 			}
 			.tab-bar {
 				display: flex;
 				.tab-btn {
-					margin-block-end: 2pt;
-					margin-inline-end: 2pt;
+					margin-bottom: 2pt;
+					margin-right: 2pt;
 					cursor: pointer;
 					&.active {
 						background-color: blue;
 						color: antiquewhite;
 					}
 				}
+				.tab-btn:last-child {
+					margin-right: unset;
+				}
 			}
 			.tab-panel {
 				display: none;
-				margin-block-start: 1pt;
-			}
-			#message {
-				padding: 0.5rem;
-				border-radius: 0.5rem;
-				box-shadow: var(--box-shadow);
+				margin-top: 1pt;
 			}
 			table {
 				width: 100%;
+			}
+			table:has(.encrypt-key-holder),
+			tr:has(.encrypt-key-holder) {
+				height: 100%;
+			}
+			.encrypt-key-holder {
+				display: flex;
+				flex-direction: column;
+				height: 100%;
+			}
+			#message {
+				flex-grow: 1;
+				padding: var(--padding);
+				border-radius: var(--border-radius);
+				box-shadow: var(--box-shadow);
+				margin: var(--margin) auto;
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
@@ -49,6 +69,9 @@
 			textarea {
 				width: 100%;
 				min-height: 480pt;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
 				resize: none;
 				&.key {
 					min-height: 50pt;
@@ -56,6 +79,10 @@
 			}
 			.qr-holder {
 				width: 25%;
+				& > img {
+					border-radius: var(--border-radius);
+					box-shadow: var(--box-shadow);
+				}
 			}
 			/*]]>*/
 		</style>
@@ -298,9 +325,11 @@
 					<tbody>
 						<tr>
 							<td>
-								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
-								<div id="message">
-									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only using the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
+								<div class="encrypt-key-holder">
+									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+									<div id="message">
+										<span><strong>The key displayed above will change with every page reload. A message can be decrypted only using the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
+									</div>
 								</div>
 							</td>
 							<td class="qr-holder align-end">
@@ -309,6 +338,7 @@
 						</tr>
 					</tbody>
 				</table>
+				<br/>
 				<table>
 					<thead>
 						<tr>
@@ -329,6 +359,7 @@
 						</tr>
 					</tbody>
 				</table>
+				<br/>
 				<table>
 					<thead>
 						<tr>
@@ -378,6 +409,7 @@
 						</tr>
 					</tbody>
 				</table>
+				<br/>
 				<table>
 					<thead>
 						<tr>
@@ -398,6 +430,7 @@
 						</tr>
 					</tbody>
 				</table>
+				<br/>
 				<table>
 					<thead>
 						<tr>
