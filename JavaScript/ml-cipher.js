@@ -33,6 +33,7 @@ const cipherSchemes = {
 			["ഔ", "കൌ"],
 			["അം", "കം"],
 			["അഃ", "കഃ"],
+			["അ്‍", "ൿ"],
 			["ഖ", "ഗ"],
 			["ഘ", "ങ"],
 			["ച", "ട"],
@@ -130,7 +131,7 @@ const cipherSchemes = {
 			["ൽ", "ൻ"],
 			["ൾ", "ർ"]
 		]),
-		conjunctsToReplace: ["കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ക്ഷ", "ങ്ക", "ഞ്ച", "ണ്ട", "ന്ത", "മ്പ", "ഩ്ഩ", "ൻ്റ", "റ്റ"]
+		conjunctsToReplace: ["അ്‍", "കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ഞ്‍", "ക്ഷ", "ങ്ക", "ഞ്ച", "ണ്ട", "ന്ത", "മ്പ", "ഩ്ഩ", "ൻ്റ", "റ്റ"]
 	},
 	moolabhadri_v2: {
 		name: "മൂലഭദ്രി (Simple)",
@@ -155,6 +156,7 @@ const cipherSchemes = {
 			["ഔ", "കൌ"],
 			["അം", "കം"],
 			["അഃ", "കഃ"],
+			["അ്‍", "ൿ"],
 			["ഖ", "ഗ"],
 			["ഘ", "ങ"],
 			["ച", "ട"],
@@ -162,6 +164,7 @@ const cipherSchemes = {
 			["ജ", "ഡ"],
 			["ഝ", "ഢ"],
 			["ഞ", "ണ"],
+			["ഞ്‍", "ൺ"],
 			["ത", "പ"],
 			["ഥ", "ഫ"],
 			["ദ", "ബ"],
@@ -238,14 +241,17 @@ const cipherSchemes = {
 			["ൔ", "ന്"],
 			["ശ", "യ"],
 			["ഷ", "ര"],
+			["ഷ്‍", "ർ"],
 			["സ", "ല"],
+			["സ്‍", "ൽ"],
 			["ഹ", "വ"],
 			["ക്ഷ", "ള"],
+			["ക്ഷ്‍", "ൾ"],
 			["റ", "ഴ"],
 			["ഩ", "റ്റ"],
 			["ൻ", "റ്റ്‍"]
 		]),
-		conjunctsToReplace: ["കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ക്ഷ", "റ്റ്‍", "റ്റ"]
+		conjunctsToReplace: ["അ്‍", "കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ഞ്‍", "സ്‍", "ക്ഷ്‍", "ക്ഷ", "ഷ്‍", "റ്റ്‍", "റ്റ"]
 	}
 };
 let activeCipherScheme = cipherSchemes["moolabhadri"];
@@ -272,7 +278,7 @@ const hasSequenceAtIndex = (source, startIndex, sequence) => sequence.every((val
  * @param {string} conjunct The conjunct character pattern to replace
  */
 const replaceConjuncts = (value, conjunct) => {
-	const chars = conjunct.split("");
+	const chars = conjunct.match(/./gu);
 	const firstChar = chars[0];
 	const charCount = chars.length;
 	const subArray = chars.slice(1);
@@ -296,7 +302,7 @@ const encDec = value => {
 	for (const [conjunct, atomic] of similarPairs) {
 		value = value.replaceAll(conjunct, atomic);
 	}
-	const chars = value.split("");
+	const chars = value.match(/[\s\S]/gu);
 	activeCipherScheme.conjunctsToReplace.forEach(conjunct => {
 		if (value.indexOf(conjunct) > -1) {
 			replaceConjuncts(chars, conjunct);
