@@ -23,7 +23,6 @@ const similarPairs = [
  * @property {string} name Malayalam name of the cipher variant
  * @property {string} description The mnemonic for the character substitution mappings
  * @property {Map<string, string>} charMap Bidirectional Malayalam character substitution mappings
- * @property {string[]} [conjunctsToReplace] List of Malayalam conjunct characters that need special handling during transformation
  * /
 /**
  * @typedef {Object} CipherSchemeDictionary
@@ -56,8 +55,6 @@ const cipherSchemes = {
 			["ഒ", "കൊ"],
 			["ഓ", "കോ"],
 			["ഔ", "കൌ"],
-			["അം", "കം"],
-			["അഃ", "കഃ"],
 			["അ്‍", "ൿ"],
 			["ഖ", "ഗ"],
 			["ഘ", "ങ"],
@@ -126,8 +123,6 @@ const cipherSchemes = {
 			["കോ", "ഓ"],
 			["കൌ", "ഔ"],
 			["കൗ", "ഔ"],
-			["കം", "അം"],
-			["കഃ", "അഃ"],
 			["ൿ", "അ്‍"],
 			["ഗ", "ഖ"],
 			["ങ", "ഘ"],
@@ -155,8 +150,7 @@ const cipherSchemes = {
 			["റ്റ", "ൻ്റ"],
 			["ൽ", "ൻ"],
 			["ൾ", "ർ"]
-		]),
-		conjunctsToReplace: ["അ്‍", "കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ഞ്‍", "ക്ഷ", "ങ്ക", "ഞ്ച", "ണ്ട", "ന്ത", "മ്പ", "ഩ്ഩ", "ൻ്റ", "റ്റ"]
+		])
 	},
 	moolabhadri_v2: {
 		name: "മൂലഭദ്രി (Simple)",
@@ -179,8 +173,6 @@ const cipherSchemes = {
 			["ഒ", "കൊ"],
 			["ഓ", "കോ"],
 			["ഔ", "കൌ"],
-			["അം", "കം"],
-			["അഃ", "കഃ"],
 			["അ്‍", "ൿ"],
 			["ഖ", "ഗ"],
 			["ഘ", "ങ"],
@@ -247,8 +239,6 @@ const cipherSchemes = {
 			["കോ", "ഓ"],
 			["കൌ", "ഔ"],
 			["കൗ", "ഔ"],
-			["കം", "അം"],
-			["കഃ", "അഃ"],
 			["ൿ", "അ്‍"],
 			["ഗ", "ഖ"],
 			["ങ", "ഘ"],
@@ -275,8 +265,7 @@ const cipherSchemes = {
 			["റ", "ഴ"],
 			["ഩ", "റ്റ"],
 			["ൻ", "റ്റ്‍"]
-		]),
-		conjunctsToReplace: ["അ്‍", "കാ", "കി", "കീ", "കു", "കൂ", "കൃ", "കൄ", "കൢ", "കൣ", "കെ", "കേ", "കൈ", "കൊ", "കോ", "കൗ", "കൌ", "കം", "കഃ", "ഞ്‍", "സ്‍", "ക്ഷ്‍", "ക്ഷ", "ഷ്‍", "റ്റ്‍", "റ്റ"]
+		])
 	}
 };
 /**
@@ -290,32 +279,6 @@ let activeCipherScheme = cipherSchemes["moolabhadri"];
  */
 const swapChar = char => activeCipherScheme.charMap.get(char) || char;
 /**
- * Validates if a particular sequence exists at a specific index within an array.
- * @param {string[]} array The array to search within
- * @param {number} startIndex The starting index for sequence comparison
- * @param {string[]} sequence The sequence to find
- * @returns {boolean} True if the sequence matches at the given index
- */
-const hasSequenceAtIndex = (array, startIndex, sequence) => sequence.every((value, index) => array[startIndex + index] === value);
-/**
- * Finds Malayalam conjunct glyph sequences within an array and unifies them.
- * @param {string[]} charArray The mutable array of characters to modify
- * @param {string} conjunct The conjunct character pattern to replace
- */
-const replaceConjuncts = (charArray, conjunct) => {
-	const chars = conjunct.match(/./gu);
-	const firstChar = chars[0];
-	const charCount = chars.length;
-	const subArray = chars.slice(1);
-	let index = charArray.indexOf(firstChar);
-	while (index > -1 && index <= charArray.length - charCount) {
-		if (hasSequenceAtIndex(charArray, index + 1, subArray)) {
-			charArray.splice(index, charCount, conjunct);
-		}
-		index = charArray.indexOf(firstChar, index + 1);
-	}
-};
-/**
  * Transforms Malayalam text by normalising visually identical Malayalam
  * glyph sequences and substituting characters as per the predefined mappings.
  * @param {string} inputString The input Malayalam text to be transformed
@@ -326,14 +289,15 @@ const encDec = inputString => {
 	for (const [conjunct, atomic] of similarPairs) {
 		inputString = inputString.replaceAll(conjunct, atomic);
 	}
-	// Split into individual characters while preserving surrogate pairs
-	const chars = inputString.match(/[\s\S]/gu);
-	// Second pass: Unify conjunct sequences
-	activeCipherScheme.conjunctsToReplace?.forEach(conjunct => {
-		if (inputString.includes(conjunct)) {
-			replaceConjuncts(chars, conjunct);
-		}
-	});
-	// Final pass: Apply character substitutions
+	// Extract multi-character sequences from the active cipher scheme and sort
+	// them by decreasing order of length to ensure proper matching precedence
+	const mappedConjuncts = Array.from(activeCipherScheme.charMap.keys())
+		.filter(x => x.match(/./gu).length > 1)
+		.sort((x, y) => x.length < y.length);
+	// Create regular expression pattern for text tokenisation
+	const tokenisationPattern = new RegExp(`(${mappedConjuncts.length ? `${mappedConjuncts.join("|")}|` : ""}\\s|\\S)`, "gu");
+	// Split text into tokens while preserving surrogate pairs and conjuncts
+	const chars = inputString.match(tokenisationPattern);
+	// Second pass: Apply character substitutions
 	return chars.map(swapChar).join("");
 };
