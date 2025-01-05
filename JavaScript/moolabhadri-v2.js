@@ -137,7 +137,7 @@ const charMap = new Map([
  * sorted by decreasing order of length for proper matching precedence.
  */
 const mappedConjuncts = Array.from(charMap.keys())
-	.filter(x => x.match(/./gu).length > 1)
+	.filter(x => Array.from(x).length > 1)
 	.sort((x, y) => x.length < y.length);
 /**
  * Regular expression pattern for splitting Malayalam text

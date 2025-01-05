@@ -145,9 +145,6 @@ const encDec = inputString => {
 	for (const [conjunct, atomic] of similarPairs) {
 		inputString = inputString.replaceAll(conjunct, atomic);
 	}
-	// Second pass: Split text into tokens, preserving surrogate pairs, and apply character substitutions
-	return inputString
-		.match(/[\s\S]/gu)
-		.map(swapChar)
-		.join("");
+	// Second pass: Apply character substitutions
+	return Array.from(inputString).map(swapChar).join("");
 };

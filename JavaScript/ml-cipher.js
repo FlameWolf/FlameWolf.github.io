@@ -292,7 +292,7 @@ const encDec = inputString => {
 	// Extract multi-character sequences from the active cipher scheme and sort
 	// them by decreasing order of length to ensure proper matching precedence
 	const mappedConjuncts = Array.from(activeCipherScheme.charMap.keys())
-		.filter(x => x.match(/./gu).length > 1)
+		.filter(x => Array.from(x).length > 1)
 		.sort((x, y) => x.length < y.length);
 	// Create regular expression pattern for text tokenisation
 	const tokenisationPattern = new RegExp(`(${mappedConjuncts.length ? `${mappedConjuncts.join("|")}|` : ""}\\s|\\S)`, "gu");
