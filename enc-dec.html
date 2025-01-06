@@ -95,15 +95,24 @@
 				const ivLength = 8;
 				const imgDim = 256;
 				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
+				const keyName = "AES-GCM";
+				const keyOps = ["encrypt", "decrypt"];
+				const keyFormat = "jwk";
 				const encryptionKey = await crypto.subtle.generateKey(
 					{
-						name: "AES-GCM",
+						name: keyName,
 						length: 256
 					},
 					true,
-					["encrypt", "decrypt"]
+					keyOps
 				);
-				const exportedKey = JSON.stringify(await crypto.subtle.exportKey("jwk", encryptionKey));
+				const jwkBase = {
+					alg: "A256GCM",
+					ext: true,
+					key_ops: keyOps,
+					kty: "oct"
+				};
+				const exportedKey = (await crypto.subtle.exportKey(keyFormat, encryptionKey)).k;
 				const encryptKeyQr = QRCode({
 					msg: exportedKey,
 					dim: imgDim,
@@ -274,7 +283,15 @@
 						dlgErrorAlert.showModal();
 						return;
 					}
-					const importedKey = await crypto.subtle.importKey("jwk", JSON.parse(decryptKey), "AES-GCM", true, ["encrypt", "decrypt"]);
+					const importedKey = await crypto.subtle.importKey(
+						keyFormat,
+						Object.assign(jwkBase, {
+							k: decryptKey
+						}),
+						keyName,
+						true,
+						keyOps
+					);
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
 						const combinedArray = Uint8Array.from(decodeBase95(cipherText));
