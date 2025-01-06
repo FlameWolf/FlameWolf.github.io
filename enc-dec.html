@@ -87,6 +87,7 @@
 			/*]]>*/
 		</style>
 		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
@@ -153,8 +154,8 @@
 					}
 					return flattenUint8Array(chunks);
 				};
-				const unicodeToBase64 = async input => btoa((await gzip(encoder.encode(input))).reduce((prev, curr) => `${prev}${String.fromCharCode(curr)}`, ""));
-				const base64ToUnicode = async input => decoder.decode(await gunzip(Uint8Array.from(Array.from(atob(input)).map(x => x.charCodeAt(0)))));
+				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
+				const base95ToUnicode = async input => decoder.decode(await gunzip(Uint8Array.from(decodeBase95(input))));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const dlgErrorAlert = document.getElementById("error-alert");
@@ -236,12 +237,11 @@
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 					const input = txtPlainText.value.trim();
 					if (input) {
-						const encryptedText = await encryptMessage(encryptionKey, encryptIv, await unicodeToBase64(input));
-						const combinedArray = new Uint8Array(ivLength + encryptedText.byteLength);
+						const encryptedBytes = await encryptMessage(encryptionKey, encryptIv, await unicodeToBase95(input));
+						const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
 						combinedArray.set(encryptIv, 0);
-						combinedArray.set(new Uint8Array(encryptedText), ivLength);
-						const bufferAsString = combinedArray.reduce((prev, curr) => `${prev}${String.fromCharCode(curr + 255)}`, "");
-						txtEncryptedOutput.value = bufferAsString;
+						combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
+						txtEncryptedOutput.value = encodeBase95(Array.from(combinedArray));
 					} else {
 						txtEncryptedOutput.value = "";
 					}
@@ -277,10 +277,10 @@
 					const importedKey = await crypto.subtle.importKey("jwk", JSON.parse(decryptKey), "AES-GCM", true, ["encrypt", "decrypt"]);
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
-						const stringAsArray = Uint8Array.from(cipherText.split("").map(x => x.charCodeAt(0) - 255));
-						const decryptIv = stringAsArray.slice(0, ivLength);
-						const decryptedText = await decryptMessage(importedKey, decryptIv, stringAsArray.slice(ivLength));
-						txtDecryptedOutput.value = await base64ToUnicode(decryptedText);
+						const combinedArray = Uint8Array.from(decodeBase95(cipherText));
+						const decryptIv = combinedArray.slice(0, ivLength);
+						const decryptedBytes = await decryptMessage(importedKey, decryptIv, combinedArray.slice(ivLength));
+						txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
 					} else {
 						txtDecryptedOutput.value = "";
 					}
