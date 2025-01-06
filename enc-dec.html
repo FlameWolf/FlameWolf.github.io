@@ -98,7 +98,7 @@
 				const keyName = "AES-GCM";
 				const keyOps = ["encrypt", "decrypt"];
 				const keyFormat = "jwk";
-				const encryptionKey = await crypto.subtle.generateKey(
+				const encryptKey = await crypto.subtle.generateKey(
 					{
 						name: keyName,
 						length: 256
@@ -112,9 +112,9 @@
 					key_ops: keyOps,
 					kty: "oct"
 				};
-				const exportedKey = (await crypto.subtle.exportKey(keyFormat, encryptionKey)).k;
+				const encryptKeySecret = (await crypto.subtle.exportKey(keyFormat, encryptKey)).k;
 				const encryptKeyQr = QRCode({
-					msg: exportedKey,
+					msg: encryptKeySecret,
 					dim: imgDim,
 					pal: ["#000000", "#FFFFFF"]
 				});
@@ -171,7 +171,7 @@
 				const btncloseErrorAlert = document.getElementById("close-error-alert");
 				const btnPasteEncryptKey = document.getElementById("paste-encrypt-key");
 				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
-				const btnPasteInput = document.getElementById("paste-plain-text");
+				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnCopyEncrypted = document.getElementById("copy-encrypted");
 				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
@@ -199,6 +199,16 @@
 						elem.classList.add("hidden");
 					}, 1500);
 				};
+				const pasteInto = async input => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						input.value = clipboardText;
+					}
+				};
+				const copyFromAndFlash = (input, elem) => {
+					navigator.clipboard.writeText(input.value);
+					flashElement(elem);
+				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
 					tabBarButtons.forEach(btn => {
@@ -214,7 +224,7 @@
 						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
-				txtEncryptKey.value = exportedKey;
+				txtEncryptKey.value = encryptKeySecret;
 				tmpImgOutputQrCode.addEventListener("load", async () => {
 					canOutputQrCode.height = imgDim;
 					canOutputQrCode.width = imgDim;
@@ -225,28 +235,14 @@
 				btncloseErrorAlert.addEventListener("click", async () => {
 					dlgErrorAlert.close();
 				});
-				btnPasteEncryptKey.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtEncryptKey.value = clipboardText;
-					}
-				});
-				btnCopyEncryptKey.addEventListener("click", async () => {
-					const encodedIv = txtEncryptKey.value;
-					navigator.clipboard.writeText(encodedIv);
-					flashElement(spnHiddenEncryptKey);
-				});
-				btnPasteInput.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtPlainText.value = clipboardText;
-					}
-				});
+				btnPasteEncryptKey.addEventListener("click", async () => await pasteInto(txtEncryptKey));
+				btnCopyEncryptKey.addEventListener("click", async () => copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
+				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 					const input = txtPlainText.value.trim();
 					if (input) {
-						const encryptedBytes = await encryptMessage(encryptionKey, encryptIv, await unicodeToBase95(input));
+						const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
 						const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
 						combinedArray.set(encryptIv, 0);
 						combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
@@ -255,38 +251,20 @@
 						txtEncryptedOutput.value = "";
 					}
 				});
-				btnCopyEncrypted.addEventListener("click", async () => {
-					const output = txtEncryptedOutput.value;
-					navigator.clipboard.writeText(output);
-					flashElement(spnHiddenEncrypted);
-				});
-				btnPasteDecryptKey.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtDecryptKey.value = clipboardText;
-					}
-				});
-				btnCopyDecryptKey.addEventListener("click", async () => {
-					const output = txtDecryptKey.value;
-					navigator.clipboard.writeText(output);
-					flashElement(spnHiddenDecryptKey);
-				});
-				btnPasteEncrypted.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtCipherText.value = clipboardText;
-					}
-				});
+				btnCopyEncrypted.addEventListener("click", async () => copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
+				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
+				btnCopyDecryptKey.addEventListener("click", async () => copyFromAndFlash(txtDecryptKey, spnHiddenDecryptKey));
+				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
-					const decryptKey = txtDecryptKey.value;
-					if (!decryptKey) {
+					const decryptKeySecret = txtDecryptKey.value;
+					if (!decryptKeySecret) {
 						dlgErrorAlert.showModal();
 						return;
 					}
-					const importedKey = await crypto.subtle.importKey(
+					const decryptKey = await crypto.subtle.importKey(
 						keyFormat,
 						Object.assign(jwkBase, {
-							k: decryptKey
+							k: decryptKeySecret
 						}),
 						keyName,
 						true,
@@ -296,17 +274,13 @@
 					if (cipherText) {
 						const combinedArray = Uint8Array.from(decodeBase95(cipherText));
 						const decryptIv = combinedArray.slice(0, ivLength);
-						const decryptedBytes = await decryptMessage(importedKey, decryptIv, combinedArray.slice(ivLength));
+						const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
 						txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
 					} else {
 						txtDecryptedOutput.value = "";
 					}
 				});
-				btnCopyDecrypted.addEventListener("click", async () => {
-					const output = txtDecryptedOutput.value;
-					navigator.clipboard.writeText(output);
-					flashElement(spnHiddenDecrypted);
-				});
+				btnCopyDecrypted.addEventListener("click", async () => copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
 			});
 		</script>
 	</head>

@@ -68,7 +68,7 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
-				const btnPasteInput = document.getElementById("paste-plain-text");
+				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncode = document.getElementById("encode");
 				const btnCopyEncoded = document.getElementById("copy-encoded");
 				const btnPasteEncoded = document.getElementById("paste-encoded");
@@ -86,6 +86,16 @@
 						elem.classList.add("hidden");
 					}, 1500);
 				};
+				const pasteInto = async input => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						input.value = clipboardText;
+					}
+				};
+				const copyFromAndFlash = (input, elem) => {
+					navigator.clipboard.writeText(input.value);
+					flashElement(elem);
+				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
 					tabBarButtons.forEach(btn => {
@@ -101,12 +111,7 @@
 						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
-				btnPasteInput.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtPlainText.value = clipboardText;
-					}
-				});
+				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value.trim();
 					if (input) {
@@ -115,17 +120,8 @@
 						txtEncodedOutput.value = "";
 					}
 				});
-				btnCopyEncoded.addEventListener("click", async () => {
-					const output = txtEncodedOutput.value;
-					navigator.clipboard.writeText(output);
-					flashElement(spnHiddenEncoded);
-				});
-				btnPasteEncoded.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtCipherText.value = clipboardText;
-					}
-				});
+				btnCopyEncoded.addEventListener("click", async () => copyFromAndFlash(txtEncodedOutput, spnHiddenEncoded));
+				btnPasteEncoded.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
@@ -134,11 +130,7 @@
 						txtDecodedOutput.value = "";
 					}
 				});
-				btnCopyDecoded.addEventListener("click", async () => {
-					const output = txtDecodedOutput.value;
-					navigator.clipboard.writeText(output);
-					flashElement(spnHiddenDecoded);
-				});
+				btnCopyDecoded.addEventListener("click", async () => copyFromAndFlash(txtDecodedOutput, spnHiddenDecoded));
 			});
 		</script>
 	</head>
