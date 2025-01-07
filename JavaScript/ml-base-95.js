@@ -23,20 +23,18 @@ const base95EncodeMap = Array.from({ length: Number(BASE95_RADIX) }, (_, index) 
 /** Lookup table mapping base-95 characters to numbers */
 const base95DecodeMap = Array.from({ length: Number(BASE95_RADIX) }, (_, index) => index);
 /**
- * Encodes byte array to base-95 string using chunked processing.
- * @param {number[]} bytes Input array of bytes (0-255)
+ * Encodes byte array into base-95 string using chunked processing.
+ * @param {Uint8Array[]} bytes Array of bytes
  * @returns {string} Base-95 encoded string
  */
 function encodeBase95(bytes) {
-	if (!bytes.length) {
-		return "";
-	}
+	const inputLength = bytes.length;
 	let result = "";
 	// Process bytes in chunks
-	for (let chunkStart = 0; chunkStart < bytes.length; chunkStart += BYTES_PER_CHUNK) {
+	for (let chunkStart = 0; chunkStart < inputLength; chunkStart += BYTES_PER_CHUNK) {
 		// Convert chunk to big number
 		let chunkValue = 0n;
-		const chunkEnd = Math.min(chunkStart + BYTES_PER_CHUNK, bytes.length);
+		const chunkEnd = Math.min(chunkStart + BYTES_PER_CHUNK, inputLength);
 		for (let byteIndex = chunkStart; byteIndex < chunkEnd; byteIndex++) {
 			chunkValue = (chunkValue << BITS_PER_BYTE) | BigInt(bytes[byteIndex]);
 		}
@@ -49,45 +47,39 @@ function encodeBase95(bytes) {
 		}
 		// Pad chunk result to expected length
 		const chunkBytes = chunkEnd - chunkStart;
-		const expectedLength = Math.ceil(chunkBytes * BYTES_TO_CHARS_RATIO);
-		result += chunkResult.padStart(expectedLength, base95EncodeMap[0]);
+		result += chunkResult.padStart(Math.ceil(chunkBytes * BYTES_TO_CHARS_RATIO), base95EncodeMap[0]);
 	}
 	return result;
 }
 /**
- * Decodes base-95 string to byte array using chunked processing.
- * @param {string} text Base-95 encoded string
- * @returns {number[]} Array of bytes
+ * Decodes base-95 string into byte array using chunked processing.
+ * @param {string} encoded Base-95 encoded string
+ * @returns {Uint8Array} Array of bytes
  */
-function decodeBase95(text) {
-	if (!text.length) {
-		return [];
-	}
-	const result = [];
+function decodeBase95(encoded) {
+	const inputLength = encoded.length;
+	const result = new Uint8Array(Math.floor(inputLength / CHARS_PER_CHUNK) * BYTES_PER_CHUNK + Math.floor((inputLength % CHARS_PER_CHUNK) * CHARS_TO_BYTES_RATIO));
+	let resultIndex = 0;
 	// Process text in chunks
-	for (let chunkStart = 0; chunkStart < text.length; chunkStart += CHARS_PER_CHUNK) {
-		const chunk = text.slice(chunkStart, chunkStart + CHARS_PER_CHUNK);
+	for (let chunkStart = 0; chunkStart < inputLength; chunkStart += CHARS_PER_CHUNK) {
+		const chunk = encoded.slice(chunkStart, chunkStart + CHARS_PER_CHUNK);
 		// Convert chunk to number
 		let chunkValue = 0n;
 		for (const char of chunk) {
 			chunkValue = chunkValue * BASE95_RADIX + BigInt(base95DecodeMap[char.charCodeAt(0) - PRINTABLE_ASCII_START]);
 		}
 		// Extract bytes from chunk
-		const chunkBytes = [];
+		const chunkBytes = new Uint8Array(Math.floor(chunk.length * CHARS_TO_BYTES_RATIO));
+		let chunkIndex = chunkBytes.length - 1;
 		while (chunkValue > 0n) {
-			chunkBytes.unshift(Number(chunkValue & 255n));
+			chunkBytes[chunkIndex--] = Number(chunkValue & 255n);
 			chunkValue = chunkValue >> BITS_PER_BYTE;
 		}
-		// Pad chunk to expected length
-		const expectedChunkBytes = Math.floor(chunk.length * CHARS_TO_BYTES_RATIO);
-		while (chunkBytes.length < expectedChunkBytes) {
-			chunkBytes.unshift(0);
-		}
-		result.push(...chunkBytes);
+		// Copy chunk bytes to result
+		result.set(chunkBytes, resultIndex);
+		resultIndex += chunkBytes.length;
 	}
-	// Trim to expected total length
-	const expectedTotalBytes = Math.floor(text.length * CHARS_TO_BYTES_RATIO);
-	return result.slice(0, expectedTotalBytes);
+	return result;
 }
 /**
  * Encodes Malayalam text to compressed base-95 string.
@@ -99,7 +91,7 @@ function encodeMalayalam(text) {
 		const codePoint = char.codePointAt(0);
 		return codePoint <= MALAYALAM_BLOCK_OFFSET ? codePoint + ASCII_COMPRESSION_OFFSET : codePoint - MALAYALAM_BLOCK_OFFSET;
 	});
-	return encodeBase95(bytes);
+	return encodeBase95(Uint8Array.from(bytes));
 }
 /**
  * Decodes compressed base-95 string back to Malayalam text.
@@ -108,5 +100,7 @@ function encodeMalayalam(text) {
  */
 function decodeMalayalam(encoded) {
 	const bytes = decodeBase95(encoded);
-	return bytes.map(byte => (byte > ASCII_COMPRESSION_OFFSET ? byte - ASCII_COMPRESSION_OFFSET : byte + MALAYALAM_BLOCK_OFFSET)).reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
+	return Array.from(bytes)
+		.map(byte => (byte > ASCII_COMPRESSION_OFFSET ? byte - ASCII_COMPRESSION_OFFSET : byte + MALAYALAM_BLOCK_OFFSET))
+		.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
 }

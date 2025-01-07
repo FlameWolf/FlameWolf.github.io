@@ -164,7 +164,7 @@
 					return flattenUint8Array(chunks);
 				};
 				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
-				const base95ToUnicode = async input => decoder.decode(await gunzip(Uint8Array.from(decodeBase95(input))));
+				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const dlgErrorAlert = document.getElementById("error-alert");
@@ -246,7 +246,7 @@
 						const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
 						combinedArray.set(encryptIv, 0);
 						combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
-						txtEncryptedOutput.value = encodeBase95(Array.from(combinedArray));
+						txtEncryptedOutput.value = encodeBase95(combinedArray);
 					} else {
 						txtEncryptedOutput.value = "";
 					}
@@ -272,7 +272,7 @@
 					);
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
-						const combinedArray = Uint8Array.from(decodeBase95(cipherText));
+						const combinedArray = decodeBase95(cipherText);
 						const decryptIv = combinedArray.slice(0, ivLength);
 						const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
 						txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
