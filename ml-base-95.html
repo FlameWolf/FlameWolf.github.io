@@ -63,11 +63,67 @@
 			}
 			/*]]>*/
 		</style>
-		<script type="text/javascript" src="JavaScript/ml-base-95.js"></script>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const MALAYALAM_BLOCK_OFFSET = 3327;
+				const ASCII_COMPRESSION_OFFSET = 128;
+				const flattenUint8Array = input => {
+					let result = [];
+					for (const item of input) {
+						if (item instanceof Uint8Array) {
+							result = result.concat(Array.from(flattenUint8Array(item)));
+						} else {
+							result.push(item);
+						}
+					}
+					return new Uint8Array(result);
+				};
+				const gzip = async input => {
+					const cs = new CompressionStream("gzip");
+					const writer = cs.writable.getWriter();
+					writer.write(input);
+					writer.close();
+					const reader = cs.readable.getReader();
+					const chunks = [];
+					let [done, value] = [null, null];
+					while ((({ done, value } = await reader.read()), !done)) {
+						chunks.push(value);
+					}
+					return flattenUint8Array(chunks);
+				};
+				const gunzip = async input => {
+					const ds = new DecompressionStream("gzip");
+					const writer = ds.writable.getWriter();
+					writer.write(input);
+					writer.close();
+					const reader = ds.readable.getReader();
+					const chunks = [];
+					let [done, value] = [null, null];
+					while ((({ done, value } = await reader.read()), !done)) {
+						chunks.push(value);
+					}
+					return flattenUint8Array(chunks);
+				};
+				const encodeMalayalam = async text => {
+					const bytes = new Uint8Array(text.length);
+					bytes.set(
+						Array.from(text).map(char => {
+							const codePoint = char.codePointAt(0);
+							return codePoint <= MALAYALAM_BLOCK_OFFSET ? codePoint + ASCII_COMPRESSION_OFFSET : codePoint - MALAYALAM_BLOCK_OFFSET;
+						}),
+						0
+					);
+					return encodeBase95(await gzip(bytes));
+				};
+				const decodeMalayalam = async encoded => {
+					const bytes = await gunzip(decodeBase95(encoded));
+					return Array.from(bytes)
+						.map(byte => (byte > ASCII_COMPRESSION_OFFSET ? byte - ASCII_COMPRESSION_OFFSET : byte + MALAYALAM_BLOCK_OFFSET))
+						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
+				};
 				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncode = document.getElementById("encode");
 				const btnCopyEncoded = document.getElementById("copy-encoded");
@@ -115,7 +171,7 @@
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value.trim();
 					if (input) {
-						txtEncodedOutput.value = encodeMalayalam(input);
+						txtEncodedOutput.value = await encodeMalayalam(input);
 					} else {
 						txtEncodedOutput.value = "";
 					}
@@ -125,7 +181,7 @@
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
-						txtDecodedOutput.value = decodeMalayalam(cipherText);
+						txtDecodedOutput.value = await decodeMalayalam(cipherText);
 					} else {
 						txtDecodedOutput.value = "";
 					}
