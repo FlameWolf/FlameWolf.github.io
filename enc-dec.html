@@ -17,8 +17,8 @@
 			}
 			.tab-bar {
 				display: flex;
+				margin: var(--margin) auto;
 				.tab-btn {
-					margin-bottom: 2pt;
 					margin-right: 2pt;
 					cursor: pointer;
 					&.active {
@@ -48,7 +48,7 @@
 			}
 			#message {
 				flex-grow: 1;
-				padding: var(--padding);
+				padding: calc(2 * var(--padding));
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
 				margin: var(--margin) auto;
