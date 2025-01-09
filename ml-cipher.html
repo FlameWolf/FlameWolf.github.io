@@ -119,7 +119,6 @@
 						activeCipherScheme = cipherSchemes[btn.dataset["schemeId"]];
 						const currSchemeName = activeCipherScheme.name;
 						if (currSchemeName !== prevSchemeName) {
-							txtOutput.value = "";
 							localStorage.setItem("schemeName", currSchemeName);
 						}
 						selectCipherTabBarButtons.forEach(x => x.classList.remove("active"));
@@ -136,7 +135,7 @@
 				btnConvert.addEventListener("click", async () => {
 					var input = txtInput.value.trim();
 					if (input) {
-						txtOutput.value = encDec(input);
+						txtOutput.value = transformText(input);
 					}
 				});
 				btnCopy.addEventListener("click", async () => {
@@ -154,7 +153,6 @@
 				} else {
 					selectCipherTabBarButtons[0].dispatchEvent(new Event("click"));
 				}
-				txtOutput.value = "";
 			});
 		</script>
 	</head>

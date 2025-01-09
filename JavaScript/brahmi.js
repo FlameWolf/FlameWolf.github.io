@@ -1,12 +1,6 @@
 "use strict";
 
-/**
- * Mappings between visually identical Malayalam glyph sequences and their atomic
- * equivalents. Where first glyph of each pair uses the sequence <base character> +
- * VIRAMA (്) + ZERO-WIDTH JOINER (ZWJ) to represent a chillu character, the second
- * glyph uses a single atomic chillu character instead.
- */
-const similarPairs = [
+const similarVariants = [
 	["ന്‍റ", "ൻ്റ"],
 	["മ്‍", "ൔ"],
 	["യ്‍", "ൕ"],
@@ -18,15 +12,11 @@ const similarPairs = [
 	["ള്‍", "ൾ"],
 	["ക്‍", "ൿ"]
 ];
-/**
- * Bidirectional mapping between Malayalam and Brahmi script characters.
- */
-const charMap = new Map([
+const baseTransforms = [
 	["അ", "𑀅"],
 	["ആ", "𑀆"],
 	["ഇ", "𑀇"],
 	["ഈ", "𑀈"],
-	["ൟ", "𑀈"],
 	["ഉ", "𑀉"],
 	["ഊ", "𑀊"],
 	["ഋ", "𑀋"],
@@ -54,7 +44,6 @@ const charMap = new Map([
 	["ൊ", "𑁴"],
 	["ോ", "𑁄"],
 	["ൌ", "𑁅"],
-	["ൗ", "𑁅"],
 	["ം", "𑀁"],
 	["ഃ", "𑀂"],
 	["്", "𑁆"],
@@ -106,7 +95,6 @@ const charMap = new Map([
 	["൮", "𑁮"],
 	["൯", "𑁯"],
 	["ഺ", "𑌟"],
-	["ൎ", "𑀭𑁰"],
 	["ൔ", "𑀫𑁰"],
 	["ൕ", "𑀬𑁰"],
 	["ൖ", "𑀵𑁰"],
@@ -115,130 +103,27 @@ const charMap = new Map([
 	["ർ", "𑀭𑁰"],
 	["ൽ", "𑀮𑁰"],
 	["ൾ", "𑀴𑁰"],
-	["ൿ", "𑀓𑁰"],
-	["𑀅", "അ"],
-	["𑀆", "ആ"],
-	["𑀇", "ഇ"],
-	["𑀈", "ഈ"],
-	["𑀉", "ഉ"],
-	["𑀊", "ഊ"],
-	["𑀋", "ഋ"],
-	["𑀌", "ൠ"],
-	["𑀍", "ഌ"],
-	["𑀎", "ൡ"],
-	["𑁱", "എ"],
-	["𑀏", "ഏ"],
-	["𑀐", "ഐ"],
-	["𑁲", "ഒ"],
-	["𑀑", "ഓ"],
-	["𑀒", "ഔ"],
-	["𑀸", "ാ"],
-	["𑀺", "ി"],
-	["𑀻", "ീ"],
-	["𑀼", "ു"],
-	["𑀽", "ൂ"],
-	["𑀾", "ൃ"],
-	["𑀿", "ൄ"],
-	["𑁀", "ൢ"],
-	["𑁁", "ൣ"],
-	["𑁳", "െ"],
-	["𑁂", "േ"],
-	["𑁃", "ൈ"],
-	["𑁴", "ൊ"],
-	["𑁄", "ോ"],
-	["𑁅", "ൌ"],
-	["𑀁", "ം"],
-	["𑀂", "ഃ"],
-	["𑁆", "്"],
-	["𑀓", "ക"],
-	["𑀔", "ഖ"],
-	["𑀕", "ഗ"],
-	["𑀖", "ഘ"],
-	["𑀗", "ങ"],
-	["𑀘", "ച"],
-	["𑀙", "ഛ"],
-	["𑀚", "ജ"],
-	["𑀛", "ഝ"],
-	["𑀜", "ഞ"],
-	["𑀝", "ട"],
-	["𑀞", "ഠ"],
-	["𑀟", "ഡ"],
-	["𑀠", "ഢ"],
-	["𑀡", "ണ"],
-	["𑀢", "ത"],
-	["𑀣", "ഥ"],
-	["𑀤", "ദ"],
-	["𑀥", "ധ"],
-	["𑀦", "ന"],
-	["𑀧", "പ"],
-	["𑀨", "ഫ"],
-	["𑀩", "ബ"],
-	["𑀪", "ഭ"],
-	["𑀫", "മ"],
-	["𑀬", "യ"],
-	["𑀭", "ര"],
-	["𑀮", "ല"],
-	["𑀯", "വ"],
-	["𑀰", "ശ"],
-	["𑀱", "ഷ"],
-	["𑀲", "സ"],
-	["𑀳", "ഹ"],
-	["𑀴", "ള"],
-	["𑀵", "ഴ"],
-	["𑀶", "റ"],
-	["𑀷", "ഩ"],
-	["𑁦", "൦"],
-	["𑁧", "൧"],
-	["𑁨", "൨"],
-	["𑁩", "൩"],
-	["𑁪", "൪"],
-	["𑁫", "൫"],
-	["𑁬", "൬"],
-	["𑁭", "൭"],
-	["𑁮", "൮"],
-	["𑁯", "൯"],
-	["𑌟", "ഺ"],
-	["𑀫𑁰", "ൔ"],
-	["𑀬𑁰", "ൕ"],
-	["𑀵𑁰", "ൖ"],
-	["𑀡𑁰", "ൺ"],
-	["𑀷𑁰", "ൻ"],
-	["𑀭𑁰", "ർ"],
-	["𑀮𑁰", "ൽ"],
-	["𑀴𑁰", "ൾ"],
-	["𑀓𑁰", "ൿ"]
-]);
-/**
- * Multi-character Brahmi sequences from the predefined character map,
- * sorted by decreasing order of length for proper matching precedence.
- */
-const mappedConjuncts = Array.from(charMap.keys())
-	.filter(x => Array.from(x).length > 1)
-	.sort((x, y) => x.length < y.length);
-/**
- * Regular expression pattern for splitting Malayalam text
- * into tokens while preserving multi-character sequences.
- */
-const tokenisationPattern = new RegExp(`(${mappedConjuncts.join("|")}|\\s|\\S)`, "gu");
-/**
- * Swaps a Malayalam/Brahmi character based on the predefined character map.
- * @param {string} char The input character to be swapped
- * @returns {string} The mapped character or the original character if no mapping exists
- */
-const swapChar = char => charMap.get(char) || char;
-/**
- * Transforms Malayalam/Brahmi text by normalising visually identical Malayalam
- * glyph sequences and substituting characters as per the predefined mappings.
- * @param {string} inputString The input Malayalam text to be transformed
- * @returns {string} The transformed text with character substitutions applied
- */
-const encDec = inputString => {
-	// First pass: Replace similar character pairs
-	for (const [conjunct, atomic] of similarPairs) {
-		inputString = inputString.replaceAll(conjunct, atomic);
+	["ൿ", "𑀓𑁰"]
+];
+const additionalTransforms = [
+	["ൟ", "𑀈"],
+	["ൗ", "𑁅"],
+	["ൎ", "𑀭𑁰"]
+];
+const transformMap = (() => {
+	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
+	return new Map([...baseTransforms, ...reverseTransforms, ...additionalTransforms]);
+})();
+const tokenisationPattern = (() => {
+	const mappedConjuncts = Array.from(transformMap.keys())
+		.filter(x => Array.from(x).length > 1)
+		.sort((x, y) => y.length - x.length);
+	return new RegExp(`(${mappedConjuncts.join("|")}|\\S)`, "gu");
+})();
+const transformToken = token => transformMap.get(token) ?? token;
+const transformText = text => {
+	for (const [conjunct, atomic] of similarVariants) {
+		text = text.replaceAll(conjunct, atomic);
 	}
-	// Split text into tokens while preserving surrogate pairs and conjuncts
-	const chars = inputString.match(tokenisationPattern);
-	// Second pass: Apply character substitutions
-	return chars.map(swapChar).join("");
+	return text.replace(tokenisationPattern, transformToken);
 };

@@ -1,12 +1,6 @@
 "use strict";
 
-/**
- * Mappings between visually identical Malayalam glyph sequences and their atomic
- * equivalents. Where first glyph of each pair uses the sequence <base character> +
- * VIRAMA (്) + ZERO-WIDTH JOINER (ZWJ) to represent a chillu character, the second
- * glyph uses a single atomic chillu character instead.
- */
-const similarPairs = [
+const similarVariants = [
 	["ന്‍റ", "ൻ്റ"],
 	["മ്‍", "ൔ"],
 	["യ്‍", "ൕ"],
@@ -18,13 +12,9 @@ const similarPairs = [
 	["ള്‍", "ൾ"],
 	["ക്‍", "ൿ"]
 ];
-/**
- * Bidirectional Malayalam character substitution mappings.
- */
-const charMap = new Map([
+const baseTransforms = [
 	["ഇ", "ഉ"],
 	["ഈ", "ഊ"],
-	["ൟ", "ഊ"],
 	["ഋ", "ഌ"],
 	["ൠ", "ൡ"],
 	["എ", "ഒ"],
@@ -53,17 +43,12 @@ const charMap = new Map([
 	["ഢ", "ഹ"],
 	["ണ", "ള"],
 	["യ", "വ"],
-	["ൕ", "വ്"],
 	["ര", "ശ"],
 	["ല", "സ"],
 	["ഺ", "ഩ"],
 	["ൿ", "ൺ"],
-	["ക്‍", "ൺ"],
 	["ൾ", "ർ"],
-	["ള്‍", "ർ"],
 	["ൽ", "ൻ"],
-	["ല്‍", "ൻ"],
-	["ന്‍റ", "ൽ്ട"],
 	["൦", "൯"],
 	["൧", "൮"],
 	["൨", "൭"],
@@ -73,78 +58,24 @@ const charMap = new Map([
 	["1", "8"],
 	["2", "7"],
 	["3", "6"],
-	["4", "5"],
-	["5", "4"],
-	["6", "3"],
-	["7", "2"],
-	["8", "1"],
-	["9", "0"],
-	["൫", "൪"],
-	["൬", "൩"],
-	["൭", "൨"],
-	["൮", "൧"],
-	["൯", "൦"],
-	["ഉ", "ഇ"],
-	["ഊ", "ഈ"],
-	["ഌ", "ഋ"],
-	["ൡ", "ൠ"],
-	["ഒ", "എ"],
-	["ഓ", "ഏ"],
-	["ഔ", "ഐ"],
-	["ു", "ി"],
-	["ൂ", "ീ"],
-	["ൢ", "ൃ"],
-	["ൣ", "ൄ"],
-	["ൊ", "െ"],
-	["ോ", "േ"],
-	["ൌ", "ൈ"],
+	["4", "5"]
+];
+const additionalTransforms = [
+	["ൟ", "ഊ"],
+	["ൕ", "വ്"],
 	["ൗ", "ൈ"],
-	["പ", "ക"],
-	["ഫ", "ഖ"],
-	["ബ", "ഗ"],
-	["ഭ", "ഘ"],
-	["മ", "ങ"],
 	["ൔ", "ങ്"],
-	["ത", "ച"],
-	["ഥ", "ഛ"],
-	["ദ", "ജ"],
-	["ധ", "ഝ"],
-	["ന", "ഞ"],
-	["റ", "ട"],
-	["ഴ", "ഠ"],
 	["ൖ", "ഠ്"],
-	["ഷ", "ഡ"],
-	["ഹ", "ഢ"],
-	["ള", "ണ"],
-	["വ", "യ"],
-	["ശ", "ര"],
-	["സ", "ല"],
-	["ഩ", "ഺ"],
-	["ൺ", "ൿ"],
-	["ണ്‍", "ൿ"],
-	["ർ", "ൾ"],
-	["ര്‍", "ൾ"],
-	["ൎ", "ൾ"],
-	["ൻ", "ൽ"],
-	["ന്‍", "ൽ"]
-]);
-/**
- * Swaps a Malayalam character based on the predefined character map.
- * @param {string} char The input character to be swapped
- * @returns {string} The mapped character or the original character if no mapping exists
- */
-const swapChar = char => charMap.get(char) || char;
-/**
- * Transforms Malayalam text by normalising visually identical Malayalam
- * glyph sequences and substituting characters as per the predefined mappings.
- * @param {string} inputString The input Malayalam text to be transformed
- * @returns {string} The transformed text with character substitutions applied
- */
-const encDec = inputString => {
-	// First pass: Replace similar character pairs
-	for (const [conjunct, atomic] of similarPairs) {
-		inputString = inputString.replaceAll(conjunct, atomic);
+	["ൎ", "ൾ"]
+];
+const transformMap = (() => {
+	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
+	return new Map([...baseTransforms, ...reverseTransforms, ...additionalTransforms]);
+})();
+const transformToken = token => transformMap.get(token) ?? token;
+const transformText = text => {
+	for (const [conjunct, atomic] of similarVariants) {
+		text = text.replaceAll(conjunct, atomic);
 	}
-	// Second pass: Apply character substitutions
-	return Array.from(inputString).map(swapChar).join("");
+	return text.replace(/\S/gu, transformToken);
 };

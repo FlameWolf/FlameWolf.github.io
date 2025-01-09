@@ -69,7 +69,7 @@
 				btnConvert.addEventListener("click", async () => {
 					var input = txtInput.value.trim();
 					if (input) {
-						txtOutput.value = encDec(input);
+						txtOutput.value = transformText(input);
 					} else {
 						txtOutput.value = "";
 					}

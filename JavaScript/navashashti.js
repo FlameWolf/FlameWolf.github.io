@@ -1,12 +1,6 @@
 "use strict";
 
-/**
- * Mappings between visually identical Malayalam glyph sequences and their atomic
- * equivalents. Where first glyph of each pair uses the sequence <base character> +
- * VIRAMA (്) + ZERO-WIDTH JOINER (ZWJ) to represent a chillu character, the second
- * glyph uses a single atomic chillu character instead.
- */
-const similarPairs = [
+const similarVariants = [
 	["ന്‍റ", "ൻ്റ"],
 	["മ്‍", "ൔ"],
 	["യ്‍", "ൕ"],
@@ -18,10 +12,7 @@ const similarPairs = [
 	["ള്‍", "ൾ"],
 	["ക്‍", "ൿ"]
 ];
-/**
- * Bidirectional Malayalam character substitution mappings.
- */
-const charMap = new Map([
+const baseTransforms = [
 	["ഇ", "എ"],
 	["ഈ", "ഏ"],
 	["ഋ", "ഌ"],
@@ -64,115 +55,34 @@ const charMap = new Map([
 	["൦", "൪"],
 	["൧", "൩"],
 	["൨", "൭"],
-	["൩", "൧"],
-	["൪", "൦"],
 	["൫", "൯"],
 	["൬", "൮"],
-	["൭", "൨"],
-	["൮", "൬"],
-	["൯", "൫"],
 	["0", "4"],
 	["1", "3"],
 	["2", "7"],
-	["3", "1"],
-	["4", "0"],
 	["5", "9"],
 	["6", "8"],
-	["7", "2"],
-	["8", "6"],
-	["9", "5"],
-	["4", "0"],
-	["3", "1"],
-	["7", "2"],
-	["1", "3"],
-	["0", "4"],
-	["9", "5"],
-	["8", "6"],
-	["2", "7"],
-	["6", "8"],
-	["5", "9"],
-	["൪", "൦"],
-	["൩", "൧"],
-	["൭", "൨"],
 	["൧", "൩"],
 	["൦", "൪"],
-	["൯", "൫"],
-	["൮", "൬"],
 	["൨", "൭"],
 	["൬", "൮"],
-	["൫", "൯"],
-	["എ", "ഇ"],
-	["ഏ", "ഈ"],
-	["ഌ", "ഋ"],
-	["ൡ", "ൠ"],
-	["ഒ", "ഉ"],
-	["ഓ", "ഊ"],
-	["ഔ", "ഐ"],
-	["െ", "ി"],
-	["േ", "ീ"],
-	["ൢ", "ൃ"],
-	["ൣ", "ൄ"],
-	["ൊ", "ു"],
-	["ോ", "ൂ"],
-	["ൌ", "ൈ"],
-	["ൗ", "ൈ"],
-	["മ", "ക"],
-	["ഭ", "ഖ"],
-	["ബ", "ഗ"],
-	["ന", "ച"],
-	["ധ", "ഛ"],
-	["ദ", "ജ"],
-	["ണ", "ട"],
-	["ഢ", "ഠ"],
-	["സ", "ഡ"],
-	["ഞ", "ത"],
-	["ഝ", "ഥ"],
-	["ങ", "പ"],
-	["ഘ", "ഫ"],
-	["ള", "യ"],
-	["ഴ", "ര"],
-	["റ", "ല"],
-	["ശ", "വ"],
-	["ഹ", "ഷ"],
-	["ൔ", "ൿ"],
-	["ൕ", "ൾ"],
-	["ട്‍", "ൺ"],
-	["റ്‍", "ൽ"],
-	["ൖ", "ർ"],
-	["ച്‍", "ൻ"],
-	["ഺ", "ഩ"]
-]);
-/**
- * Multi-character Malayalam sequences from the predefined character map,
- * sorted by decreasing order of length for proper matching precedence.
- */
-const mappedConjuncts = Array.from(charMap.keys())
-	.filter(x => Array.from(x).length > 1)
-	.sort((x, y) => x.length < y.length);
-/**
- * Regular expression pattern for splitting Malayalam text
- * into tokens while preserving multi-character sequences.
- */
-const tokenisationPattern = new RegExp(`(${mappedConjuncts.join("|")}|\\s|\\S)`, "gu");
-/**
- * Swaps a Malayalam character based on the predefined character map.
- * @param {string} char The input character to be swapped
- * @returns {string} The mapped character or the original character if no mapping exists
- */
-const swapChar = char => charMap.get(char) || char;
-/**
- * Transforms Malayalam text by normalising visually identical Malayalam
- * glyph sequences and substituting characters as per the predefined mappings.
- * @param {string} inputString The input Malayalam text to be transformed
- * @returns {string} The transformed text with character substitutions applied
- */
-const encDec = inputString => {
-	// First pass: Replace similar character pairs
-	for (const [conjunct, atomic] of similarPairs) {
-		inputString = inputString.replaceAll(conjunct, atomic);
+	["൫", "൯"]
+];
+const additionalTransforms = [["ൗ", "ൈ"]];
+const transformMap = (() => {
+	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
+	return new Map([...baseTransforms, ...reverseTransforms, ...additionalTransforms]);
+})();
+const tokenisationPattern = (() => {
+	const mappedConjuncts = Array.from(transformMap.keys())
+		.filter(x => Array.from(x).length > 1)
+		.sort((x, y) => y.length - x.length);
+	return new RegExp(`(${mappedConjuncts.join("|")}|\\S)`, "gu");
+})();
+const transformToken = token => transformMap.get(token) ?? token;
+const transformText = text => {
+	for (const [conjunct, atomic] of similarVariants) {
+		text = text.replaceAll(conjunct, atomic);
 	}
-	// Split text into tokens while preserving surrogate pairs and conjuncts
-	const chars = inputString.match(tokenisationPattern);
-	// Second pass: Apply character substitutions
-	return chars.map(swapChar).join("");
+	return text.replace(tokenisationPattern, transformToken);
 };
