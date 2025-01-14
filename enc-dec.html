@@ -51,16 +51,29 @@
 				height: 100%;
 			}
 			.encrypt-key-holder {
-				display: flex;
-				flex-direction: column;
-				height: 100%;
+				display: grid;
+				gap: var(--margin);
+				place-items: stretch;
+				place-content: stretch;
+				& > .key {
+					grid-column: 1 / span 1;
+					grid-row: 1 / span 1;
+				}
+				& > .message {
+					grid-column: 1 / span 1;
+					grid-row: 2 / span 1;
+				}
+				& > .qr-code {
+					grid-column: 2 / span 1;
+					grid-row: 1 / span 2;
+					display: block;
+					border-radius: var(--border-radius);
+				}
 			}
 			#message {
-				flex-grow: 1;
 				padding: calc(2 * var(--padding));
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
-				margin: var(--margin) auto;
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
@@ -84,13 +97,6 @@
 				resize: none;
 				&.key {
 					min-height: 50pt;
-				}
-			}
-			.qr-holder {
-				width: 25%;
-				& > img {
-					border-radius: var(--border-radius);
-					box-shadow: var(--box-shadow);
 				}
 			}
 			/*]]>*/
@@ -324,16 +330,14 @@
 					</thead>
 					<tbody>
 						<tr>
-							<td>
+							<td colspan="2">
 								<div class="encrypt-key-holder">
 									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
 									<div id="message">
 										<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
 									</div>
+									<img id="output-qr-code" class="qr-code"/>
 								</div>
-							</td>
-							<td class="qr-holder align-end">
-								<img id="output-qr-code"/>
 							</td>
 						</tr>
 					</tbody>
