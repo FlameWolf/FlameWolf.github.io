@@ -60,7 +60,7 @@ const baseTransforms = [
 	["3", "6"],
 	["4", "5"]
 ];
-const additionalTransforms = [
+const oneWayTransforms = [
 	["ൟ", "ഊ"],
 	["ൕ", "വ്"],
 	["ൗ", "ൈ"],
@@ -70,12 +70,11 @@ const additionalTransforms = [
 ];
 const transformMap = (() => {
 	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
-	return new Map([...baseTransforms, ...reverseTransforms, ...additionalTransforms]);
+	return new Map([...baseTransforms, ...reverseTransforms, ...oneWayTransforms]);
 })();
-const transformToken = token => transformMap.get(token) ?? token;
-const transformText = text => {
+const transformText = input => {
 	for (const [conjunct, atomic] of similarVariants) {
-		text = text.replaceAll(conjunct, atomic);
+		input = input.replaceAll(conjunct, atomic);
 	}
-	return text.replace(/\S/gu, transformToken);
+	return input.replace(/\S/gu, token => transformMap.get(token) ?? token);
 };

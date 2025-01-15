@@ -65,7 +65,7 @@ const baseTransforms = [
 	["7", "8"],
 	["9", "0"]
 ];
-const additionalTransforms = [
+const oneWayTransforms = [
 	["ൟ", "കീ"],
 	["ൕ", "ശ്"],
 	["ൎ", "ഷ്‍"],
@@ -76,7 +76,7 @@ const additionalTransforms = [
 ];
 const transformMap = (() => {
 	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
-	return new Map([...baseTransforms, ...reverseTransforms, ...additionalTransforms]);
+	return new Map([...baseTransforms, ...reverseTransforms, ...oneWayTransforms]);
 })();
 const tokenisationPattern = (() => {
 	const mappedConjuncts = Array.from(transformMap.keys())
@@ -84,10 +84,9 @@ const tokenisationPattern = (() => {
 		.sort((x, y) => y.length - x.length);
 	return new RegExp(`(${mappedConjuncts.join("|")}|\\S)`, "gu");
 })();
-const transformToken = token => transformMap.get(token) ?? token;
-const transformText = text => {
+const transformText = input => {
 	for (const [conjunct, atomic] of similarVariants) {
-		text = text.replaceAll(conjunct, atomic);
+		input = input.replaceAll(conjunct, atomic);
 	}
-	return text.replace(tokenisationPattern, transformToken);
+	return input.replace(tokenisationPattern, token => transformMap.get(token) ?? token);
 };

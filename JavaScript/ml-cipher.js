@@ -70,7 +70,7 @@ const cipherSchemes = {
 			["7", "8"],
 			["9", "0"]
 		],
-		additionalTransforms: [
+		oneWayTransforms: [
 			["ൟ", "കീ"],
 			["ഩ", "മ"],
 			["ൕ", "ശ്"],
@@ -137,7 +137,7 @@ const cipherSchemes = {
 			["7", "8"],
 			["9", "0"]
 		],
-		additionalTransforms: [
+		oneWayTransforms: [
 			["ൟ", "കീ"],
 			["ൕ", "ശ്"],
 			["ൎ", "ഷ്‍"],
@@ -151,7 +151,7 @@ const cipherSchemes = {
 for (const scheme of Object.values(cipherSchemes)) {
 	const baseTransforms = scheme.baseTransforms;
 	const reverseTransforms = baseTransforms.map(([x, y]) => [y, x]);
-	const transformMap = new Map([...baseTransforms, ...reverseTransforms, ...scheme.additionalTransforms]);
+	const transformMap = new Map([...baseTransforms, ...reverseTransforms, ...scheme.oneWayTransforms]);
 	const mappedConjuncts = Array.from(transformMap.keys())
 		.filter(x => Array.from(x).length > 1)
 		.sort((x, y) => y.length - x.length);
@@ -162,10 +162,10 @@ for (const scheme of Object.values(cipherSchemes)) {
 	});
 }
 let activeCipherScheme = cipherSchemes["moolabhadri"];
-const transformToken = token => activeCipherScheme.transformMap.get(token) ?? token;
-const transformText = text => {
+const transformText = input => {
 	for (const [conjunct, atomic] of similarVariants) {
-		text = text.replaceAll(conjunct, atomic);
+		input = input.replaceAll(conjunct, atomic);
 	}
-	return text.replace(activeCipherScheme.tokenisationPattern, transformToken);
+	const { tokenisationPattern, transformMap } = activeCipherScheme;
+	return input.replace(tokenisationPattern, token => transformMap.get(token) ?? token);
 };
