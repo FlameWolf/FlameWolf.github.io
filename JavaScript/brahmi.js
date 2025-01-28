@@ -118,7 +118,7 @@ const tokenisationPattern = (() => {
 	const mappedConjuncts = Array.from(transformMap.keys())
 		.filter(x => Array.from(x).length > 1)
 		.sort((x, y) => y.length - x.length);
-	return new RegExp(`(${mappedConjuncts.join("|")}|\\S)`, "gu");
+	return new RegExp(`${mappedConjuncts.join("|")}|\\S`, "gu");
 })();
 const transformText = input => {
 	for (const [conjunct, atomic] of similarVariants) {

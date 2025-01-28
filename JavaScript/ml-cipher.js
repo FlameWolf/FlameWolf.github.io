@@ -155,7 +155,7 @@ for (const scheme of Object.values(cipherSchemes)) {
 	const mappedConjuncts = Array.from(transformMap.keys())
 		.filter(x => Array.from(x).length > 1)
 		.sort((x, y) => y.length - x.length);
-	const tokenisationPattern = new RegExp(`(${mappedConjuncts.length ? `${mappedConjuncts.join("|")}|` : ""}\\S)`, "gu");
+	const tokenisationPattern = new RegExp(`${mappedConjuncts.length ? `${mappedConjuncts.join("|")}|` : ""}\\S`, "gu");
 	Object.assign(scheme, {
 		transformMap,
 		tokenisationPattern
