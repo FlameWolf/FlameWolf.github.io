@@ -37,8 +37,7 @@ function encodeBase95(bytes) {
 		// Convert chunk to base-95 string
 		let chunkResult = "";
 		while (chunkValue > 0n) {
-			const remainder = Number(chunkValue % BASE95_RADIX);
-			chunkResult = base95EncodeMap[remainder] + chunkResult;
+			chunkResult = base95EncodeMap[Number(chunkValue % BASE95_RADIX)] + chunkResult;
 			chunkValue = chunkValue / BASE95_RADIX;
 		}
 		// Pad chunk result to expected length
