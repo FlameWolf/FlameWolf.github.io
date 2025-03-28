@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Base-95 Conversion</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			/*<![CDATA[*/
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.5rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
+				--margin: 0.5rem;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			.tab-bar {
+				display: flex;
+				margin: var(--margin) auto;
+				.tab-btn {
+					margin-right: 2pt;
+					cursor: pointer;
+					&.active {
+						background-color: blue;
+						color: antiquewhite;
+					}
+				}
+				.tab-btn:last-child {
+					margin-right: unset;
+				}
+			}
+			.tab-panel {
+				display: none;
+			}
+			table {
+				width: 100%;
+			}
+			.toggle {
+				transition: all 0.5s ease-in-out;
+			}
+			.hidden {
+				visibility: hidden;
+				opacity: 0;
+			}
+			.align-start {
+				text-align: start;
+			}
+			.align-end {
+				text-align: end;
+			}
+			textarea {
+				width: 100%;
+				min-height: 480pt;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
+				resize: none;
+				&.key {
+					min-height: 50pt;
+				}
+			}
+			/*]]>*/
+		</style>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
+		<script type="text/javascript">
+			"use strict";
+
+			document.addEventListener("DOMContentLoaded", async () => {
+				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
+				const flattenUint8Array = input => {
+					let result = [];
+					for (const item of input) {
+						if (item instanceof Uint8Array) {
+							result = result.concat(Array.from(flattenUint8Array(item)));
+						} else {
+							result.push(item);
+						}
+					}
+					return new Uint8Array(result);
+				};
+				const gzip = async input => {
+					const cs = new CompressionStream("gzip");
+					const writer = cs.writable.getWriter();
+					writer.write(input);
+					writer.close();
+					const reader = cs.readable.getReader();
+					const chunks = [];
+					let [done, value] = [null, null];
+					while ((({ done, value } = await reader.read()), !done)) {
+						chunks.push(value);
+					}
+					return flattenUint8Array(chunks);
+				};
+				const gunzip = async input => {
+					const ds = new DecompressionStream("gzip");
+					const writer = ds.writable.getWriter();
+					writer.write(input);
+					writer.close();
+					const reader = ds.readable.getReader();
+					const chunks = [];
+					let [done, value] = [null, null];
+					while ((({ done, value } = await reader.read()), !done)) {
+						chunks.push(value);
+					}
+					return flattenUint8Array(chunks);
+				};
+				const encodeText = async text => {
+					return encodeBase95(await gzip(encoder.encode(text)));
+				};
+				const decodeText = async encoded => {
+					return decoder.decode(await gunzip(decodeBase95(encoded)));
+				};
+				const btnPastePlainText = document.getElementById("paste-plain-text");
+				const btnEncode = document.getElementById("encode");
+				const btnCopyEncoded = document.getElementById("copy-encoded");
+				const btnPasteEncoded = document.getElementById("paste-encoded");
+				const btnDecode = document.getElementById("decode");
+				const btnCopyDecoded = document.getElementById("copy-decoded");
+				const txtPlainText = document.getElementById("plain-text");
+				const txtEncodedOutput = document.getElementById("encoded-output");
+				const txtCipherText = document.getElementById("cipher-text");
+				const txtDecodedOutput = document.getElementById("decoded-output");
+				const spnHiddenEncoded = document.getElementById("hidden-encoded");
+				const spnHiddenDecoded = document.getElementById("hidden-decoded");
+				const flashElement = elem => {
+					elem.classList.remove("hidden");
+					setTimeout(() => {
+						elem.classList.add("hidden");
+					}, 1500);
+				};
+				const pasteInto = async input => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						input.value = clipboardText;
+					}
+				};
+				const copyFromAndFlash = (input, elem) => {
+					navigator.clipboard.writeText(input.value);
+					flashElement(elem);
+				};
+				[...document.getElementsByClassName("tab-container")].forEach(tc => {
+					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
+					tabBarButtons.forEach(btn => {
+						btn.addEventListener("click", () => {
+							tabBarButtons.forEach(x => x.classList.remove("active"));
+							tc.querySelectorAll(".tab-panel").forEach(tp => tp.style.removeProperty("display"));
+							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.style.setProperty("display", "block");
+							btn.classList.add("active");
+						});
+					});
+					const defaultPanelName = tc.getAttribute("data-default");
+					if (defaultPanelName) {
+						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
+					}
+				});
+				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
+				btnEncode.addEventListener("click", async () => {
+					const input = txtPlainText.value.trim();
+					if (input) {
+						txtEncodedOutput.value = await encodeText(input);
+					} else {
+						txtEncodedOutput.value = "";
+					}
+				});
+				btnCopyEncoded.addEventListener("click", async () => copyFromAndFlash(txtEncodedOutput, spnHiddenEncoded));
+				btnPasteEncoded.addEventListener("click", async () => await pasteInto(txtCipherText));
+				btnDecode.addEventListener("click", async () => {
+					const cipherText = txtCipherText.value;
+					if (cipherText) {
+						txtDecodedOutput.value = await decodeText(cipherText);
+					} else {
+						txtDecodedOutput.value = "";
+					}
+				});
+				btnCopyDecoded.addEventListener("click", async () => copyFromAndFlash(txtDecodedOutput, spnHiddenDecoded));
+			});
+		</script>
+	</head>
+	<body>
+		<h3>Encode/decode text using base-95 conversion and GZip compression</h3>
+		<div class="tab-container" data-default="tab-encode">
+			<div class="tab-bar">
+				<button class="tab-btn" data-href="tab-encode">Encode</button>
+				<button class="tab-btn" data-href="tab-decode">Decode</button>
+			</div>
+			<div class="tab-panel" data-name="tab-encode">
+				<table>
+					<thead>
+						<tr>
+							<td>
+								<h4>Plain Text</h4>
+							</td>
+							<td class="align-end">
+								<button id="paste-plain-text">Paste</button>
+								<button id="encode">Encode</button>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td colspan="2">
+								<textarea id="plain-text"></textarea>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<br/>
+				<table>
+					<thead>
+						<tr>
+							<td>
+								<h4>Base-95 Encoded Text</h4>
+							</td>
+							<td class="align-end">
+								<span id="hidden-encoded" class="toggle hidden">
+									<span>Copied!</span>
+									<span>&#xA0;</span>
+								</span>
+								<button id="copy-encoded">Copy</button>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td colspan="2">
+								<textarea id="encoded-output" readonly="readonly"></textarea>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="tab-panel" data-name="tab-decode">
+				<table>
+					<thead>
+						<tr>
+							<td>
+								<h4>Base-95 Encoded Text</h4>
+							</td>
+							<td class="align-end">
+								<button id="paste-encoded">Paste</button>
+								<button id="decode">Decode</button>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td colspan="2">
+								<textarea id="cipher-text"></textarea>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<br/>
+				<table>
+					<thead>
+						<tr>
+							<td>
+								<h4>Plain Text</h4>
+							</td>
+							<td class="align-end">
+								<span id="hidden-decoded" class="toggle hidden">
+									<span>Copied!</span>
+									<span>&#xA0;</span>
+								</span>
+								<button id="copy-decoded">Copy</button>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td colspan="2">
+								<textarea id="decoded-output" readonly="readonly"></textarea>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
