@@ -140,42 +140,21 @@
 					key,
 					data
 				];
-				const flattenUint8Array = input => {
-					let result = [];
-					for (const item of input) {
-						if (item instanceof Uint8Array) {
-							result = result.concat(Array.from(flattenUint8Array(item)));
-						} else {
-							result.push(item);
-						}
-					}
-					return new Uint8Array(result);
-				};
 				const gzip = async input => {
-					const cs = new CompressionStream("gzip");
-					const writer = cs.writable.getWriter();
+					const stream = new CompressionStream("gzip");
+					const response = new Response(stream.readable);
+					const writer = stream.writable.getWriter();
 					writer.write(input);
 					writer.close();
-					const reader = cs.readable.getReader();
-					const chunks = [];
-					let [done, value] = [null, null];
-					while ((({ done, value } = await reader.read()), !done)) {
-						chunks.push(value);
-					}
-					return flattenUint8Array(chunks);
+					return new Uint8Array(await response.arrayBuffer());
 				};
 				const gunzip = async input => {
-					const ds = new DecompressionStream("gzip");
-					const writer = ds.writable.getWriter();
+					const stream = new DecompressionStream("gzip");
+					const response = new Response(stream.readable);
+					const writer = stream.writable.getWriter();
 					writer.write(input);
 					writer.close();
-					const reader = ds.readable.getReader();
-					const chunks = [];
-					let [done, value] = [null, null];
-					while ((({ done, value } = await reader.read()), !done)) {
-						chunks.push(value);
-					}
-					return flattenUint8Array(chunks);
+					return new Uint8Array(await response.arrayBuffer());
 				};
 				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
 				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
