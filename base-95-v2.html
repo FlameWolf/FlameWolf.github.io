@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Base-95 Conversion Tool</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"/>
+		<style>
+			:root {
+				--primary-color: #2563eb;
+				--primary-hover: #1d4ed8;
+				--success-color: #10b981;
+				--error-color: #ef4444;
+				--warning-color: #f59e0b;
+				--bg-color: #ffffff;
+				--surface-color: #f8fafc;
+				--text-color: #1f2937;
+				--text-secondary: #6b7280;
+				--border-color: #d1d5db;
+				--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+				--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+				--radius: 0.5rem;
+				--transition: all 0.2s ease-in-out;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg-color: #111827;
+					--surface-color: #1f2937;
+					--text-color: #f9fafb;
+					--text-secondary: #9ca3af;
+					--border-color: #374151;
+					--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+					--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+				}
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				background-color: var(--bg-color);
+				color: var(--text-color);
+				line-height: 1.6;
+				margin: 0;
+				padding: 1rem;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+			}
+
+			.header {
+				text-align: center;
+				margin-bottom: 2rem;
+
+				h1 {
+					margin: 0 0 0.5rem 0;
+					color: var(--primary-color);
+				}
+
+				p {
+					color: var(--text-secondary);
+					margin: 0;
+				}
+			}
+
+			.tab-container {
+				background: var(--surface-color);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				overflow: hidden;
+			}
+
+			.tab-bar {
+				display: flex;
+				background: var(--surface-color);
+				border-bottom: 1px solid var(--border-color);
+			}
+
+			.tab-btn {
+				flex: 1;
+				padding: 1rem;
+				border: none;
+				background: transparent;
+				color: var(--text-secondary);
+				cursor: pointer;
+				transition: var(--transition);
+				font-weight: 500;
+				position: relative;
+
+				&:hover {
+					background: var(--bg-color);
+					color: var(--text-color);
+				}
+
+				&.active {
+					color: var(--primary-color);
+					background: var(--bg-color);
+
+					&::after {
+						content: "";
+						position: absolute;
+						bottom: 0;
+						left: 0;
+						right: 0;
+						height: 2px;
+						background: var(--primary-color);
+					}
+				}
+			}
+
+			.tab-panel {
+				display: none;
+				padding: 2rem;
+
+				&.active {
+					display: block;
+				}
+			}
+
+			.section {
+				margin-bottom: 2rem;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+
+			.section-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 1rem;
+			}
+
+			.section-title {
+				margin: 0;
+				font-size: 1.125rem;
+				font-weight: 600;
+			}
+
+			.section-actions {
+				display: flex;
+				gap: 0.5rem;
+				align-items: center;
+			}
+
+			.btn {
+				padding: 0.5rem 1rem;
+				border: 1px solid var(--border-color);
+				border-radius: var(--radius);
+				background: var(--bg-color);
+				color: var(--text-color);
+				cursor: pointer;
+				transition: var(--transition);
+				font-size: 0.875rem;
+				font-weight: 500;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.25rem;
+
+				&:hover:not(:disabled) {
+					background: var(--surface-color);
+					border-color: var(--primary-color);
+
+					&:disabled {
+						opacity: 0.5;
+						cursor: not-allowed;
+					}
+				}
+			}
+
+			.btn-primary {
+				background: var(--primary-color);
+				color: white;
+				border-color: var(--primary-color);
+
+				&:hover:not(:disabled) {
+					background: var(--primary-hover);
+					border-color: var(--primary-hover);
+				}
+			}
+
+			.btn-success {
+				background: var(--success-color);
+				color: white;
+				border-color: var(--success-color);
+			}
+
+			textarea {
+				width: 100%;
+				min-height: 300px;
+				padding: 1rem;
+				border: 1px solid var(--border-color);
+				border-radius: var(--radius);
+				background: var(--bg-color);
+				color: var(--text-color);
+				resize: vertical;
+				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+				font-size: 0.875rem;
+				line-height: 1.5;
+				transition: var(--transition);
+
+				&:focus {
+					outline: none;
+					border-color: var(--primary-color);
+					box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+				}
+
+				&.drag-over {
+					border-color: var(--primary-color);
+					background: rgba(37, 99, 235, 0.05);
+				}
+			}
+
+			.stats {
+				display: flex;
+				gap: 1rem;
+				margin-top: 0.5rem;
+				font-size: 0.75rem;
+				color: var(--text-secondary);
+			}
+
+			.stat {
+				display: flex;
+				align-items: center;
+				gap: 0.25rem;
+			}
+
+			.toast {
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				padding: 0.75rem 1rem;
+				border-radius: var(--radius);
+				box-shadow: var(--shadow-lg);
+				transform: translateX(100%);
+				opacity: 0;
+				transition: var(--transition);
+				z-index: 1000;
+				font-weight: 500;
+
+				&.show {
+					transform: translateX(0);
+					opacity: 1;
+				}
+			}
+
+			.toast-success {
+				background: var(--success-color);
+				color: white;
+			}
+
+			.toast-error {
+				background: var(--error-color);
+				color: white;
+			}
+
+			.spinner {
+				width: 16px;
+				height: 16px;
+				border: 2px solid transparent;
+				border-top: 2px solid currentColor;
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.shortcuts {
+				margin-top: 2rem;
+				padding: 1rem;
+				background: var(--surface-color);
+				border-radius: var(--radius);
+				font-size: 0.75rem;
+				color: var(--text-secondary);
+
+				h4 {
+					margin: 0 0 0.5rem 0;
+					color: var(--text-color);
+				}
+
+				ul {
+					margin: 0;
+					padding-left: 1.5rem;
+				}
+			}
+
+			.sr-only {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				padding: 0;
+				margin: -1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+				border: 0;
+			}
+
+			@media (max-width: 768px) {
+				body {
+					padding: 0.5rem;
+				}
+
+				.tab-panel {
+					padding: 1rem;
+				}
+
+				.section-header {
+					flex-direction: column;
+					align-items: stretch;
+					gap: 1rem;
+				}
+
+				.section-actions {
+					justify-content: stretch;
+				}
+
+				.btn {
+					flex: 1;
+					justify-content: center;
+				}
+			}
+		</style>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
+		<script>
+			"use strict";
+
+			async function gzip(input) {
+				const stream = new CompressionStream("gzip");
+				const response = new Response(stream.readable);
+				const writer = stream.writable.getWriter();
+				writer.write(input);
+				writer.close();
+				return new Uint8Array(await response.arrayBuffer());
+			}
+
+			async function gunzip(input) {
+				const stream = new DecompressionStream("gzip");
+				const response = new Response(stream.readable);
+				const writer = stream.writable.getWriter();
+				writer.write(input);
+				writer.close();
+				return new Uint8Array(await response.arrayBuffer());
+			}
+
+			document.addEventListener("DOMContentLoaded", () => {
+				const encoder = new TextEncoder();
+				const decoder = new TextDecoder();
+				let currentTab = "encode";
+				let isProcessing = false;
+
+				function setProcessing(processing, button, text) {
+					isProcessing = processing;
+					button.disabled = processing;
+					if (processing) {
+						button.innerHTML = `<span class="spinner"></span> ${text}`;
+					} else {
+						button.textContent = text;
+					}
+				}
+
+				function showToast(message, type = "success") {
+					const toast = document.createElement("div");
+					toast.className = `toast toast-${type}`;
+					toast.textContent = message;
+					const container = document.getElementById("toast-container");
+					container.appendChild(toast);
+					setTimeout(() => toast.classList.add("show"), 100);
+					setTimeout(() => {
+						toast.classList.remove("show");
+						setTimeout(() => container.removeChild(toast), 300);
+					}, 3000);
+				}
+
+				function updateStats() {
+					const plainText = document.getElementById("plain-text").value;
+					const plainBytes = new Blob([plainText]).size;
+					document.getElementById("plain-chars").textContent = `${plainText.length.toLocaleString()} characters`;
+					document.getElementById("plain-bytes").textContent = `${plainBytes.toLocaleString()} bytes`;
+					const encodedOutput = document.getElementById("encoded-output").value;
+					const encodedBytes = new Blob([encodedOutput]).size;
+					document.getElementById("encoded-chars").textContent = `${encodedOutput.length.toLocaleString()} characters`;
+					document.getElementById("encoded-bytes").textContent = `${encodedBytes.toLocaleString()} bytes`;
+					if (plainBytes > 0 && encodedBytes > 0) {
+						const ratio = ((plainBytes - encodedBytes) / plainBytes) * 100;
+						const ratioText = ratio > 0 ? `${ratio.toFixed(1)}% smaller` : `${Math.abs(ratio).toFixed(1)}% larger`;
+						document.getElementById("compression-ratio").textContent = ratioText;
+					} else {
+						document.getElementById("compression-ratio").textContent = "0% compression";
+					}
+					const encodedInput = document.getElementById("encoded-input").value;
+					document.getElementById("encoded-input-chars").textContent = `${encodedInput.length.toLocaleString()} characters`;
+					const decodedOutput = document.getElementById("decoded-output").value;
+					const decodedBytes = new Blob([decodedOutput]).size;
+					document.getElementById("decoded-chars").textContent = `${decodedOutput.length.toLocaleString()} characters`;
+					document.getElementById("decoded-bytes").textContent = `${decodedBytes.toLocaleString()} bytes`;
+				}
+
+				async function encodeText(text) {
+					if (!text.trim()) {
+						return "";
+					}
+					return encodeBase95(await gzip(encoder.encode(text)));
+				}
+
+				async function encode() {
+					if (isProcessing) {
+						return;
+					}
+					const input = document.getElementById("plain-text").value;
+					const output = document.getElementById("encoded-output");
+					const button = document.getElementById("encode-btn");
+					if (!input.trim()) {
+						showToast("Please enter some text to encode", "error");
+						return;
+					}
+					try {
+						setProcessing(true, button, "Encoding...");
+						const encoded = await encodeText(input);
+						output.value = encoded;
+						updateStats();
+						showToast("Text encoded successfully!", "success");
+					} catch (error) {
+						console.error("Encoding failed:", error);
+						showToast("Failed to encode text. Please try again.", "error");
+					} finally {
+						setProcessing(false, button, "Encode");
+					}
+				}
+
+				function validateBase95Input(input) {
+					return input.trim().length > 0;
+				}
+
+				async function decodeText(encoded) {
+					if (!encoded.trim()) {
+						return "";
+					}
+					return decoder.decode(await gunzip(decodeBase95(encoded)));
+				}
+
+				async function decode() {
+					if (isProcessing) {
+						return;
+					}
+					const input = document.getElementById("encoded-input").value;
+					const output = document.getElementById("decoded-output");
+					const button = document.getElementById("decode-btn");
+					if (!input.trim()) {
+						showToast("Please enter encoded text to decode", "error");
+						return;
+					}
+					if (!validateBase95Input(input)) {
+						showToast("Invalid Base-95 encoded text", "error");
+						return;
+					}
+					try {
+						setProcessing(true, button, "Decoding...");
+						const decoded = await decodeText(input);
+						output.value = decoded;
+						updateStats();
+						showToast("Text decoded successfully!", "success");
+					} catch (error) {
+						console.error("Decoding failed:", error);
+						showToast("Failed to decode text. Please check the input format.", "error");
+					} finally {
+						setProcessing(false, button, "Decode");
+					}
+				}
+
+				async function pasteText(targetId) {
+					try {
+						const text = await navigator.clipboard.readText();
+						document.getElementById(targetId).value = text;
+						updateStats();
+						showToast("Text pasted from clipboard", "success");
+					} catch (error) {
+						console.error("Failed to paste:", error);
+						showToast("Failed to paste from clipboard", "error");
+					}
+				}
+
+				async function copyText(sourceId) {
+					const element = document.getElementById(sourceId);
+					if (!element.value.trim()) {
+						showToast("Nothing to copy", "error");
+						return;
+					}
+					try {
+						await navigator.clipboard.writeText(element.value);
+						showToast("Copied to clipboard!", "success");
+					} catch (error) {
+						console.error("Failed to copy:", error);
+						showToast("Failed to copy to clipboard", "error");
+					}
+				}
+
+				function uploadFile() {
+					document.getElementById("file-input").click();
+				}
+
+				async function handleFileDrop(file, targetId) {
+					if (file.size > 10 * 1024 * 1024) {
+						showToast("File too large. Maximum size is 10MB.", "error");
+						return;
+					}
+					try {
+						const text = await file.text();
+						document.getElementById(targetId).value = text;
+						updateStats();
+						showToast(`File "${file.name}" loaded successfully`, "success");
+					} catch (error) {
+						console.error("Failed to read file:", error);
+						showToast("Failed to read file", "error");
+					}
+				}
+
+				async function handleFileSelect(event) {
+					const file = event.target.files[0];
+					if (file) {
+						await handleFileDrop(file, "plain-text");
+					}
+				}
+
+				function downloadText(sourceId, filename) {
+					const element = document.getElementById(sourceId);
+					if (!element.value.trim()) {
+						showToast("Nothing to download", "error");
+						return;
+					}
+					const blob = new Blob([element.value], { type: "text/plain" });
+					const url = URL.createObjectURL(blob);
+					const anchor = document.createElement("a");
+					anchor.href = url;
+					anchor.download = filename;
+					document.body.appendChild(anchor);
+					anchor.click();
+					document.body.removeChild(anchor);
+					URL.revokeObjectURL(url);
+					showToast("File downloaded successfully", "success");
+				}
+
+				async function pasteToCurrentInput() {
+					const targetId = currentTab === "encode" ? "plain-text" : "encoded-input";
+					await pasteText(targetId);
+				}
+
+				async function copyCurrentOutput() {
+					const sourceId = currentTab === "encode" ? "encoded-output" : "decoded-output";
+					await copyText(sourceId);
+				}
+
+				function switchTab(tabName) {
+					currentTab = tabName;
+					document.querySelectorAll(".tab-btn").forEach(btn => {
+						btn.classList.toggle("active", btn.dataset.tab === tabName);
+					});
+					document.querySelectorAll(".tab-panel").forEach(panel => {
+						panel.classList.toggle("active", panel.dataset.panel === tabName);
+					});
+				}
+
+				function debounce(func, wait) {
+					let timeout;
+					return function executedFunction(...args) {
+						const later = () => {
+							clearTimeout(timeout);
+							func.apply(this, args);
+						};
+						clearTimeout(timeout);
+						timeout = setTimeout(later, wait);
+					};
+				}
+
+				document.querySelectorAll(".tab-btn").forEach(btn => {
+					btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+				});
+				document.getElementById("paste-plain").addEventListener("click", () => pasteText("plain-text"));
+				document.getElementById("upload-file").addEventListener("click", uploadFile);
+				document.getElementById("encode-btn").addEventListener("click", encode);
+				document.getElementById("copy-encoded").addEventListener("click", () => copyText("encoded-output"));
+				document.getElementById("download-encoded").addEventListener("click", () => downloadText("encoded-output", "encoded.txt"));
+				document.getElementById("paste-encoded").addEventListener("click", () => pasteText("encoded-input"));
+				document.getElementById("decode-btn").addEventListener("click", decode);
+				document.getElementById("copy-decoded").addEventListener("click", () => copyText("decoded-output"));
+				document.getElementById("download-decoded").addEventListener("click", () => downloadText("decoded-output", "decoded.txt"));
+				document.getElementById("plain-text").addEventListener("input", debounce(updateStats, 300));
+				document.getElementById("encoded-input").addEventListener("input", debounce(updateStats, 300));
+				document.getElementById("file-input").addEventListener("change", handleFileSelect);
+				document.querySelectorAll("textarea:not([readonly])").forEach(textarea => {
+					textarea.addEventListener("dragover", e => {
+						e.preventDefault();
+						textarea.classList.add("drag-over");
+					});
+					textarea.addEventListener("dragleave", e => {
+						e.preventDefault();
+						textarea.classList.remove("drag-over");
+					});
+					textarea.addEventListener("drop", async e => {
+						e.preventDefault();
+						textarea.classList.remove("drag-over");
+						const files = Array.from(e.dataTransfer.files);
+						if (files.length > 0) {
+							await handleFileDrop(files[0], textarea.id);
+						}
+					});
+				});
+				document.addEventListener("keydown", e => {
+					if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT") {
+						return;
+					}
+					if (e.ctrlKey || e.metaKey) {
+						switch (e.key) {
+							case "Enter":
+								e.preventDefault();
+								currentTab === "encode" ? encode() : decode();
+								break;
+							case "1":
+								e.preventDefault();
+								switchTab("encode");
+								break;
+							case "2":
+								e.preventDefault();
+								switchTab("decode");
+								break;
+						}
+					} else if (e.altKey) {
+						switch (e.key) {
+							case "v":
+								e.preventDefault();
+								pasteToCurrentInput();
+								break;
+							case "c":
+								e.preventDefault();
+								copyCurrentOutput();
+								break;
+						}
+					}
+				});
+				updateStats();
+			});
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<header class="header">
+				<h1>Base-95 Conversion Tool</h1>
+				<p>Encode and decode text using Base-95 conversion with GZip compression</p>
+			</header>
+			<div class="tab-container">
+				<div class="tab-bar">
+					<button class="tab-btn active" data-tab="encode">📝 Encode</button>
+					<button class="tab-btn" data-tab="decode">🔓 Decode</button>
+				</div>
+				<div class="tab-panel active" data-panel="encode">
+					<section class="section">
+						<div class="section-header">
+							<h3 class="section-title">Plain Text Input</h3>
+							<div class="section-actions">
+								<button class="btn" id="paste-plain">📋 Paste</button>
+								<button class="btn" id="upload-file">📁 Upload File</button>
+								<button class="btn btn-primary" id="encode-btn">🔒 Encode</button>
+							</div>
+						</div>
+						<textarea id="plain-text" placeholder="Enter or paste your text here, or drag and drop a file..." aria-label="Plain text input for encoding" aria-describedby="plain-text-help"></textarea>
+						<div id="plain-text-help" class="sr-only">Enter the text you want to encode using Base-95 compression</div>
+						<div class="stats" id="plain-stats">
+							<div class="stat">
+								<span>📏</span>
+								<span id="plain-chars">0 characters</span>
+							</div>
+							<div class="stat">
+								<span>💾</span>
+								<span id="plain-bytes">0 bytes</span>
+							</div>
+						</div>
+					</section>
+					<section class="section">
+						<div class="section-header">
+							<h3 class="section-title">Base-95 Encoded Output</h3>
+							<div class="section-actions">
+								<button class="btn btn-success" id="copy-encoded">📋 Copy</button>
+								<button class="btn" id="download-encoded">💾 Download</button>
+							</div>
+						</div>
+						<textarea id="encoded-output" readonly placeholder="Encoded text will appear here..." aria-label="Base-95 encoded output"></textarea>
+						<div class="stats" id="encoded-stats">
+							<div class="stat">
+								<span>📏</span>
+								<span id="encoded-chars">0 characters</span>
+							</div>
+							<div class="stat">
+								<span>💾</span>
+								<span id="encoded-bytes">0 bytes</span>
+							</div>
+							<div class="stat">
+								<span>📊</span>
+								<span id="compression-ratio">0% compression</span>
+							</div>
+						</div>
+					</section>
+				</div>
+				<div class="tab-panel" data-panel="decode">
+					<section class="section">
+						<div class="section-header">
+							<h3 class="section-title">Base-95 Encoded Input</h3>
+							<div class="section-actions">
+								<button class="btn" id="paste-encoded">📋 Paste</button>
+								<button class="btn btn-primary" id="decode-btn">🔓 Decode</button>
+							</div>
+						</div>
+						<textarea id="encoded-input" placeholder="Paste your Base-95 encoded text here..." aria-label="Base-95 encoded input for decoding" aria-describedby="encoded-input-help"></textarea>
+						<div id="encoded-input-help" class="sr-only">Enter the Base-95 encoded text you want to decode</div>
+						<div class="stats" id="encoded-input-stats">
+							<div class="stat">
+								<span>📏</span>
+								<span id="encoded-input-chars">0 characters</span>
+							</div>
+						</div>
+					</section>
+					<section class="section">
+						<div class="section-header">
+							<h3 class="section-title">Decoded Plain Text</h3>
+							<div class="section-actions">
+								<button class="btn btn-success" id="copy-decoded">📋 Copy</button>
+								<button class="btn" id="download-decoded">💾 Download</button>
+							</div>
+						</div>
+						<textarea id="decoded-output" readonly placeholder="Decoded text will appear here..." aria-label="Decoded plain text output"></textarea>
+						<div class="stats" id="decoded-stats">
+							<div class="stat">
+								<span>📏</span>
+								<span id="decoded-chars">0 characters</span>
+							</div>
+							<div class="stat">
+								<span>💾</span>
+								<span id="decoded-bytes">0 bytes</span>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+			<div class="shortcuts">
+				<h4>⌨️ Keyboard Shortcuts</h4>
+				<ul>
+					<li><kbd>Ctrl/Cmd + Enter</kbd> - Process current tab (encode/decode)</li>
+					<li><kbd>Alt + V</kbd> - Paste into current input</li>
+					<li><kbd>Alt + C</kbd> - Copy current output</li>
+					<li><kbd>Ctrl/Cmd + 1/2</kbd> - Switch between tabs</li>
+				</ul>
+			</div>
+		</div>
+		<input type="file" id="file-input" style="display: none" accept=".txt,.md,.json,.xml,.csv"/>
+		<div id="toast-container"></div>
+	</body>
+</html>

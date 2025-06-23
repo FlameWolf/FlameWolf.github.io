@@ -10,7 +10,8 @@
 			}
 		</style>
 		<script type="application/javascript">
-			/*<![CDATA[*/
+			"use strict";
+
 			function generateMalluNames(randomise = false) {
 				const alphabet = new Array(26);
 				const vowels = ["a", "e", "i", "o", "u"];
@@ -76,7 +77,6 @@
 				displayNames(false);
 				document.getElementById("ramdomise").addEventListener("click", toggleRandomise);
 			});
-			/*]]>*/
 		</script>
 	</head>
 	<body>
