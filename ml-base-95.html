@@ -47,8 +47,18 @@
 			.tab-panel {
 				display: none;
 			}
-			table {
-				width: 100%;
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+			}
+			.grid > .row {
+				display: grid;
+				grid-auto-flow: column;
+				align-items: center;
+			}
+			.row > .cell {
+				display: table-cell;
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
@@ -191,96 +201,80 @@
 				<button class="tab-btn" data-href="tab-decode">Decode</button>
 			</div>
 			<div class="tab-panel" data-name="tab-encode">
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Plain Text</h4>
-							</td>
-							<td class="align-end">
-								<button id="paste-plain-text">Paste</button>
-								<button id="encode">Encode</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="plain-text"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+						</div>
+						<div class="cell align-end">
+							<button id="paste-plain-text">Paste</button>
+							<button id="encode">Encode</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="plain-text"></textarea>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Base-95 Encoded Text</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-encoded" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="copy-encoded">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="encoded-output" readonly="readonly"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Base-95 Encoded Text</strong>
+						</div>
+						<div class="cell align-end">
+							<span id="hidden-encoded" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="copy-encoded">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="encoded-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="tab-panel" data-name="tab-decode">
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Base-95 Encoded Text</h4>
-							</td>
-							<td class="align-end">
-								<button id="paste-encoded">Paste</button>
-								<button id="decode">Decode</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="cipher-text"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Base-95 Encoded Text</strong>
+						</div>
+						<div class="cell align-end">
+							<button id="paste-encoded">Paste</button>
+							<button id="decode">Decode</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="cipher-text"></textarea>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Plain Text</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-decoded" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="copy-decoded">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="decoded-output" readonly="readonly"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+						</div>
+						<div class="cell align-end">
+							<span id="hidden-decoded" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="copy-decoded">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decoded-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>

@@ -58,8 +58,18 @@
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
 			}
-			table {
-				width: 100%;
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+			}
+			.grid > .row {
+				display: grid;
+				grid-auto-flow: column;
+				align-items: center;
+			}
+			.row > .cell {
+				display: table-cell;
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
@@ -160,50 +170,42 @@
 			<div class="tab-bar"></div>
 			<p id="cipher-description" data-name="cipher-description"></p>
 		</div>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<h4>Input</h4>
-					</td>
-					<td class="align-end">
-						<button id="paste">Paste</button>
-						<button id="convert">Convert</button>
-					</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td colspan="2">
-						<textarea id="input"></textarea>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Input</strong>
+				</div>
+				<div class="cell align-end">
+					<button id="paste">Paste</button>
+					<button id="convert">Convert</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="input"></textarea>
+				</div>
+			</div>
+		</div>
 		<br/>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<h4>Output</h4>
-					</td>
-					<td class="align-end">
-						<span id="hidden" class="toggle hidden">
-							<span>Text copied!</span>
-							<span>&#xA0;</span>
-						</span>
-						<button id="copy">Copy</button>
-					</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td colspan="2">
-						<textarea id="output" readonly="readonly"></textarea>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Output</strong>
+				</div>
+				<div class="cell align-end">
+					<span id="hidden" class="toggle hidden">
+						<span>Text copied!</span>
+						<span>&#xA0;</span>
+					</span>
+					<button id="copy">Copy</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="output" readonly="readonly"></textarea>
+				</div>
+			</div>
+		</div>
 		<p>&#xA0;</p>
 	</body>
 </html>

@@ -22,9 +22,18 @@
 			* {
 				box-sizing: border-box;
 			}
-			table {
-				width: 100%;
-				box-shadow: none;
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: 0.5rem;
+			}
+			.grid > .row {
+				display: grid;
+				grid-auto-flow: column;
+				align-items: center;
+			}
+			.row > .cell {
+				display: table-cell;
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
@@ -76,47 +85,40 @@
 	<body>
 		<h1>ROT-18</h1>
 		<hr/>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<strong>Input</strong>
-					</td>
-					<td class="align-end">
-						<button id="paste">Paste</button>
-					</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td colspan="2">
-						<textarea id="input" placeholder="Enter text here..."></textarea>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<strong>Output</strong>
-					</td>
-					<td class="align-end">
-						<span id="hidden" class="toggle hidden">
-							<span>Text copied!</span>
-							<span>&#xA0;</span>
-						</span>
-						<button id="copy">Copy</button>
-					</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td colspan="2">
-						<textarea id="output" placeholder="Output will appear here..." readonly></textarea>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Input</strong>
+				</div>
+				<div class="cell align-end">
+					<button id="paste">Paste</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="input" placeholder="Enter text here..."></textarea>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Output</strong>
+				</div>
+				<div class="cell align-end">
+					<span id="hidden" class="toggle hidden">
+						<span>Text copied!</span>
+						<span>&#xA0;</span>
+					</span>
+					<button id="copy">Copy</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="output" placeholder="Output will appear here..." readonly></textarea>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

@@ -42,18 +42,26 @@
 				display: none;
 				margin-top: 1pt;
 			}
-			table {
-				width: 100%;
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
 			}
-			table:has(.encrypt-key-holder),
-			tr:has(.encrypt-key-holder) {
+			.grid > .row {
+				display: grid;
+				grid-auto-flow: column;
+				align-items: center;
+			}
+			.row > .cell {
+				display: table-cell;
+			}
+			.cell:has(.encrypt-key-holder) {
 				height: 100%;
 			}
 			.encrypt-key-holder {
 				display: grid;
 				gap: var(--margin);
 				place-items: stretch;
-				place-content: stretch;
 				& > .key {
 					grid-column: 1 / span 1;
 					grid-row: 1 / span 1;
@@ -70,7 +78,6 @@
 				}
 			}
 			#message {
-				text-transform: uppercase;
 				padding: calc(2 * var(--padding));
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
@@ -290,152 +297,128 @@
 				<button class="tab-btn" data-href="tab-decrypt">Decrypt</button>
 			</div>
 			<div class="tab-panel" data-name="tab-encrypt">
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Key</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-encrypt-key" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="paste-encrypt-key">Paste</button>
-								<button id="copy-encrypt-key">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<div class="encrypt-key-holder">
-									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
-									<div id="message">
-										<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
-									</div>
-									<img id="output-qr-code" class="qr-code"/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Key</strong>
+						</div>
+						<div class="row align-end">
+							<span id="hidden-encrypt-key" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="paste-encrypt-key">Paste</button>
+							<button id="copy-encrypt-key">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<div class="encrypt-key-holder">
+								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+								<div id="message">
+									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
 								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+								<img id="output-qr-code" class="qr-code"/>
+							</div>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Plain Text</h4>
-							</td>
-							<td class="align-end">
-								<button id="paste-plain-text">Paste</button>
-								<button id="encrypt">Encrypt</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="plain-text"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+						</div>
+						<div class="row align-end">
+							<button id="paste-plain-text">Paste</button>
+							<button id="encrypt">Encrypt</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="plain-text"></textarea>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Cipher Text</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-encrypted" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="copy-encrypted">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="encrypted-output" readonly="readonly"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Cipher Text</strong>
+						</div>
+						<div class="row align-end">
+							<span id="hidden-encrypted" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="copy-encrypted">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="encrypted-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="tab-panel" data-name="tab-decrypt">
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Key</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-decrypt-key" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="paste-decrypt-key">Paste</button>
-								<button id="copy-decrypt-key">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="decrypt-key" class="key"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Key</strong>
+						</div>
+						<div class="row align-end">
+							<span id="hidden-decrypt-key" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="paste-decrypt-key">Paste</button>
+							<button id="copy-decrypt-key">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypt-key" class="key"></textarea>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Cipher Text</h4>
-							</td>
-							<td class="align-end">
-								<button id="paste-encrypted">Paste</button>
-								<button id="decrypt">Decrypt</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="cipher-text"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Cipher Text</strong>
+						</div>
+						<div class="row align-end">
+							<button id="paste-encrypted">Paste</button>
+							<button id="decrypt">Decrypt</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="cipher-text"></textarea>
+						</div>
+					</div>
+				</div>
 				<br/>
-				<table>
-					<thead>
-						<tr>
-							<td>
-								<h4>Plain Text</h4>
-							</td>
-							<td class="align-end">
-								<span id="hidden-decrypted" class="toggle hidden">
-									<span>Copied!</span>
-									<span>&#xA0;</span>
-								</span>
-								<button id="copy-decrypted">Copy</button>
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<textarea id="decrypted-output" readonly="readonly"></textarea>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+						</div>
+						<div class="row align-end">
+							<span id="hidden-decrypted" class="toggle hidden">
+								<span>Copied!</span>
+								<span>&#xA0;</span>
+							</span>
+							<button id="copy-decrypted">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypted-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>
