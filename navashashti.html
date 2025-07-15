@@ -74,7 +74,7 @@
 				});
 				btnCopy.addEventListener("click", async () => {
 					var output = txtOutput.value;
-					navigator.clipboard.writeText(output);
+					await navigator.clipboard.writeText(output);
 					spnHidden.classList.remove("hidden");
 					setTimeout(() => {
 						spnHidden.classList.add("hidden");

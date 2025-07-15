@@ -198,8 +198,8 @@
 						input.value = clipboardText;
 					}
 				};
-				const copyFromAndFlash = (input, elem) => {
-					navigator.clipboard.writeText(input.value);
+				const copyFromAndFlash = async (input, elem) => {
+					await navigator.clipboard.writeText(input.value);
 					flashElement(elem);
 				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
@@ -229,7 +229,7 @@
 					dlgErrorAlert.close();
 				});
 				btnPasteEncryptKey.addEventListener("click", async () => await pasteInto(txtEncryptKey));
-				btnCopyEncryptKey.addEventListener("click", async () => copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
+				btnCopyEncryptKey.addEventListener("click", async () => await copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
 				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
@@ -244,9 +244,9 @@
 						txtEncryptedOutput.value = "";
 					}
 				});
-				btnCopyEncrypted.addEventListener("click", async () => copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
+				btnCopyEncrypted.addEventListener("click", async () => await copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
 				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
-				btnCopyDecryptKey.addEventListener("click", async () => copyFromAndFlash(txtDecryptKey, spnHiddenDecryptKey));
+				btnCopyDecryptKey.addEventListener("click", async () => await copyFromAndFlash(txtDecryptKey, spnHiddenDecryptKey));
 				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
 					const decryptKeySecret = txtDecryptKey.value;
@@ -273,7 +273,7 @@
 						txtDecryptedOutput.value = "";
 					}
 				});
-				btnCopyDecrypted.addEventListener("click", async () => copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
+				btnCopyDecrypted.addEventListener("click", async () => await copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
 			});
 		</script>
 	</head>

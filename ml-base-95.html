@@ -139,8 +139,8 @@
 						input.value = clipboardText;
 					}
 				};
-				const copyFromAndFlash = (input, elem) => {
-					navigator.clipboard.writeText(input.value);
+				const copyFromAndFlash = async (input, elem) => {
+					await navigator.clipboard.writeText(input.value);
 					flashElement(elem);
 				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
@@ -167,7 +167,7 @@
 						txtEncodedOutput.value = "";
 					}
 				});
-				btnCopyEncoded.addEventListener("click", async () => copyFromAndFlash(txtEncodedOutput, spnHiddenEncoded));
+				btnCopyEncoded.addEventListener("click", async () => await copyFromAndFlash(txtEncodedOutput, spnHiddenEncoded));
 				btnPasteEncoded.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
@@ -177,7 +177,7 @@
 						txtDecodedOutput.value = "";
 					}
 				});
-				btnCopyDecoded.addEventListener("click", async () => copyFromAndFlash(txtDecodedOutput, spnHiddenDecoded));
+				btnCopyDecoded.addEventListener("click", async () => await copyFromAndFlash(txtDecodedOutput, spnHiddenDecoded));
 			});
 		</script>
 	</head>
