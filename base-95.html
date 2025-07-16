@@ -79,28 +79,13 @@
 				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
 				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
-				const gzip = async input => {
-					const stream = new CompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
-				const gunzip = async input => {
-					const stream = new DecompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
 				const encodeText = async text => {
 					return encodeBase95(await gzip(encoder.encode(text)));
 				};

@@ -85,6 +85,7 @@
 				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
@@ -92,22 +93,6 @@
 			document.addEventListener("DOMContentLoaded", async () => {
 				const MALAYALAM_BLOCK_OFFSET = 3327;
 				const ASCII_COMPRESSION_OFFSET = 128;
-				const gzip = async input => {
-					const stream = new CompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
-				const gunzip = async input => {
-					const stream = new DecompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
 				const encodeMalayalam = async text => {
 					const bytes = new Uint8Array(text.length);
 					bytes.set(

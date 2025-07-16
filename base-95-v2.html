@@ -331,27 +331,10 @@
 				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script>
 			"use strict";
-
-			async function gzip(input) {
-				const stream = new CompressionStream("gzip");
-				const response = new Response(stream.readable);
-				const writer = stream.writable.getWriter();
-				writer.write(input);
-				writer.close();
-				return new Uint8Array(await response.arrayBuffer());
-			}
-
-			async function gunzip(input) {
-				const stream = new DecompressionStream("gzip");
-				const response = new Response(stream.readable);
-				const writer = stream.writable.getWriter();
-				writer.write(input);
-				writer.close();
-				return new Uint8Array(await response.arrayBuffer());
-			}
 
 			document.addEventListener("DOMContentLoaded", () => {
 				const encoder = new TextEncoder();

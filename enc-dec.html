@@ -108,6 +108,7 @@
 			}
 		</style>
 		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
+		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
@@ -147,22 +148,6 @@
 					key,
 					data
 				];
-				const gzip = async input => {
-					const stream = new CompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
-				const gunzip = async input => {
-					const stream = new DecompressionStream("gzip");
-					const response = new Response(stream.readable);
-					const writer = stream.writable.getWriter();
-					writer.write(input);
-					writer.close();
-					return new Uint8Array(await response.arrayBuffer());
-				};
 				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
 				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
