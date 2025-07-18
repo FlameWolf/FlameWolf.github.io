@@ -46,17 +46,17 @@
 				display: grid;
 				grid-auto-flow: row;
 				gap: var(--margin);
-			}
-			.grid > .row {
-				display: grid;
-				grid-auto-flow: column;
-				align-items: center;
-			}
-			.row > .cell {
-				display: table-cell;
-			}
-			.cell:has(.encrypt-key-holder) {
-				height: 100%;
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					> .cell {
+						display: table-cell;
+						&:has(.encrypt-key-holder) {
+							height: 100%;
+						}
+					}
+				}
 			}
 			.encrypt-key-holder {
 				display: grid;

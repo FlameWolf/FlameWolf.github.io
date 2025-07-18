@@ -25,15 +25,15 @@
 			.grid {
 				display: grid;
 				grid-auto-flow: row;
-				gap: 0.5rem;
-			}
-			.grid > .row {
-				display: grid;
-				grid-auto-flow: column;
-				align-items: center;
-			}
-			.row > .cell {
-				display: table-cell;
+				gap: var(--margin);
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					> .cell {
+						display: table-cell;
+					}
+				}
 			}
 			.toggle {
 				transition: all 0.5s ease-in-out;
