@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Reverse Unicode Text</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.5rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
+				--margin: 0.5rem;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					> .cell {
+						display: table-cell;
+					}
+				}
+			}
+			.toggle {
+				transition: all 0.5s ease-in-out;
+			}
+			.hidden {
+				visibility: hidden;
+				opacity: 0;
+			}
+			.align-start {
+				text-align: start;
+			}
+			.align-end {
+				text-align: end;
+			}
+			textarea {
+				width: 100%;
+				min-height: 240pt;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
+				resize: vertical;
+			}
+		</style>
+		<script type="text/javascript" src="JavaScript/reverseUnicodeText.js"></script>
+		<script type="text/javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+				const input = document.getElementById("input");
+				const output = document.getElementById("output");
+				const btnPaste = document.getElementById("paste");
+				const btnCopy = document.getElementById("copy");
+				const spnHidden = document.getElementById("hidden");
+				btnPaste.addEventListener("click", async () => {
+					input.value = await navigator.clipboard.readText();
+					input.dispatchEvent(new Event("input"));
+				});
+				btnCopy.addEventListener("click", async () => {
+					await navigator.clipboard.writeText(output.value);
+					spnHidden.classList.remove("hidden");
+					setTimeout(() => {
+						spnHidden.classList.add("hidden");
+					}, 1500);
+				});
+				input.addEventListener("input", function () {
+					output.value = reverseUnicodeText(input.value);
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Reverse Unicode Text</h1>
+		<hr/>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Input</strong>
+				</div>
+				<div class="cell align-end">
+					<button id="paste">Paste</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="input" placeholder="Enter text here..."></textarea>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Output</strong>
+				</div>
+				<div class="cell align-end">
+					<span id="hidden" class="toggle hidden">
+						<span>Text copied!</span>
+						<span>&#xA0;</span>
+					</span>
+					<button id="copy">Copy</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="output" placeholder="Output will appear here..." readonly></textarea>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
