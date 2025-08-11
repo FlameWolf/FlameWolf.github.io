@@ -154,13 +154,11 @@
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const dlgErrorAlert = document.getElementById("error-alert");
 				const btncloseErrorAlert = document.getElementById("close-error-alert");
-				const btnPasteEncryptKey = document.getElementById("paste-encrypt-key");
 				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
 				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnCopyEncrypted = document.getElementById("copy-encrypted");
 				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
-				const btnCopyDecryptKey = document.getElementById("copy-decrypt-key");
 				const btnPasteEncrypted = document.getElementById("paste-encrypted");
 				const btnDecrypt = document.getElementById("decrypt");
 				const btnCopyDecrypted = document.getElementById("copy-decrypted");
@@ -172,7 +170,6 @@
 				const txtDecryptedOutput = document.getElementById("decrypted-output");
 				const spnHiddenEncryptKey = document.getElementById("hidden-encrypt-key");
 				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
-				const spnHiddenDecryptKey = document.getElementById("hidden-decrypt-key");
 				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
 				const imgOutputQrCode = document.getElementById("output-qr-code");
 				const canOutputQrCode = document.createElement("canvas");
@@ -220,7 +217,6 @@
 				btncloseErrorAlert.addEventListener("click", async () => {
 					dlgErrorAlert.close();
 				});
-				btnPasteEncryptKey.addEventListener("click", async () => await pasteInto(txtEncryptKey));
 				btnCopyEncryptKey.addEventListener("click", async () => await copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
 				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
@@ -238,7 +234,6 @@
 				});
 				btnCopyEncrypted.addEventListener("click", async () => await copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
 				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
-				btnCopyDecryptKey.addEventListener("click", async () => await copyFromAndFlash(txtDecryptKey, spnHiddenDecryptKey));
 				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
 					const decryptKeySecret = txtDecryptKey.value;
@@ -287,12 +282,11 @@
 						<div class="cell">
 							<strong>Key</strong>
 						</div>
-						<div class="row align-end">
+						<div class="cell align-end">
 							<span id="hidden-encrypt-key" class="toggle hidden">
 								<span>Copied!</span>
 								<span>&#xA0;</span>
 							</span>
-							<button id="paste-encrypt-key">Paste</button>
 							<button id="copy-encrypt-key">Copy</button>
 						</div>
 					</div>
@@ -314,7 +308,7 @@
 						<div class="cell">
 							<strong>Plain Text</strong>
 						</div>
-						<div class="row align-end">
+						<div class="cell align-end">
 							<button id="paste-plain-text">Paste</button>
 							<button id="encrypt">Encrypt</button>
 						</div>
@@ -331,7 +325,7 @@
 						<div class="cell">
 							<strong>Cipher Text</strong>
 						</div>
-						<div class="row align-end">
+						<div class="cell align-end">
 							<span id="hidden-encrypted" class="toggle hidden">
 								<span>Copied!</span>
 								<span>&#xA0;</span>
@@ -352,13 +346,8 @@
 						<div class="cell">
 							<strong>Key</strong>
 						</div>
-						<div class="row align-end">
-							<span id="hidden-decrypt-key" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
+						<div class="cell align-end">
 							<button id="paste-decrypt-key">Paste</button>
-							<button id="copy-decrypt-key">Copy</button>
 						</div>
 					</div>
 					<div class="row">
@@ -373,7 +362,7 @@
 						<div class="cell">
 							<strong>Cipher Text</strong>
 						</div>
-						<div class="row align-end">
+						<div class="cell align-end">
 							<button id="paste-encrypted">Paste</button>
 							<button id="decrypt">Decrypt</button>
 						</div>
@@ -390,7 +379,7 @@
 						<div class="cell">
 							<strong>Plain Text</strong>
 						</div>
-						<div class="row align-end">
+						<div class="cell align-end">
 							<span id="hidden-decrypted" class="toggle hidden">
 								<span>Copied!</span>
 								<span>&#xA0;</span>
