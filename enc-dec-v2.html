@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Enc-Dec</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			:root {
+				--padding: 1rem;
+				--border-radius: 0.75rem;
+				--box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+				--margin: 1rem;
+				--bg-primary: #ffffff;
+				--bg-secondary: #f8f9fa;
+				--bg-tertiary: #e9ecef;
+				--text-primary: #212529;
+				--text-secondary: #6c757d;
+				--accent-primary: #0066cc;
+				--accent-hover: #0056b3;
+				--border-color: #dee2e6;
+				--error-color: #dc3545;
+				--success-color: #28a745;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
+					--bg-primary: #1a1a1a;
+					--bg-secondary: #2d2d2d;
+					--bg-tertiary: #404040;
+					--text-primary: #ffffff;
+					--text-secondary: #adb5bd;
+					--accent-primary: #4dabf7;
+					--accent-hover: #339af0;
+					--border-color: #495057;
+					--error-color: #f5c6cb;
+					--success-color: #d4edda;
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				background-color: var(--bg-primary);
+				color: var(--text-primary);
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Aptos, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+				line-height: 1.6;
+				padding: var(--margin);
+				min-height: 100vh;
+			}
+			.container {
+				width: 100%;
+				margin: 0 auto;
+			}
+			.tab-container {
+				background-color: var(--bg-secondary);
+				border-radius: var(--border-radius);
+				box-shadow: var(--box-shadow);
+				overflow: hidden;
+			}
+			.tab-bar {
+				display: flex;
+				background-color: var(--bg-tertiary);
+				border-bottom: 1px solid var(--border-color);
+				.tab-btn {
+					flex: 1;
+					padding: var(--padding);
+					border: none;
+					background-color: transparent;
+					color: var(--text-secondary);
+					cursor: pointer;
+					font-size: 1rem;
+					font-weight: 500;
+					transition: all 0.2s ease;
+					border-radius: 0;
+					&:hover {
+						background-color: var(--bg-secondary);
+						color: var(--text-primary);
+					}
+					&.active {
+						background-color: var(--accent-primary);
+						color: white;
+					}
+					&:focus {
+						outline: 2px solid var(--accent-primary);
+						outline-offset: -2px;
+					}
+				}
+			}
+			.tab-panel {
+				display: none;
+				padding: var(--padding);
+			}
+			.grid {
+				display: flex;
+				flex-direction: column;
+				gap: var(--margin);
+				.row {
+					display: flex;
+					flex-direction: column;
+					gap: 0.5rem;
+					@media (min-width: 768px) {
+						flex-direction: row;
+						align-items: flex-start;
+						justify-content: space-between;
+					}
+					.cell {
+						flex: 1;
+						&:has(.encrypt-key-holder) {
+							min-height: auto;
+						}
+					}
+				}
+			}
+			.encrypt-key-holder {
+				display: grid;
+				gap: var(--margin);
+				grid-template-columns: 1fr;
+				grid-template-rows: auto auto auto;
+				@media (min-width: 768px) {
+					grid-template-columns: 3fr 1fr;
+					grid-template-rows: auto auto;
+				}
+				.key {
+					grid-column: 1;
+					grid-row: 1;
+				}
+				.message {
+					grid-column: 1;
+					grid-row: 2;
+					padding: var(--padding);
+					background-color: var(--bg-tertiary);
+					border-radius: var(--border-radius);
+					border: 1px solid var(--border-color);
+					@media (min-width: 768px) {
+						grid-row: 2;
+					}
+				}
+				.qr-code {
+					grid-column: 1;
+					grid-row: 3;
+					justify-self: center;
+					max-width: 200px;
+					width: 100%;
+					height: auto;
+					border-radius: var(--border-radius);
+					box-shadow: var(--box-shadow);
+					@media (min-width: 768px) {
+						grid-column: 2;
+						grid-row: 1 / span 2;
+						max-width: unset;
+					}
+				}
+			}
+			.button-group {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				justify-content: flex-end;
+				@media (max-width: 767px) {
+					justify-content: stretch;
+					button {
+						flex: 1;
+					}
+				}
+			}
+			button {
+				padding: 0.75rem 1.5rem;
+				border: 2px solid var(--border-color);
+				border-radius: var(--border-radius);
+				background-color: var(--bg-secondary);
+				color: var(--text-primary);
+				cursor: pointer;
+				font-size: 0.9rem;
+				font-weight: 500;
+				transition: all 0.2s ease;
+				min-width: 80px;
+				&:hover {
+					background-color: var(--accent-primary);
+					color: white;
+					border-color: var(--accent-primary);
+				}
+				&:focus {
+					outline: 2px solid var(--accent-primary);
+					outline-offset: 2px;
+				}
+				&:active {
+					transform: translateY(1px);
+				}
+			}
+			#message {
+				font-size: 0.9rem;
+				line-height: 1.5;
+			}
+			.toggle {
+				display: flex;
+				place-items: center;
+				transition: all 0.3s ease;
+			}
+			.hidden {
+				display: none;
+				opacity: 0;
+			}
+			.align-start {
+				text-align: start;
+			}
+			.align-end {
+				text-align: end;
+			}
+			textarea {
+				width: 100%;
+				min-height: 200px;
+				padding: var(--padding);
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
+				background-color: var(--bg-primary);
+				color: var(--text-primary);
+				font-family: "Cascadia Code", "Monaco", "Consolas", monospace;
+				font-size: 0.9rem;
+				line-height: 1.4;
+				resize: vertical;
+				box-shadow: var(--box-shadow);
+				transition: border-color 0.2s ease, box-shadow 0.2s ease;
+				&:focus {
+					outline: none;
+					border-color: var(--accent-primary);
+					box-shadow: 0 0 0 3px rgba(70, 171, 247, 0.1);
+				}
+				&.key {
+					min-height: 80px;
+					font-family: monospace;
+					font-size: 0.8rem;
+				}
+				&[readonly] {
+					background-color: var(--bg-secondary);
+					cursor: default;
+				}
+				@media (min-width: 768px) {
+					min-height: 300px;
+					&.key {
+						min-height: 100px;
+					}
+				}
+			}
+			dialog {
+				padding: var(--padding);
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
+				background-color: var(--bg-primary);
+				color: var(--text-primary);
+				box-shadow: var(--box-shadow);
+				min-width: 300px;
+				&::backdrop {
+					background-color: rgba(0, 0, 0, 0.5);
+				}
+				header {
+					font-weight: 600;
+					font-size: 1.1rem;
+					color: var(--error-color);
+					margin-bottom: 0.5rem;
+				}
+				button {
+					margin-top: var(--margin);
+				}
+			}
+			strong {
+				color: var(--text-primary);
+				font-weight: 600;
+			}
+			@media (max-width: 767px) {
+				:root {
+					--padding: 0.75rem;
+					--margin: 0.75rem;
+				}
+				body {
+					padding: 0.5rem;
+				}
+				.grid .row {
+					gap: 0.75rem;
+				}
+			}
+			@media (prefers-contrast: high) {
+				:root {
+					--box-shadow: 0 0 4px rgba(0, 0, 0, 0.75);
+				}
+				button,
+				textarea {
+					border-width: 2px;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.toggle,
+				button,
+				textarea {
+					transition: none;
+				}
+			}
+		</style>
+		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
+		<script type="text/javascript" src="JavaScript/gzip.js"></script>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
+		<script type="text/javascript">
+			"use strict";
+
+			document.addEventListener("DOMContentLoaded", async () => {
+				const ivLength = 8;
+				const imgDim = 256;
+				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
+				const keyName = "AES-GCM";
+				const keyOps = ["encrypt", "decrypt"];
+				const keyFormat = "jwk";
+				const encryptKey = await crypto.subtle.generateKey(
+					{
+						name: keyName,
+						length: 256
+					},
+					true,
+					keyOps
+				);
+				const jwkBase = {
+					alg: "A256GCM",
+					ext: true,
+					key_ops: keyOps,
+					kty: "oct"
+				};
+				const encryptKeySecret = (await crypto.subtle.exportKey(keyFormat, encryptKey)).k;
+				const encryptKeyQr = QRCode({
+					msg: encryptKeySecret,
+					dim: imgDim,
+					pal: ["#000000", "#FFFFFF"]
+				});
+				const getEncryptionParams = (key, iv, data) => [
+					{
+						name: "AES-GCM",
+						iv
+					},
+					key,
+					data
+				];
+				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
+				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
+				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
+				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
+				const dlgErrorAlert = document.getElementById("error-alert");
+				const btncloseErrorAlert = document.getElementById("close-error-alert");
+				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
+				const btnPastePlainText = document.getElementById("paste-plain-text");
+				const btnEncrypt = document.getElementById("encrypt");
+				const btnCopyEncrypted = document.getElementById("copy-encrypted");
+				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
+				const btnPasteEncrypted = document.getElementById("paste-encrypted");
+				const btnDecrypt = document.getElementById("decrypt");
+				const btnCopyDecrypted = document.getElementById("copy-decrypted");
+				const txtEncryptKey = document.getElementById("encrypt-key");
+				const txtPlainText = document.getElementById("plain-text");
+				const txtEncryptedOutput = document.getElementById("encrypted-output");
+				const txtDecryptKey = document.getElementById("decrypt-key");
+				const txtCipherText = document.getElementById("cipher-text");
+				const txtDecryptedOutput = document.getElementById("decrypted-output");
+				const spnHiddenEncryptKey = document.getElementById("hidden-encrypt-key");
+				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
+				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
+				const imgOutputQrCode = document.getElementById("output-qr-code");
+				const canOutputQrCode = document.createElement("canvas");
+				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
+				const tmpImgOutputQrCode = new Image();
+				const flashElement = elem => {
+					elem.classList.remove("hidden");
+					setTimeout(() => {
+						elem.classList.add("hidden");
+					}, 1500);
+				};
+				const pasteInto = async input => {
+					const clipboardText = await navigator.clipboard.readText();
+					if (clipboardText) {
+						input.value = clipboardText;
+					}
+				};
+				const copyFromAndFlash = async (input, elem) => {
+					await navigator.clipboard.writeText(input.value);
+					flashElement(elem);
+				};
+				[...document.getElementsByClassName("tab-container")].forEach(tc => {
+					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
+					tabBarButtons.forEach(btn => {
+						btn.addEventListener("click", () => {
+							tabBarButtons.forEach(x => x.classList.remove("active"));
+							tc.querySelectorAll(".tab-panel").forEach(tp => tp.style.removeProperty("display"));
+							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.style.setProperty("display", "block");
+							btn.classList.add("active");
+						});
+					});
+					const defaultPanelName = tc.getAttribute("data-default");
+					if (defaultPanelName) {
+						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
+					}
+				});
+				txtEncryptKey.value = encryptKeySecret;
+				tmpImgOutputQrCode.addEventListener("load", async () => {
+					canOutputQrCode.height = imgDim;
+					canOutputQrCode.width = imgDim;
+					ctxCanOutputQrCode.drawImage(tmpImgOutputQrCode, 0, 0, imgDim, imgDim);
+					imgOutputQrCode.src = canOutputQrCode.toDataURL();
+				});
+				tmpImgOutputQrCode.src = `data:image/svg+xml;base64,${btoa(encryptKeyQr.outerHTML)}`;
+				btncloseErrorAlert.addEventListener("click", async () => {
+					dlgErrorAlert.close();
+				});
+				btnCopyEncryptKey.addEventListener("click", async () => await copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
+				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
+				btnEncrypt.addEventListener("click", async () => {
+					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
+					const input = txtPlainText.value.trim();
+					if (input) {
+						const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
+						const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
+						combinedArray.set(encryptIv, 0);
+						combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
+						txtEncryptedOutput.value = encodeBase95(combinedArray);
+					} else {
+						txtEncryptedOutput.value = "";
+					}
+				});
+				btnCopyEncrypted.addEventListener("click", async () => await copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
+				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
+				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
+				btnDecrypt.addEventListener("click", async () => {
+					const decryptKeySecret = txtDecryptKey.value;
+					if (!decryptKeySecret) {
+						dlgErrorAlert.showModal();
+						return;
+					}
+					const decryptKey = await crypto.subtle.importKey(
+						keyFormat,
+						Object.assign(jwkBase, {
+							k: decryptKeySecret
+						}),
+						keyName,
+						true,
+						keyOps
+					);
+					const cipherText = txtCipherText.value;
+					if (cipherText) {
+						const combinedArray = decodeBase95(cipherText);
+						const decryptIv = combinedArray.slice(0, ivLength);
+						const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
+						txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
+					} else {
+						txtDecryptedOutput.value = "";
+					}
+				});
+				btnCopyDecrypted.addEventListener("click", async () => await copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
+			});
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<dialog id="error-alert">
+				<header>Error:</header>
+				<p>Key must be a non-empty string.</p>
+				<button id="close-error-alert">Close</button>
+			</dialog>
+			<div class="tab-container" data-default="tab-encrypt">
+				<div class="tab-bar">
+					<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
+					<button class="tab-btn" data-href="tab-decrypt">Decrypt</button>
+				</div>
+				<div class="tab-panel" data-name="tab-encrypt">
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Encryption Key</strong>
+							</div>
+							<div class="cell button-group">
+								<span id="hidden-encrypt-key" class="toggle hidden">Copied!</span>
+								<button id="copy-encrypt-key">Copy</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<div class="encrypt-key-holder">
+									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+									<div id="message"><strong>Important:</strong> The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it. Note down the above key and send it to the receiver via a secure channel separately from the message. Alternatively, you can send them the QR code, which when scanned would produce the above key.</div>
+									<img id="output-qr-code" class="qr-code" alt="QR code containing the encryption key"/>
+								</div>
+							</div>
+						</div>
+					</div>
+					<br/>
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Plain Text</strong>
+							</div>
+							<div class="cell button-group">
+								<button id="paste-plain-text">Paste</button>
+								<button id="encrypt">Encrypt</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<textarea id="plain-text" placeholder="Enter your message here..."></textarea>
+							</div>
+						</div>
+					</div>
+					<br/>
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Encrypted Text</strong>
+							</div>
+							<div class="cell button-group">
+								<span id="hidden-encrypted" class="toggle hidden">Copied!</span>
+								<button id="copy-encrypted">Copy</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<textarea id="encrypted-output" readonly="readonly" placeholder="Encrypted text will appear here..."></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-panel" data-name="tab-decrypt">
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Decryption Key</strong>
+							</div>
+							<div class="cell button-group">
+								<button id="paste-decrypt-key">Paste</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<textarea id="decrypt-key" class="key" placeholder="Paste the decryption key here..."></textarea>
+							</div>
+						</div>
+					</div>
+					<br/>
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Encrypted Text</strong>
+							</div>
+							<div class="cell button-group">
+								<button id="paste-encrypted">Paste</button>
+								<button id="decrypt">Decrypt</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<textarea id="cipher-text" placeholder="Paste the encrypted message here..."></textarea>
+							</div>
+						</div>
+					</div>
+					<br/>
+					<div class="grid">
+						<div class="row">
+							<div class="cell">
+								<strong>Decrypted Text</strong>
+							</div>
+							<div class="cell button-group">
+								<span id="hidden-decrypted" class="toggle hidden">Copied!</span>
+								<button id="copy-decrypted">Copy</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell">
+								<textarea id="decrypted-output" readonly="readonly" placeholder="Decrypted text will appear here..."></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
