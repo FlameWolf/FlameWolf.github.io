@@ -105,7 +105,10 @@
 						justify-content: space-between;
 					}
 					.cell {
-						flex: 1;
+						display: flex;
+						align-items: center;
+						align-self: stretch;
+						flex-grow: 1;
 						&:has(.encrypt-key-holder) {
 							min-height: auto;
 						}
