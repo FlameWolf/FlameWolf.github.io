@@ -7,22 +7,21 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"/>
 		<style>
 			:root {
-				--primary-color: #2563eb;
-				--primary-hover: #1d4ed8;
-				--success-color: #10b981;
-				--error-color: #ef4444;
-				--warning-color: #f59e0b;
 				--bg-color: #ffffff;
 				--surface-color: #f8fafc;
 				--text-color: #1f2937;
 				--text-secondary: #6b7280;
+				--primary-color: #2563eb;
+				--primary-hover: #1d4ed8;
+				--error-color: #ef4444;
+				--warning-color: #f59e0b;
+				--success-color: #10b981;
 				--border-color: #d1d5db;
-				--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-				--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-				--radius: 0.5rem;
+				--border-radius: 0.5rem;
+				--box-shadow: 0 0 4px rgba(0, 0, 0, 0.1), 0 0 4px rgba(0, 0, 0, 0.06);
+				--box-shadow-lg: 0 0 12px rgba(0, 0, 0, 0.1), 0 0 12px rgba(0, 0, 0, 0.05);
 				--transition: all 0.2s ease-in-out;
 			}
-
 			@media (prefers-color-scheme: dark) {
 				:root {
 					--bg-color: #111827;
@@ -30,236 +29,199 @@
 					--text-color: #f9fafb;
 					--text-secondary: #9ca3af;
 					--border-color: #374151;
-					--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-					--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+					--box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+					--box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 				}
 			}
-
 			* {
 				box-sizing: border-box;
 			}
-
 			body {
-				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 				background-color: var(--bg-color);
 				color: var(--text-color);
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 				line-height: 1.6;
-				margin: 0;
 				padding: 1rem;
+				margin: 0;
 			}
-
 			.container {
 				max-width: 1200px;
 				margin: 0 auto;
 			}
-
 			.header {
 				text-align: center;
 				margin-bottom: 2rem;
-
 				h1 {
-					margin: 0 0 0.5rem 0;
 					color: var(--primary-color);
+					margin: 0 0 0.5rem 0;
 				}
-
 				p {
 					color: var(--text-secondary);
 					margin: 0;
 				}
 			}
-
 			.tab-container {
 				background: var(--surface-color);
-				border-radius: var(--radius);
-				box-shadow: var(--shadow);
+				border-radius: var(--border-radius);
 				overflow: hidden;
+				box-shadow: var(--box-shadow);
 			}
-
 			.tab-bar {
 				display: flex;
 				background: var(--surface-color);
 				border-bottom: 1px solid var(--border-color);
 			}
-
 			.tab-btn {
-				flex: 1;
-				padding: 1rem;
-				border: none;
+				flex-grow: 1;
 				background: transparent;
 				color: var(--text-secondary);
-				cursor: pointer;
-				transition: var(--transition);
 				font-weight: 500;
+				cursor: pointer;
+				padding: 1rem;
+				border: none;
 				position: relative;
-
+				transition: var(--transition);
 				&:hover {
 					background: var(--bg-color);
 					color: var(--text-color);
 				}
-
 				&.active {
-					color: var(--primary-color);
 					background: var(--bg-color);
-
+					color: var(--primary-color);
 					&::after {
 						content: "";
+						background: var(--primary-color);
+						height: 2px;
 						position: absolute;
 						bottom: 0;
 						left: 0;
 						right: 0;
-						height: 2px;
-						background: var(--primary-color);
 					}
 				}
 			}
-
 			.tab-panel {
 				display: none;
 				padding: 2rem;
-
 				&.active {
 					display: block;
 				}
 			}
-
 			.section {
 				margin-bottom: 2rem;
-
 				&:last-child {
 					margin-bottom: 0;
 				}
 			}
-
 			.section-header {
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
 				margin-bottom: 1rem;
 			}
-
 			.section-title {
-				margin: 0;
 				font-size: 1.125rem;
 				font-weight: 600;
+				margin: 0;
 			}
-
 			.section-actions {
 				display: flex;
-				gap: 0.5rem;
 				align-items: center;
+				gap: 0.5rem;
 			}
-
 			.btn {
-				padding: 0.5rem 1rem;
-				border: 1px solid var(--border-color);
-				border-radius: var(--radius);
-				background: var(--bg-color);
-				color: var(--text-color);
-				cursor: pointer;
-				transition: var(--transition);
-				font-size: 0.875rem;
-				font-weight: 500;
 				display: inline-flex;
 				align-items: center;
 				gap: 0.25rem;
-
+				background: var(--bg-color);
+				color: var(--text-color);
+				font-size: 0.875rem;
+				font-weight: 500;
+				cursor: pointer;
+				padding: 0.5rem 1rem;
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
+				transition: var(--transition);
 				&:hover:not(:disabled) {
 					background: var(--surface-color);
+					color: var(--text-secondary);
 					border-color: var(--primary-color);
-
 					&:disabled {
-						opacity: 0.5;
 						cursor: not-allowed;
+						opacity: 0.5;
 					}
 				}
 			}
-
 			.btn-primary {
 				background: var(--primary-color);
 				color: white;
 				border-color: var(--primary-color);
-
-				&:hover:not(:disabled) {
-					background: var(--primary-hover);
-					border-color: var(--primary-hover);
-				}
 			}
-
 			.btn-success {
 				background: var(--success-color);
 				color: white;
 				border-color: var(--success-color);
 			}
-
 			textarea {
+				resize: vertical;
+				background: var(--bg-color);
+				color: var(--text-color);
+				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+				font-size: 0.875rem;
+				line-height: 1.5;
 				width: 100%;
 				min-height: 300px;
 				padding: 1rem;
 				border: 1px solid var(--border-color);
-				border-radius: var(--radius);
-				background: var(--bg-color);
-				color: var(--text-color);
-				resize: vertical;
-				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-				font-size: 0.875rem;
-				line-height: 1.5;
+				border-radius: var(--border-radius);
 				transition: var(--transition);
-
 				&:focus {
-					outline: none;
 					border-color: var(--primary-color);
+					outline: none;
 					box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 				}
-
 				&.drag-over {
-					border-color: var(--primary-color);
 					background: rgba(37, 99, 235, 0.05);
+					border-color: var(--primary-color);
 				}
 			}
-
 			.stats {
 				display: flex;
 				gap: 1rem;
-				margin-top: 0.5rem;
-				font-size: 0.75rem;
 				color: var(--text-secondary);
+				font-size: 0.75rem;
+				margin-top: 0.5rem;
 			}
-
 			.stat {
 				display: flex;
 				align-items: center;
 				gap: 0.25rem;
 			}
-
 			.toast {
+				color: white;
+				font-weight: 500;
+				padding: 0.75rem 1rem;
+				border-radius: var(--border-radius);
+				box-shadow: var(--box-shadow-lg);
 				position: fixed;
 				top: 1rem;
 				right: 1rem;
-				padding: 0.75rem 1rem;
-				border-radius: var(--radius);
-				box-shadow: var(--shadow-lg);
-				transform: translateX(100%);
 				opacity: 0;
+				transform: translateX(100%);
 				transition: var(--transition);
 				z-index: 1000;
-				font-weight: 500;
-
 				&.show {
-					transform: translateX(0);
 					opacity: 1;
+					transform: translateX(0);
 				}
 			}
-
 			.toast-success {
 				background: var(--success-color);
 				color: white;
 			}
-
 			.toast-error {
 				background: var(--error-color);
 				color: white;
 			}
-
 			.spinner {
 				width: 16px;
 				height: 16px;
@@ -268,66 +230,56 @@
 				border-radius: 50%;
 				animation: spin 1s linear infinite;
 			}
-
 			@keyframes spin {
 				to {
 					transform: rotate(360deg);
 				}
 			}
-
 			.shortcuts {
-				margin-top: 2rem;
-				padding: 1rem;
 				background: var(--surface-color);
-				border-radius: var(--radius);
-				font-size: 0.75rem;
 				color: var(--text-secondary);
-
+				font-size: 0.75rem;
+				padding: 1rem;
+				border-radius: var(--border-radius);
+				margin-top: 2rem;
 				h4 {
-					margin: 0 0 0.5rem 0;
 					color: var(--text-color);
+					margin: 0 0 0.5rem 0;
 				}
-
 				ul {
-					margin: 0;
 					padding-left: 1.5rem;
+					margin: 0;
 				}
 			}
-
 			.sr-only {
-				position: absolute;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
 				width: 1px;
 				height: 1px;
 				padding: 0;
-				margin: -1px;
-				overflow: hidden;
-				clip: rect(0, 0, 0, 0);
-				white-space: nowrap;
 				border: 0;
+				overflow: hidden;
+				position: absolute;
+				margin: -1px;
 			}
-
 			@media (max-width: 768px) {
 				body {
 					padding: 0.5rem;
 				}
-
 				.tab-panel {
 					padding: 1rem;
 				}
-
 				.section-header {
 					flex-direction: column;
 					align-items: stretch;
 					gap: 1rem;
 				}
-
 				.section-actions {
 					justify-content: stretch;
 					align-items: stretch;
 				}
-
 				.btn {
-					flex: 1;
+					flex-grow: 1;
 					justify-content: center;
 				}
 			}
@@ -342,7 +294,6 @@
 				const decoder = new TextDecoder();
 				let currentTab = "encode";
 				let isProcessing = false;
-
 				function setProcessing(processing, button, text) {
 					isProcessing = processing;
 					button.disabled = processing;
@@ -352,7 +303,6 @@
 						button.textContent = text;
 					}
 				}
-
 				function showToast(message, type = "success") {
 					const toast = document.createElement("div");
 					toast.className = `toast toast-${type}`;
@@ -365,7 +315,6 @@
 						setTimeout(() => container.removeChild(toast), 300);
 					}, 3000);
 				}
-
 				function updateStats() {
 					const plainText = document.getElementById("plain-text").value;
 					const plainBytes = new Blob([plainText]).size;
@@ -389,14 +338,12 @@
 					document.getElementById("decoded-chars").textContent = `${decodedOutput.length.toLocaleString()} characters`;
 					document.getElementById("decoded-bytes").textContent = `${decodedBytes.toLocaleString()} bytes`;
 				}
-
 				async function encodeText(text) {
 					if (!text.trim()) {
 						return "";
 					}
 					return encodeBase95(await gzip(encoder.encode(text)));
 				}
-
 				async function encode() {
 					if (isProcessing) {
 						return;
@@ -421,18 +368,15 @@
 						setProcessing(false, button, "Encode");
 					}
 				}
-
 				function validateBase95Input(input) {
 					return input.trim().length > 0;
 				}
-
 				async function decodeText(encoded) {
 					if (!encoded.trim()) {
 						return "";
 					}
 					return decoder.decode(await gunzip(decodeBase95(encoded)));
 				}
-
 				async function decode() {
 					if (isProcessing) {
 						return;
@@ -461,7 +405,6 @@
 						setProcessing(false, button, "Decode");
 					}
 				}
-
 				async function pasteText(targetId) {
 					try {
 						const text = await navigator.clipboard.readText();
@@ -473,7 +416,6 @@
 						showToast("Failed to paste from clipboard", "error");
 					}
 				}
-
 				async function copyText(sourceId) {
 					const element = document.getElementById(sourceId);
 					if (!element.value.trim()) {
@@ -488,11 +430,9 @@
 						showToast("Failed to copy to clipboard", "error");
 					}
 				}
-
 				function uploadFile() {
 					document.getElementById("file-input").click();
 				}
-
 				async function handleFileDrop(file, targetId) {
 					if (file.size > 10 * 1024 * 1024) {
 						showToast("File too large. Maximum size is 10MB.", "error");
@@ -508,14 +448,12 @@
 						showToast("Failed to read file", "error");
 					}
 				}
-
 				async function handleFileSelect(event) {
 					const file = event.target.files[0];
 					if (file) {
 						await handleFileDrop(file, "plain-text");
 					}
 				}
-
 				function downloadText(sourceId, filename) {
 					const element = document.getElementById(sourceId);
 					if (!element.value.trim()) {
@@ -533,17 +471,14 @@
 					URL.revokeObjectURL(url);
 					showToast("File downloaded successfully", "success");
 				}
-
 				async function pasteToCurrentInput() {
 					const targetId = currentTab === "encode" ? "plain-text" : "encoded-input";
 					await pasteText(targetId);
 				}
-
 				async function copyCurrentOutput() {
 					const sourceId = currentTab === "encode" ? "encoded-output" : "decoded-output";
 					await copyText(sourceId);
 				}
-
 				function switchTab(tabName) {
 					currentTab = tabName;
 					document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -553,7 +488,6 @@
 						panel.classList.toggle("active", panel.dataset.panel === tabName);
 					});
 				}
-
 				function debounce(func, wait) {
 					let timeout;
 					return function executedFunction(...args) {
@@ -565,7 +499,6 @@
 						timeout = setTimeout(later, wait);
 					};
 				}
-
 				document.querySelectorAll(".tab-btn").forEach(btn => {
 					btn.addEventListener("click", () => switchTab(btn.dataset.tab));
 				});
