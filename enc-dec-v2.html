@@ -7,46 +7,38 @@
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
 			:root {
-				--padding: 1rem;
-				--border-radius: 0.75rem;
-				--box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
-				--margin: 1rem;
 				--bg-primary: #ffffff;
 				--bg-secondary: #f8f9fa;
 				--bg-tertiary: #e9ecef;
 				--text-primary: #212529;
 				--text-secondary: #6c757d;
+				--error-color: #dc3545;
+				--success-color: #28a745;
 				--accent-primary: #0066cc;
 				--accent-hover: #0056b3;
 				--border-color: #dee2e6;
-				--error-color: #dc3545;
-				--success-color: #28a745;
+				--padding: 1rem;
+				--border-radius: 0.75rem;
+				--box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+				--margin: 1rem;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
-					--box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
 					--bg-primary: #1a1a1a;
 					--bg-secondary: #2d2d2d;
 					--bg-tertiary: #404040;
 					--text-primary: #ffffff;
 					--text-secondary: #adb5bd;
+					--error-color: #f5c6cb;
+					--success-color: #d4edda;
 					--accent-primary: #4dabf7;
 					--accent-hover: #339af0;
 					--border-color: #495057;
-					--error-color: #f5c6cb;
-					--success-color: #d4edda;
+					--box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
 				}
 			}
 			* {
 				box-sizing: border-box;
-			}
-			body {
-				background-color: var(--bg-primary);
-				color: var(--text-primary);
-				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Aptos, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-				line-height: 1.6;
-				padding: var(--margin);
-				min-height: 100vh;
 			}
 			.container {
 				width: 100%;
@@ -54,25 +46,25 @@
 			}
 			.tab-container {
 				background-color: var(--bg-secondary);
+				overflow: hidden;
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
-				overflow: hidden;
 			}
 			.tab-bar {
 				display: flex;
 				background-color: var(--bg-tertiary);
 				border-bottom: 1px solid var(--border-color);
 				.tab-btn {
-					flex: 1;
-					padding: var(--padding);
-					border: none;
+					flex-grow: 1;
 					background-color: transparent;
 					color: var(--text-secondary);
-					cursor: pointer;
 					font-size: 1rem;
 					font-weight: 500;
-					transition: all 0.2s ease;
+					cursor: pointer;
+					padding: var(--padding);
+					border: none;
 					border-radius: 0;
+					transition: all 0.2s ease;
 					&:hover {
 						background-color: var(--bg-secondary);
 						color: var(--text-primary);
@@ -85,11 +77,17 @@
 						outline: 2px solid var(--accent-primary);
 						outline-offset: -2px;
 					}
+					&:active {
+						transform: none;
+					}
 				}
 			}
 			.tab-panel {
 				display: none;
 				padding: var(--padding);
+				&.visible {
+					display: block;
+				}
 			}
 			.grid {
 				display: flex;
@@ -98,7 +96,7 @@
 				.row {
 					display: flex;
 					flex-direction: column;
-					gap: 0.5rem;
+					gap: calc(var(--margin) / 2);
 					@media (min-width: 768px) {
 						flex-direction: row;
 						align-items: flex-start;
@@ -109,17 +107,14 @@
 						align-items: center;
 						align-self: stretch;
 						flex-grow: 1;
-						&:has(.encrypt-key-holder) {
-							min-height: auto;
-						}
 					}
 				}
 			}
 			.encrypt-key-holder {
 				display: grid;
-				gap: var(--margin);
 				grid-template-columns: 1fr;
 				grid-template-rows: auto auto auto;
+				gap: var(--margin);
 				@media (min-width: 768px) {
 					grid-template-columns: 3fr 1fr;
 					grid-template-rows: auto auto;
@@ -131,20 +126,17 @@
 				.message {
 					grid-column: 1;
 					grid-row: 2;
-					padding: var(--padding);
 					background-color: var(--bg-tertiary);
+					padding: var(--padding);
+					border: solid 1px var(--border-color);
 					border-radius: var(--border-radius);
-					border: 1px solid var(--border-color);
-					@media (min-width: 768px) {
-						grid-row: 2;
-					}
 				}
 				.qr-code {
 					grid-column: 1;
 					grid-row: 3;
 					justify-self: center;
-					max-width: 200px;
 					width: 100%;
+					max-width: 200px;
 					height: auto;
 					border-radius: var(--border-radius);
 					box-shadow: var(--box-shadow);
@@ -157,38 +149,13 @@
 			}
 			.button-group {
 				display: flex;
-				gap: 0.5rem;
-				flex-wrap: wrap;
 				justify-content: flex-end;
+				gap: calc(var(--margin) / 2);
 				@media (max-width: 767px) {
 					justify-content: stretch;
 					button {
-						flex: 1;
+						flex-grow: 1;
 					}
-				}
-			}
-			button {
-				padding: 0.75rem 1.5rem;
-				border: 2px solid var(--border-color);
-				border-radius: var(--border-radius);
-				background-color: var(--bg-secondary);
-				color: var(--text-primary);
-				cursor: pointer;
-				font-size: 0.9rem;
-				font-weight: 500;
-				transition: all 0.2s ease;
-				min-width: 80px;
-				&:hover {
-					background-color: var(--accent-primary);
-					color: white;
-					border-color: var(--accent-primary);
-				}
-				&:focus {
-					outline: 2px solid var(--accent-primary);
-					outline-offset: 2px;
-				}
-				&:active {
-					transform: translateY(1px);
 				}
 			}
 			#message {
@@ -202,7 +169,6 @@
 			}
 			.hidden {
 				display: none;
-				opacity: 0;
 			}
 			.align-start {
 				text-align: start;
@@ -210,29 +176,70 @@
 			.align-end {
 				text-align: end;
 			}
+			button {
+				background-color: var(--bg-secondary);
+				color: var(--text-primary);
+				font-size: 0.9rem;
+				cursor: pointer;
+				min-width: 80px;
+				padding: 0.75rem 1.5rem;
+				border: solid 2px var(--border-color);
+				border-radius: var(--border-radius);
+				transition: all 0.2s ease;
+				&:hover {
+					background-color: var(--accent-primary);
+					color: white;
+					border-color: var(--accent-primary);
+				}
+				&:focus {
+					outline: 2px solid var(--accent-primary);
+					outline-offset: 2px;
+				}
+				&:active {
+					transform: scale(0.98);
+				}
+			}
+			dialog {
+				background-color: var(--bg-primary);
+				color: var(--text-primary);
+				min-width: 300px;
+				padding: var(--padding);
+				border: solid 1px var(--border-color);
+				border-radius: var(--border-radius);
+				box-shadow: var(--box-shadow);
+				&::backdrop {
+					background-color: rgba(0, 0, 0, 0.5);
+				}
+				header {
+					color: var(--error-color);
+					font-size: 1.1rem;
+					font-weight: 600;
+					margin-bottom: 0.5rem;
+				}
+				button {
+					margin-top: var(--margin);
+				}
+			}
 			textarea {
+				background-color: var(--bg-primary);
+				color: var(--text-primary);
+				font-size: 0.9rem;
+				line-height: 1.4;
 				width: 100%;
 				min-height: 200px;
 				padding: var(--padding);
-				border: 1px solid var(--border-color);
+				border: solid 1px var(--border-color);
 				border-radius: var(--border-radius);
-				background-color: var(--bg-primary);
-				color: var(--text-primary);
-				font-family: "Cascadia Code", "Monaco", "Consolas", monospace;
-				font-size: 0.9rem;
-				line-height: 1.4;
 				resize: vertical;
 				box-shadow: var(--box-shadow);
-				transition: border-color 0.2s ease, box-shadow 0.2s ease;
 				&:focus {
 					outline: none;
 					border-color: var(--accent-primary);
 					box-shadow: 0 0 0 3px rgba(70, 171, 247, 0.1);
 				}
 				&.key {
-					min-height: 80px;
-					font-family: monospace;
 					font-size: 0.8rem;
+					min-height: 80px;
 				}
 				&[readonly] {
 					background-color: var(--bg-secondary);
@@ -245,41 +252,15 @@
 					}
 				}
 			}
-			dialog {
-				padding: var(--padding);
-				border: 1px solid var(--border-color);
-				border-radius: var(--border-radius);
-				background-color: var(--bg-primary);
-				color: var(--text-primary);
-				box-shadow: var(--box-shadow);
-				min-width: 300px;
-				&::backdrop {
-					background-color: rgba(0, 0, 0, 0.5);
-				}
-				header {
-					font-weight: 600;
-					font-size: 1.1rem;
-					color: var(--error-color);
-					margin-bottom: 0.5rem;
-				}
-				button {
-					margin-top: var(--margin);
-				}
-			}
-			strong {
-				color: var(--text-primary);
-				font-weight: 600;
-			}
 			@media (max-width: 767px) {
 				:root {
 					--padding: 0.75rem;
 					--margin: 0.75rem;
 				}
-				body {
-					padding: 0.5rem;
-				}
-				.grid .row {
-					gap: 0.75rem;
+				.grid {
+					> .row {
+						gap: var(--margin);
+					}
 				}
 			}
 			@media (prefers-contrast: high) {
@@ -388,8 +369,8 @@
 					tabBarButtons.forEach(btn => {
 						btn.addEventListener("click", () => {
 							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tc.querySelectorAll(".tab-panel").forEach(tp => tp.style.removeProperty("display"));
-							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.style.setProperty("display", "block");
+							tc.querySelectorAll(".tab-panel").forEach(tp => tp.classList.remove("visible"));
+							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.classList.add("visible");
 							btn.classList.add("active");
 						});
 					});

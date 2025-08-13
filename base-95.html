@@ -40,6 +40,9 @@
 			}
 			.tab-panel {
 				display: none;
+				&.visible {
+					display: block;
+				}
 			}
 			.grid {
 				display: grid;
@@ -125,8 +128,8 @@
 					tabBarButtons.forEach(btn => {
 						btn.addEventListener("click", () => {
 							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tc.querySelectorAll(".tab-panel").forEach(tp => tp.style.removeProperty("display"));
-							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.style.setProperty("display", "block");
+							tc.querySelectorAll(".tab-panel").forEach(tp => tp.classList.remove("visible"));
+							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.classList.add("visible");
 							btn.classList.add("active");
 						});
 					});
