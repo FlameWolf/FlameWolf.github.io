@@ -18,8 +18,8 @@
 				--accent-hover: #0056b3;
 				--border-color: #dee2e6;
 				--padding: 1rem;
-				--border-radius: 0.75rem;
-				--box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+				--border-radius: 0.375rem;
+				--box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.25);
 				--margin: 1rem;
 			}
 			@media (prefers-color-scheme: dark) {
@@ -34,7 +34,7 @@
 					--accent-primary: #4dabf7;
 					--accent-hover: #339af0;
 					--border-color: #495057;
-					--box-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
+					--box-shadow: 0 0 0.25rem rgba(255, 255, 255, 0.75);
 				}
 			}
 			* {
@@ -47,53 +47,51 @@
 			.tab-container {
 				background-color: var(--bg-secondary);
 				overflow: hidden;
-				border-radius: var(--border-radius);
+				border-radius: calc(var(--border-radius) * 2);
 				box-shadow: var(--box-shadow);
-			}
-			.tab-bar {
-				display: flex;
-				background-color: var(--bg-tertiary);
-				border-bottom: 1px solid var(--border-color);
-				.tab-btn {
-					flex-grow: 1;
-					background-color: transparent;
-					color: var(--text-secondary);
-					font-size: 1rem;
-					font-weight: 500;
-					cursor: pointer;
-					padding: var(--padding);
-					border: none;
-					border-radius: 0;
-					transition: all 0.2s ease;
-					&:hover {
-						background-color: var(--bg-secondary);
-						color: var(--text-primary);
-					}
-					&.active {
-						background-color: var(--accent-primary);
-						color: white;
-					}
-					&:focus {
-						outline: 2px solid var(--accent-primary);
-						outline-offset: -2px;
-					}
-					&:active {
-						transform: none;
+				> .tab-bar {
+					display: flex;
+					background-color: var(--bg-tertiary);
+					border-bottom: 1px solid var(--border-color);
+					> .tab-btn {
+						flex-grow: 1;
+						font-size: 1rem;
+						cursor: pointer;
+						padding: var(--padding);
+						border-style: none;
+						border-radius: 0;
+						&.active {
+							background-color: var(--accent-primary);
+							color: white;
+						}
+						&:focus {
+							outline-color: cyan;
+							outline-offset: -4px;
+						}
+						&:active {
+							transform: none;
+						}
+						&:first-child {
+							border-top-left-radius: calc(var(--border-radius) * 2);
+						}
+						&:last-child {
+							border-top-right-radius: calc(var(--border-radius) * 2);
+						}
 					}
 				}
-			}
-			.tab-panel {
-				display: none;
-				padding: var(--padding);
-				&.visible {
-					display: block;
+				> .tab-panel {
+					display: none;
+					padding: var(--padding);
+					&.visible {
+						display: block;
+					}
 				}
 			}
 			.grid {
 				display: flex;
 				flex-direction: column;
 				gap: var(--margin);
-				.row {
+				> .row {
 					display: flex;
 					flex-direction: column;
 					gap: calc(var(--margin) / 2);
@@ -102,7 +100,7 @@
 						align-items: flex-start;
 						justify-content: space-between;
 					}
-					.cell {
+					> .cell {
 						display: flex;
 						align-items: center;
 						align-self: stretch;
@@ -113,37 +111,37 @@
 			.encrypt-key-holder {
 				display: grid;
 				grid-template-columns: 1fr;
-				grid-template-rows: auto auto auto;
 				gap: var(--margin);
 				@media (min-width: 768px) {
 					grid-template-columns: 3fr 1fr;
-					grid-template-rows: auto auto;
 				}
-				.key {
+				> .key {
 					grid-column: 1;
 					grid-row: 1;
 				}
-				.message {
+				> .message {
 					grid-column: 1;
 					grid-row: 2;
 					background-color: var(--bg-tertiary);
+					font-size: 0.9rem;
+					line-height: 1.5;
 					padding: var(--padding);
 					border: solid 1px var(--border-color);
 					border-radius: var(--border-radius);
 				}
-				.qr-code {
+				> .qr-code {
 					grid-column: 1;
 					grid-row: 3;
 					justify-self: center;
-					width: 100%;
-					max-width: 200px;
-					height: auto;
+					max-width: 12.5rem;
 					border-radius: var(--border-radius);
 					box-shadow: var(--box-shadow);
 					@media (min-width: 768px) {
 						grid-column: 2;
 						grid-row: 1 / span 2;
-						max-width: unset;
+						place-self: stretch;
+						min-width: 256px;
+						max-width: 100%;
 					}
 				}
 			}
@@ -153,22 +151,10 @@
 				gap: calc(var(--margin) / 2);
 				@media (max-width: 767px) {
 					justify-content: stretch;
-					button {
+					> button {
 						flex-grow: 1;
 					}
 				}
-			}
-			#message {
-				font-size: 0.9rem;
-				line-height: 1.5;
-			}
-			.toggle {
-				display: flex;
-				place-items: center;
-				transition: all 0.3s ease;
-			}
-			.hidden {
-				display: none;
 			}
 			.align-start {
 				text-align: start;
@@ -181,28 +167,38 @@
 				color: var(--text-primary);
 				font-size: 0.9rem;
 				cursor: pointer;
-				min-width: 80px;
+				min-width: 5rem;
 				padding: 0.75rem 1.5rem;
 				border: solid 2px var(--border-color);
 				border-radius: var(--border-radius);
-				transition: all 0.2s ease;
 				&:hover {
-					background-color: var(--accent-primary);
+					background-color: var(--accent-hover);
 					color: white;
-					border-color: var(--accent-primary);
+					border-color: var(--accent-hover);
+					&:disabled {
+						color: var(--text-primary);
+						cursor: default;
+					}
 				}
 				&:focus {
-					outline: 2px solid var(--accent-primary);
+					outline: 2px solid var(--accent-hover);
 					outline-offset: 2px;
 				}
 				&:active {
 					transform: scale(0.98);
 				}
+				@media (min-width: 768px) {
+					&.btn-copy {
+						min-width: 6.75rem;
+					}
+				}
+				@media (max-width: 767px) {
+					min-width: unset;
+				}
 			}
 			dialog {
 				background-color: var(--bg-primary);
 				color: var(--text-primary);
-				min-width: 300px;
 				padding: var(--padding);
 				border: solid 1px var(--border-color);
 				border-radius: var(--border-radius);
@@ -210,13 +206,12 @@
 				&::backdrop {
 					background-color: rgba(0, 0, 0, 0.5);
 				}
-				header {
+				> header {
 					color: var(--error-color);
 					font-size: 1.1rem;
-					font-weight: 600;
-					margin-bottom: 0.5rem;
+					font-weight: bold;
 				}
-				button {
+				> button {
 					margin-top: var(--margin);
 				}
 			}
@@ -226,7 +221,7 @@
 				font-size: 0.9rem;
 				line-height: 1.4;
 				width: 100%;
-				min-height: 200px;
+				min-height: 12.5rem;
 				padding: var(--padding);
 				border: solid 1px var(--border-color);
 				border-radius: var(--border-radius);
@@ -235,20 +230,20 @@
 				&:focus {
 					outline: none;
 					border-color: var(--accent-primary);
-					box-shadow: 0 0 0 3px rgba(70, 171, 247, 0.1);
+					box-shadow: 0 0 0.25rem var(--accent-primary);
 				}
 				&.key {
 					font-size: 0.8rem;
-					min-height: 80px;
+					min-height: 5rem;
 				}
 				&[readonly] {
 					background-color: var(--bg-secondary);
 					cursor: default;
 				}
 				@media (min-width: 768px) {
-					min-height: 300px;
+					min-height: 20rem;
 					&.key {
-						min-height: 100px;
+						min-height: 6rem;
 					}
 				}
 			}
@@ -257,26 +252,10 @@
 					--padding: 0.75rem;
 					--margin: 0.75rem;
 				}
-				.grid {
-					> .row {
-						gap: var(--margin);
-					}
-				}
 			}
 			@media (prefers-contrast: high) {
 				:root {
-					--box-shadow: 0 0 4px rgba(0, 0, 0, 0.75);
-				}
-				button,
-				textarea {
-					border-width: 2px;
-				}
-			}
-			@media (prefers-reduced-motion: reduce) {
-				.toggle,
-				button,
-				textarea {
-					transition: none;
+					--box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.75);
 				}
 			}
 		</style>
@@ -327,42 +306,40 @@
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const dlgErrorAlert = document.getElementById("error-alert");
 				const btncloseErrorAlert = document.getElementById("close-error-alert");
-				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
 				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncrypt = document.getElementById("encrypt");
-				const btnCopyEncrypted = document.getElementById("copy-encrypted");
 				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
 				const btnPasteEncrypted = document.getElementById("paste-encrypted");
 				const btnDecrypt = document.getElementById("decrypt");
-				const btnCopyDecrypted = document.getElementById("copy-decrypted");
 				const txtEncryptKey = document.getElementById("encrypt-key");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncryptedOutput = document.getElementById("encrypted-output");
 				const txtDecryptKey = document.getElementById("decrypt-key");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecryptedOutput = document.getElementById("decrypted-output");
-				const spnHiddenEncryptKey = document.getElementById("hidden-encrypt-key");
-				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
-				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
 				const imgOutputQrCode = document.getElementById("output-qr-code");
 				const canOutputQrCode = document.createElement("canvas");
 				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
 				const tmpImgOutputQrCode = new Image();
-				const flashElement = elem => {
-					elem.classList.remove("hidden");
-					setTimeout(() => {
-						elem.classList.add("hidden");
-					}, 1500);
-				};
 				const pasteInto = async input => {
 					const clipboardText = await navigator.clipboard.readText();
 					if (clipboardText) {
 						input.value = clipboardText;
 					}
 				};
-				const copyFromAndFlash = async (input, elem) => {
-					await navigator.clipboard.writeText(input.value);
-					flashElement(elem);
+				const flashCopiedMessage = elem => {
+					elem.setAttribute("disabled", true);
+					elem.textContent = "Copied!";
+					setTimeout(() => {
+						elem.textContent = "Copy";
+						elem.removeAttribute("disabled");
+					}, 1500);
+				};
+				const copyAndFlash = async event => {
+					const target = event.target;
+					const sourceElement = document.getElementById(target.dataset["source"]);
+					await navigator.clipboard.writeText(sourceElement.value);
+					flashCopiedMessage(target);
 				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
@@ -390,7 +367,6 @@
 				btncloseErrorAlert.addEventListener("click", async () => {
 					dlgErrorAlert.close();
 				});
-				btnCopyEncryptKey.addEventListener("click", async () => await copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
 				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
@@ -405,7 +381,6 @@
 						txtEncryptedOutput.value = "";
 					}
 				});
-				btnCopyEncrypted.addEventListener("click", async () => await copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
 				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
 				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
@@ -433,7 +408,9 @@
 						txtDecryptedOutput.value = "";
 					}
 				});
-				btnCopyDecrypted.addEventListener("click", async () => await copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
+				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
+					btnCopy.addEventListener("click", copyAndFlash);
+				});
 			});
 		</script>
 	</head>
@@ -456,15 +433,14 @@
 								<strong>Encryption Key</strong>
 							</div>
 							<div class="cell button-group">
-								<span id="hidden-encrypt-key" class="toggle hidden">Copied!</span>
-								<button id="copy-encrypt-key">Copy</button>
+								<button class="btn-copy" data-source="encrypt-key">Copy</button>
 							</div>
 						</div>
 						<div class="row">
 							<div class="cell">
 								<div class="encrypt-key-holder">
 									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
-									<div id="message"><strong>Important:</strong> The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it. Note down the above key and send it to the receiver via a secure channel separately from the message. Alternatively, you can send them the QR code, which when scanned would produce the above key.</div>
+									<div class="message"><strong>Important:</strong> The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it. Note down the above key and send it to the receiver via a secure channel separately from the message. Alternatively, you can send them the QR code, which when scanned would produce the above key.</div>
 									<img id="output-qr-code" class="qr-code" alt="QR code containing the encryption key"/>
 								</div>
 							</div>
@@ -494,8 +470,7 @@
 								<strong>Encrypted Text</strong>
 							</div>
 							<div class="cell button-group">
-								<span id="hidden-encrypted" class="toggle hidden">Copied!</span>
-								<button id="copy-encrypted">Copy</button>
+								<button class="btn-copy" data-source="encrypted-output">Copy</button>
 							</div>
 						</div>
 						<div class="row">
@@ -545,8 +520,7 @@
 								<strong>Decrypted Text</strong>
 							</div>
 							<div class="cell button-group">
-								<span id="hidden-decrypted" class="toggle hidden">Copied!</span>
-								<button id="copy-decrypted">Copy</button>
+								<button class="btn-copy" data-source="decrypted-output">Copy</button>
 							</div>
 						</div>
 						<div class="row">
