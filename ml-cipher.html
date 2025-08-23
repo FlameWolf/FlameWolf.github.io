@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>Moolabhadri</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
@@ -11,50 +12,64 @@
 				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
 				--margin: 0.5rem;
 			}
-			@media (prefers-color-scheme: dark) {
-				:root {
-					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
-				}
-				textarea {
-					background-color: rgba(0, 0, 0, 0.25);
-					color: rgb(255, 255, 255);
-				}
-			}
 			* {
 				box-sizing: border-box;
 			}
-			body {
-				margin: auto;
+			button {
+				font-size: 0.9rem;
+				padding-inline: 1.5rem;
+				&:focus {
+					outline: 2px solid grey;
+					outline-offset: -4px;
+					transform: none;
+				}
+				&:disabled,
+				&:disabled:hover {
+					cursor: default;
+				}
 			}
 			.tab-bar {
 				display: flex;
-				margin: var(--margin) auto;
-				.tab-btn {
-					margin-right: 2pt;
-					cursor: pointer;
+				gap: 2px;
+				background-color: var(--background-hover);
+				border: solid 2px var(--background-hover);
+				border-radius: calc(var(--border-radius) + 2px);
+				> .tab-btn {
+					flex: 1;
+					border-style: none;
+					border-radius: unset;
 					&.active {
 						background-color: blue;
 						color: antiquewhite;
 					}
-				}
-				.tab-btn:last-child {
-					margin-right: unset;
+					&:focus {
+						outline-offset: -2px;
+					}
+					&:focus-visible {
+						outline-color: var(--focus);
+					}
+					&:first-child {
+						border-top-left-radius: var(--border-radius);
+						border-bottom-left-radius: var(--border-radius);
+					}
+					&:last-child {
+						border-top-right-radius: var(--border-radius);
+						border-bottom-right-radius: var(--border-radius);
+					}
 				}
 			}
 			.tab-panel {
 				display: none;
-				margin-top: 1pt;
+				&.visible {
+					display: block;
+				}
 			}
-			.tab-bar,
 			#cipher-description {
 				display: flex;
 				place-items: center;
 				place-content: center;
-			}
-			#cipher-description {
 				text-align: center;
-				min-height: 60pt;
-				padding: var(--padding);
+				padding: var(--padding) calc(var(--padding) * 2);
 				border-radius: var(--border-radius);
 				box-shadow: var(--box-shadow);
 			}
@@ -67,33 +82,53 @@
 					grid-auto-flow: column;
 					align-items: center;
 					> .cell {
-						display: table-cell;
+						display: flex;
+						gap: var(--margin);
 					}
 				}
 			}
-			.toggle {
-				transition: all 0.5s ease-in-out;
-			}
-			.hidden {
-				visibility: hidden;
-				opacity: 0;
-			}
-			.align-start {
-				text-align: start;
-			}
-			.align-centre {
-				text-align: center;
-			}
-			.align-end {
-				text-align: end;
-			}
 			textarea {
 				width: 100%;
-				min-height: 480pt;
+				min-height: 40rem;
 				padding: var(--padding);
 				border-style: solid;
 				border-radius: var(--border-radius);
 				resize: none;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			@media (min-width: 768px) {
+				.align-end {
+					justify-content: flex-end;
+				}
+				button {
+					min-width: 5rem;
+					&.btn-copy {
+						min-width: 6.75rem;
+					}
+				}
+			}
+			@media (max-width: 767px) {
+				.grid {
+					> .row {
+						display: flex;
+						flex-direction: column;
+						align-items: stretch;
+						gap: var(--margin);
+						> .cell {
+							> button {
+								flex-grow: 1;
+							}
+						}
+					}
+				}
 			}
 		</style>
 		<script type="text/javascript" src="JavaScript/ml-cipher.js"></script>
@@ -109,7 +144,6 @@
 				const btnCopy = document.getElementById("copy");
 				const txtInput = document.getElementById("input");
 				const txtOutput = document.getElementById("output");
-				const spnHidden = document.getElementById("hidden");
 				for (const schemeId in cipherSchemes) {
 					const scheme = cipherSchemes[schemeId];
 					const btnCipher = document.createElement("button");
@@ -141,17 +175,19 @@
 					}
 				});
 				btnConvert.addEventListener("click", async () => {
-					var input = txtInput.value.trim();
+					const input = txtInput.value.trim();
 					if (input) {
 						txtOutput.value = transformText(input);
 					}
 				});
-				btnCopy.addEventListener("click", async () => {
-					var output = txtOutput.value;
-					await navigator.clipboard.writeText(output);
-					spnHidden.classList.remove("hidden");
+				btnCopy.addEventListener("click", async event => {
+					const target = event.target;
+					await navigator.clipboard.writeText(txtOutput.value);
+					target.setAttribute("disabled", true);
+					target.textContent = "Copied!";
 					setTimeout(() => {
-						spnHidden.classList.add("hidden");
+						target.textContent = "Copy";
+						target.removeAttribute("disabled");
 					}, 1500);
 				});
 				const schemeName = localStorage.getItem("schemeName");
@@ -165,11 +201,12 @@
 		</script>
 	</head>
 	<body>
-		<div id="select-cipher" class="tab-container" data-default="moolabhadri">
-			<p class="align-centre">Choose an encryption scheme</p>
+		<p>Choose an encryption scheme</p>
+		<div id="select-cipher" data-default="moolabhadri">
 			<div class="tab-bar"></div>
-			<p id="cipher-description" data-name="cipher-description"></p>
 		</div>
+		<p id="cipher-description" data-name="cipher-description"></p>
+		<br/>
 		<div class="grid">
 			<div class="row">
 				<div class="cell">
@@ -193,11 +230,7 @@
 					<strong>Output</strong>
 				</div>
 				<div class="cell align-end">
-					<span id="hidden" class="toggle hidden">
-						<span>Text copied!</span>
-						<span>&#xA0;</span>
-					</span>
-					<button id="copy">Copy</button>
+					<button id="copy" class="btn-copy">Copy</button>
 				</div>
 			</div>
 			<div class="row">
@@ -206,6 +239,5 @@
 				</div>
 			</div>
 		</div>
-		<p>&#xA0;</p>
 	</body>
 </html>

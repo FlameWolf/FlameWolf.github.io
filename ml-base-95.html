@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>Malayalam Base-95 Conversion</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
@@ -10,15 +11,6 @@
 				--border-radius: 0.375rem;
 				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
 				--margin: 0.5rem;
-			}
-			@media (prefers-color-scheme: dark) {
-				:root {
-					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
-				}
-				textarea {
-					background-color: rgba(0, 0, 0, 0.25);
-					color: rgb(255, 255, 255);
-				}
 			}
 			* {
 				box-sizing: border-box;
@@ -29,19 +21,47 @@
 				box-shadow: var(--box-shadow);
 				margin-bottom: var(--margin);
 			}
+			button {
+				font-size: 0.9rem;
+				padding-inline: 1.5rem;
+				&:focus {
+					outline: 2px solid grey;
+					outline-offset: -4px;
+					transform: none;
+				}
+				&:disabled,
+				&:disabled:hover {
+					cursor: default;
+				}
+			}
 			.tab-bar {
 				display: flex;
-				margin: var(--margin) auto;
-				.tab-btn {
-					margin-right: 2pt;
-					cursor: pointer;
+				gap: 2px;
+				background-color: var(--background-hover);
+				border: solid 2px var(--background-hover);
+				border-radius: calc(var(--border-radius) + 2px);
+				> .tab-btn {
+					flex: 1;
+					border-style: none;
+					border-radius: unset;
 					&.active {
 						background-color: blue;
 						color: antiquewhite;
 					}
-				}
-				.tab-btn:last-child {
-					margin-right: unset;
+					&:focus {
+						outline-offset: -2px;
+					}
+					&:focus-visible {
+						outline-color: var(--focus);
+					}
+					&:first-child {
+						border-top-left-radius: var(--border-radius);
+						border-bottom-left-radius: var(--border-radius);
+					}
+					&:last-child {
+						border-top-right-radius: var(--border-radius);
+						border-bottom-right-radius: var(--border-radius);
+					}
 				}
 			}
 			.tab-panel {
@@ -59,32 +79,52 @@
 					grid-auto-flow: column;
 					align-items: center;
 					> .cell {
-						display: table-cell;
+						display: flex;
+						gap: var(--margin);
 					}
 				}
 			}
-			.toggle {
-				transition: all 0.5s ease-in-out;
-			}
-			.hidden {
-				visibility: hidden;
-				opacity: 0;
-			}
-			.align-start {
-				text-align: start;
-			}
-			.align-end {
-				text-align: end;
-			}
 			textarea {
 				width: 100%;
-				min-height: 480pt;
+				min-height: 40rem;
 				padding: var(--padding);
 				border-style: solid;
 				border-radius: var(--border-radius);
 				resize: none;
-				&.key {
-					min-height: 50pt;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			@media (min-width: 768px) {
+				.align-end {
+					justify-content: flex-end;
+				}
+				button {
+					min-width: 5rem;
+					&.btn-copy {
+						min-width: 6.75rem;
+					}
+				}
+			}
+			@media (max-width: 767px) {
+				.grid {
+					> .row {
+						display: flex;
+						flex-direction: column;
+						align-items: stretch;
+						gap: var(--margin);
+						> .cell {
+							> button {
+								flex-grow: 1;
+							}
+						}
+					}
 				}
 			}
 		</style>
@@ -115,31 +155,31 @@
 				};
 				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncode = document.getElementById("encode");
-				const btnCopyEncoded = document.getElementById("copy-encoded");
 				const btnPasteEncoded = document.getElementById("paste-encoded");
 				const btnDecode = document.getElementById("decode");
-				const btnCopyDecoded = document.getElementById("copy-decoded");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncodedOutput = document.getElementById("encoded-output");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecodedOutput = document.getElementById("decoded-output");
-				const spnHiddenEncoded = document.getElementById("hidden-encoded");
-				const spnHiddenDecoded = document.getElementById("hidden-decoded");
-				const flashElement = elem => {
-					elem.classList.remove("hidden");
-					setTimeout(() => {
-						elem.classList.add("hidden");
-					}, 1500);
-				};
 				const pasteInto = async input => {
 					const clipboardText = await navigator.clipboard.readText();
 					if (clipboardText) {
 						input.value = clipboardText;
 					}
 				};
-				const copyFromAndFlash = async (input, elem) => {
-					await navigator.clipboard.writeText(input.value);
-					flashElement(elem);
+				const flashCopiedMessage = elem => {
+					elem.setAttribute("disabled", true);
+					elem.textContent = "Copied!";
+					setTimeout(() => {
+						elem.textContent = "Copy";
+						elem.removeAttribute("disabled");
+					}, 1500);
+				};
+				const copyAndFlash = async event => {
+					const target = event.target;
+					const sourceElement = document.getElementById(target.dataset["source"]);
+					await navigator.clipboard.writeText(sourceElement.value);
+					flashCopiedMessage(target);
 				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
@@ -165,7 +205,6 @@
 						txtEncodedOutput.value = "";
 					}
 				});
-				btnCopyEncoded.addEventListener("click", async () => await copyFromAndFlash(txtEncodedOutput, spnHiddenEncoded));
 				btnPasteEncoded.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
@@ -175,7 +214,9 @@
 						txtDecodedOutput.value = "";
 					}
 				});
-				btnCopyDecoded.addEventListener("click", async () => await copyFromAndFlash(txtDecodedOutput, spnHiddenDecoded));
+				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
+					btnCopy.addEventListener("click", copyAndFlash);
+				});
 			});
 		</script>
 	</head>
@@ -189,6 +230,7 @@
 				<button class="tab-btn" data-href="tab-decode">Decode</button>
 			</div>
 			<div class="tab-panel" data-name="tab-encode">
+				<br/>
 				<div class="grid">
 					<div class="row">
 						<div class="cell">
@@ -212,11 +254,7 @@
 							<strong>Base-95 Encoded Text</strong>
 						</div>
 						<div class="cell align-end">
-							<span id="hidden-encoded" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
-							<button id="copy-encoded">Copy</button>
+							<button class="btn-copy" data-source="encoded-output">Copy</button>
 						</div>
 					</div>
 					<div class="row">
@@ -227,6 +265,7 @@
 				</div>
 			</div>
 			<div class="tab-panel" data-name="tab-decode">
+				<br/>
 				<div class="grid">
 					<div class="row">
 						<div class="cell">
@@ -250,11 +289,7 @@
 							<strong>Plain Text</strong>
 						</div>
 						<div class="cell align-end">
-							<span id="hidden-decoded" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
-							<button id="copy-decoded">Copy</button>
+							<button class="btn-copy" data-source="decoded-output">Copy</button>
 						</div>
 					</div>
 					<div class="row">

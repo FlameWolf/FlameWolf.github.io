@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>Enc-Dec</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
@@ -11,36 +12,64 @@
 				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
 				--margin: 0.5rem;
 			}
-			@media (prefers-color-scheme: dark) {
-				:root {
-					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
-				}
-				textarea {
-					background-color: rgba(0, 0, 0, 0.25);
-					color: rgb(255, 255, 255);
-				}
-			}
 			* {
 				box-sizing: border-box;
 			}
+			dialog {
+				& > header {
+					font-weight: bold;
+				}
+			}
+			.tab-container {
+				display: flex;
+				flex-direction: column;
+				gap: var(--margin);
+			}
+			button {
+				font-size: 0.9rem;
+				padding-inline: 1.5rem;
+				&:focus {
+					outline: 2px solid grey;
+					outline-offset: -4px;
+					transform: none;
+				}
+				&:disabled,
+				&:disabled:hover {
+					cursor: default;
+				}
+			}
 			.tab-bar {
 				display: flex;
-				margin: var(--margin) auto;
-				.tab-btn {
-					margin-right: 2pt;
-					cursor: pointer;
+				gap: 2px;
+				background-color: var(--background-hover);
+				border: solid 2px var(--background-hover);
+				border-radius: calc(var(--border-radius) + 2px);
+				> .tab-btn {
+					flex: 1;
+					border-style: none;
+					border-radius: unset;
 					&.active {
 						background-color: blue;
 						color: antiquewhite;
 					}
-				}
-				.tab-btn:last-child {
-					margin-right: unset;
+					&:focus {
+						outline-offset: -2px;
+					}
+					&:focus-visible {
+						outline-color: var(--focus);
+					}
+					&:first-child {
+						border-top-left-radius: var(--border-radius);
+						border-bottom-left-radius: var(--border-radius);
+					}
+					&:last-child {
+						border-top-right-radius: var(--border-radius);
+						border-bottom-right-radius: var(--border-radius);
+					}
 				}
 			}
 			.tab-panel {
 				display: none;
-				margin-top: 1pt;
 				&.visible {
 					display: block;
 				}
@@ -54,7 +83,8 @@
 					grid-auto-flow: column;
 					align-items: center;
 					> .cell {
-						display: table-cell;
+						display: flex;
+						gap: var(--margin);
 					}
 				}
 			}
@@ -69,41 +99,69 @@
 				& > .message {
 					grid-column: 1 / span 1;
 					grid-row: 2 / span 1;
+					padding: calc(2 * var(--padding));
+					border-radius: var(--border-radius);
+					box-shadow: var(--box-shadow);
 				}
 				& > .qr-code {
+					display: block;
 					grid-column: 2 / span 1;
 					grid-row: 1 / span 2;
-					display: block;
 					border-radius: var(--border-radius);
 				}
 			}
-			#message {
-				padding: calc(2 * var(--padding));
-				border-radius: var(--border-radius);
-				box-shadow: var(--box-shadow);
-			}
-			.toggle {
-				transition: all 0.5s ease-in-out;
-			}
-			.hidden {
-				visibility: hidden;
-				opacity: 0;
-			}
-			.align-start {
-				text-align: start;
-			}
-			.align-end {
-				text-align: end;
-			}
 			textarea {
 				width: 100%;
-				min-height: 480pt;
+				min-height: 40rem;
 				padding: var(--padding);
 				border-style: solid;
 				border-radius: var(--border-radius);
 				resize: none;
 				&.key {
-					min-height: 50pt;
+					min-height: 4rem;
+				}
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			@media (min-width: 768px) {
+				.align-end {
+					justify-content: flex-end;
+				}
+				button {
+					min-width: 5rem;
+					&.btn-copy {
+						min-width: 6.75rem;
+					}
+				}
+			}
+			@media (max-width: 767px) {
+				.grid {
+					> .row {
+						display: flex;
+						flex-direction: column;
+						align-items: stretch;
+						gap: var(--margin);
+						> .cell {
+							> button {
+								flex-grow: 1;
+							}
+						}
+					}
+				}
+				.encrypt-key-holder {
+					display: flex;
+					flex-direction: column;
+					& > .qr-code {
+						align-self: center;
+						max-width: 256px;
+					}
 				}
 			}
 		</style>
@@ -154,42 +212,40 @@
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
 				const dlgErrorAlert = document.getElementById("error-alert");
 				const btncloseErrorAlert = document.getElementById("close-error-alert");
-				const btnCopyEncryptKey = document.getElementById("copy-encrypt-key");
 				const btnPastePlainText = document.getElementById("paste-plain-text");
 				const btnEncrypt = document.getElementById("encrypt");
-				const btnCopyEncrypted = document.getElementById("copy-encrypted");
 				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
 				const btnPasteEncrypted = document.getElementById("paste-encrypted");
 				const btnDecrypt = document.getElementById("decrypt");
-				const btnCopyDecrypted = document.getElementById("copy-decrypted");
 				const txtEncryptKey = document.getElementById("encrypt-key");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncryptedOutput = document.getElementById("encrypted-output");
 				const txtDecryptKey = document.getElementById("decrypt-key");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecryptedOutput = document.getElementById("decrypted-output");
-				const spnHiddenEncryptKey = document.getElementById("hidden-encrypt-key");
-				const spnHiddenEncrypted = document.getElementById("hidden-encrypted");
-				const spnHiddenDecrypted = document.getElementById("hidden-decrypted");
 				const imgOutputQrCode = document.getElementById("output-qr-code");
 				const canOutputQrCode = document.createElement("canvas");
 				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
 				const tmpImgOutputQrCode = new Image();
-				const flashElement = elem => {
-					elem.classList.remove("hidden");
-					setTimeout(() => {
-						elem.classList.add("hidden");
-					}, 1500);
-				};
 				const pasteInto = async input => {
 					const clipboardText = await navigator.clipboard.readText();
 					if (clipboardText) {
 						input.value = clipboardText;
 					}
 				};
-				const copyFromAndFlash = async (input, elem) => {
-					await navigator.clipboard.writeText(input.value);
-					flashElement(elem);
+				const flashCopiedMessage = elem => {
+					elem.setAttribute("disabled", true);
+					elem.textContent = "Copied!";
+					setTimeout(() => {
+						elem.textContent = "Copy";
+						elem.removeAttribute("disabled");
+					}, 1500);
+				};
+				const copyAndFlash = async event => {
+					const target = event.target;
+					const sourceElement = document.getElementById(target.dataset["source"]);
+					await navigator.clipboard.writeText(sourceElement.value);
+					flashCopiedMessage(target);
 				};
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
@@ -217,7 +273,6 @@
 				btncloseErrorAlert.addEventListener("click", async () => {
 					dlgErrorAlert.close();
 				});
-				btnCopyEncryptKey.addEventListener("click", async () => await copyFromAndFlash(txtEncryptKey, spnHiddenEncryptKey));
 				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
@@ -232,7 +287,6 @@
 						txtEncryptedOutput.value = "";
 					}
 				});
-				btnCopyEncrypted.addEventListener("click", async () => await copyFromAndFlash(txtEncryptedOutput, spnHiddenEncrypted));
 				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
 				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
@@ -260,7 +314,9 @@
 						txtDecryptedOutput.value = "";
 					}
 				});
-				btnCopyDecrypted.addEventListener("click", async () => await copyFromAndFlash(txtDecryptedOutput, spnHiddenDecrypted));
+				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
+					btnCopy.addEventListener("click", copyAndFlash);
+				});
 			});
 		</script>
 	</head>
@@ -283,19 +339,15 @@
 							<strong>Key</strong>
 						</div>
 						<div class="cell align-end">
-							<span id="hidden-encrypt-key" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
-							<button id="copy-encrypt-key">Copy</button>
+							<button class="btn-copy" data-source="encrypt-key">Copy</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
 							<div class="encrypt-key-holder">
 								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
-								<div id="message">
-									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code displayed to the right, which when scanned would produce the above key.</span>
+								<div class="message">
+									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code, which when scanned would produce the above key.</span>
 								</div>
 								<img id="output-qr-code" class="qr-code"/>
 							</div>
@@ -326,11 +378,7 @@
 							<strong>Cipher Text</strong>
 						</div>
 						<div class="cell align-end">
-							<span id="hidden-encrypted" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
-							<button id="copy-encrypted">Copy</button>
+							<button class="btn-copy" data-source="encrypted-output">Copy</button>
 						</div>
 					</div>
 					<div class="row">
@@ -380,11 +428,7 @@
 							<strong>Plain Text</strong>
 						</div>
 						<div class="cell align-end">
-							<span id="hidden-decrypted" class="toggle hidden">
-								<span>Copied!</span>
-								<span>&#xA0;</span>
-							</span>
-							<button id="copy-decrypted">Copy</button>
+							<button class="btn-copy" data-source="decrypted-output">Copy</button>
 						</div>
 					</div>
 					<div class="row">
