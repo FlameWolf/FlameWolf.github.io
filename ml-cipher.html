@@ -15,6 +15,29 @@
 			* {
 				box-sizing: border-box;
 			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+			}
 			button {
 				font-size: 0.9rem;
 				padding-inline: 1.5rem;
@@ -32,6 +55,7 @@
 				display: flex;
 				gap: 2px;
 				background-color: var(--background-hover);
+				min-width: fit-content;
 				border: solid 2px var(--background-hover);
 				border-radius: calc(var(--border-radius) + 2px);
 				> .tab-btn {
@@ -108,12 +132,6 @@
 				.align-end {
 					justify-content: flex-end;
 				}
-				button {
-					min-width: 5rem;
-					&.btn-copy {
-						min-width: 6.75rem;
-					}
-				}
 			}
 			@media (max-width: 767px) {
 				.grid {
@@ -130,12 +148,21 @@
 					}
 				}
 			}
+			@media (max-width: 479px) {
+				.toast {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
+				}
+			}
 		</style>
 		<script type="text/javascript" src="JavaScript/ml-cipher.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const divToast = document.getElementById("toast");
 				const selectCipherTabContainer = document.getElementById("select-cipher");
 				const selectCipherTabBar = selectCipherTabContainer.querySelector(".tab-bar");
 				const cipherDescription = document.getElementById("cipher-description");
@@ -144,6 +171,30 @@
 				const btnCopy = document.getElementById("copy");
 				const txtInput = document.getElementById("input");
 				const txtOutput = document.getElementById("output");
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					if (success) {
+						divToast.classList.add("success");
+					} else {
+						divToast.classList.add("error");
+					}
+					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = "";
+					}
+				});
+				divToast.addEventListener("click", hideToast);
 				for (const schemeId in cipherSchemes) {
 					const scheme = cipherSchemes[schemeId];
 					const btnCipher = document.createElement("button");
@@ -169,26 +220,34 @@
 					});
 				});
 				btnPaste.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtInput.value = clipboardText;
+					try {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							txtInput.value = clipboardText;
+						}
+						showToast("Pasted from clipboard", true);
+					} catch {
+						showToast("Failed to paste", false);
 					}
 				});
 				btnConvert.addEventListener("click", async () => {
-					const input = txtInput.value.trim();
-					if (input) {
-						txtOutput.value = transformText(input);
+					try {
+						const input = txtInput.value.trim();
+						if (input) {
+							txtOutput.value = transformText(input);
+						}
+						showToast("Conversion successful", true);
+					} catch {
+						showToast("Failed to convert", false);
 					}
 				});
 				btnCopy.addEventListener("click", async event => {
-					const target = event.target;
-					await navigator.clipboard.writeText(txtOutput.value);
-					target.setAttribute("disabled", true);
-					target.textContent = "Copied!";
-					setTimeout(() => {
-						target.textContent = "Copy";
-						target.removeAttribute("disabled");
-					}, 1500);
+					try {
+						await navigator.clipboard.writeText(txtOutput.value);
+						showToast("Copied to clipboard", true);
+					} catch {
+						showToast("Failed to copy", false);
+					}
 				});
 				const schemeName = localStorage.getItem("schemeName");
 				if (schemeName) {
@@ -201,6 +260,7 @@
 		</script>
 	</head>
 	<body>
+		<div id="toast" class="toast"></div>
 		<p>Choose an encryption scheme</p>
 		<div id="select-cipher" data-default="moolabhadri">
 			<div class="tab-bar"></div>

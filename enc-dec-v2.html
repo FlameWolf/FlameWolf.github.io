@@ -45,6 +45,35 @@
 			* {
 				box-sizing: border-box;
 			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+				@media (max-width: 479px) {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
+				}
+			}
 			.container {
 				width: 100%;
 				margin: 0 auto;
@@ -57,6 +86,7 @@
 				> .tab-bar {
 					display: flex;
 					background-color: var(--bg-tertiary);
+					min-width: fit-content;
 					border-bottom: 1px solid var(--border-color);
 					> .tab-btn {
 						flex: 1;
@@ -192,11 +222,6 @@
 				&:active {
 					transform: scale(0.98);
 				}
-				@media (min-width: 768px) {
-					&.btn-copy {
-						min-width: 6.75rem;
-					}
-				}
 				@media (max-width: 767px) {
 					min-width: unset;
 				}
@@ -298,12 +323,8 @@
 				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
-				const dlgErrorAlert = document.getElementById("error-alert");
-				const btncloseErrorAlert = document.getElementById("close-error-alert");
-				const btnPastePlainText = document.getElementById("paste-plain-text");
+				const divToast = document.getElementById("toast");
 				const btnEncrypt = document.getElementById("encrypt");
-				const btnPasteDecryptKey = document.getElementById("paste-decrypt-key");
-				const btnPasteEncrypted = document.getElementById("paste-encrypted");
 				const btnDecrypt = document.getElementById("decrypt");
 				const txtEncryptKey = document.getElementById("encrypt-key");
 				const txtPlainText = document.getElementById("plain-text");
@@ -315,26 +336,53 @@
 				const canOutputQrCode = document.createElement("canvas");
 				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
 				const tmpImgOutputQrCode = new Image();
-				const pasteInto = async input => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						input.value = clipboardText;
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					if (success) {
+						divToast.classList.add("success");
+					} else {
+						divToast.classList.add("error");
+					}
+					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				const pasteToTarget = async event => {
+					const sender = event.target;
+					const targetElement = document.getElementById(sender.dataset["target"]);
+					try {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							targetElement.value = clipboardText;
+						}
+						showToast("Pasted from clipboard", true);
+					} catch {
+						showToast("Failed to paste", false);
 					}
 				};
-				const flashCopiedMessage = elem => {
-					elem.setAttribute("disabled", true);
-					elem.textContent = "Copied!";
-					setTimeout(() => {
-						elem.textContent = "Copy";
-						elem.removeAttribute("disabled");
-					}, 1500);
+				const copyFromSource = async event => {
+					const sender = event.target;
+					const sourceElement = document.getElementById(sender.dataset["source"]);
+					try {
+						await navigator.clipboard.writeText(sourceElement.value);
+						showToast("Copied to clipboard", true);
+					} catch {
+						showToast("Failed to copy", false);
+					}
 				};
-				const copyAndFlash = async event => {
-					const target = event.target;
-					const sourceElement = document.getElementById(target.dataset["source"]);
-					await navigator.clipboard.writeText(sourceElement.value);
-					flashCopiedMessage(target);
-				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = "";
+					}
+				});
+				divToast.addEventListener("click", hideToast);
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
 					tabBarButtons.forEach(btn => {
@@ -358,63 +406,66 @@
 					imgOutputQrCode.src = canOutputQrCode.toDataURL();
 				});
 				tmpImgOutputQrCode.src = `data:image/svg+xml;base64,${btoa(encryptKeyQr.outerHTML)}`;
-				btncloseErrorAlert.addEventListener("click", async () => {
-					dlgErrorAlert.close();
-				});
-				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 					const input = txtPlainText.value.trim();
 					if (input) {
-						const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
-						const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
-						combinedArray.set(encryptIv, 0);
-						combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
-						txtEncryptedOutput.value = encodeBase95(combinedArray);
+						try {
+							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
+							const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
+							combinedArray.set(encryptIv, 0);
+							combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
+							txtEncryptedOutput.value = encodeBase95(combinedArray);
+							showToast("Encryption successful", true);
+						} catch {
+							showToast("Failed to encrypt", false);
+						}
 					} else {
 						txtEncryptedOutput.value = "";
 					}
 				});
-				btnPasteDecryptKey.addEventListener("click", async () => await pasteInto(txtDecryptKey));
-				btnPasteEncrypted.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecrypt.addEventListener("click", async () => {
 					const decryptKeySecret = txtDecryptKey.value;
 					if (!decryptKeySecret) {
-						dlgErrorAlert.showModal();
+						showToast("Key must be a non-empty string", false);
 						return;
 					}
-					const decryptKey = await crypto.subtle.importKey(
-						keyFormat,
-						Object.assign(jwkBase, {
-							k: decryptKeySecret
-						}),
-						keyName,
-						true,
-						keyOps
-					);
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
-						const combinedArray = decodeBase95(cipherText);
-						const decryptIv = combinedArray.slice(0, ivLength);
-						const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
-						txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
+						try {
+							const decryptKey = await crypto.subtle.importKey(
+								keyFormat,
+								Object.assign(jwkBase, {
+									k: decryptKeySecret
+								}),
+								keyName,
+								true,
+								keyOps
+							);
+							const combinedArray = decodeBase95(cipherText);
+							const decryptIv = combinedArray.slice(0, ivLength);
+							const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
+							txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
+							showToast("Decryption successful", true);
+						} catch {
+							showToast("Failed to decrypt", false);
+						}
 					} else {
 						txtDecryptedOutput.value = "";
 					}
 				});
+				[...document.getElementsByClassName("btn-paste")].forEach(btnPaste => {
+					btnPaste.addEventListener("click", pasteToTarget);
+				});
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
-					btnCopy.addEventListener("click", copyAndFlash);
+					btnCopy.addEventListener("click", copyFromSource);
 				});
 			});
 		</script>
 	</head>
 	<body>
+		<div id="toast" class="toast"></div>
 		<div class="container">
-			<dialog id="error-alert">
-				<header>Error:</header>
-				<p>Key must be a non-empty string.</p>
-				<button id="close-error-alert">Close</button>
-			</dialog>
 			<div class="tab-container" data-default="tab-encrypt">
 				<div class="tab-bar">
 					<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
@@ -447,7 +498,7 @@
 								<strong>Plain Text</strong>
 							</div>
 							<div class="cell button-group">
-								<button id="paste-plain-text">Paste</button>
+								<button class="btn-paste" data-target="plain-text">Paste</button>
 								<button id="encrypt">Encrypt</button>
 							</div>
 						</div>
@@ -481,7 +532,7 @@
 								<strong>Decryption Key</strong>
 							</div>
 							<div class="cell button-group">
-								<button id="paste-decrypt-key">Paste</button>
+								<button class="btn-paste" data-target="decrypt-key">Paste</button>
 							</div>
 						</div>
 						<div class="row">
@@ -497,7 +548,7 @@
 								<strong>Encrypted Text</strong>
 							</div>
 							<div class="cell button-group">
-								<button id="paste-encrypted">Paste</button>
+								<button class="btn-paste" data-target="cipher-text">Paste</button>
 								<button id="decrypt">Decrypt</button>
 							</div>
 						</div>

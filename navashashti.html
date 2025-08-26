@@ -15,6 +15,29 @@
 			* {
 				box-sizing: border-box;
 			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+			}
 			button {
 				font-size: 0.9rem;
 				padding-inline: 1.5rem;
@@ -63,12 +86,6 @@
 				.align-end {
 					justify-content: flex-end;
 				}
-				button {
-					min-width: 5rem;
-					&.btn-copy {
-						min-width: 6.75rem;
-					}
-				}
 			}
 			@media (max-width: 767px) {
 				.grid {
@@ -85,45 +102,90 @@
 					}
 				}
 			}
+			@media (max-width: 479px) {
+				.toast {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
+				}
+			}
 		</style>
 		<script type="text/javascript" src="JavaScript/navashashti.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const divToast = document.getElementById("toast");
 				const btnPaste = document.getElementById("paste");
 				const btnConvert = document.getElementById("convert");
 				const btnCopy = document.getElementById("copy");
 				const txtInput = document.getElementById("input");
 				const txtOutput = document.getElementById("output");
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					if (success) {
+						divToast.classList.add("success");
+					} else {
+						divToast.classList.add("error");
+					}
+					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = "";
+					}
+				});
+				divToast.addEventListener("click", hideToast);
 				btnPaste.addEventListener("click", async () => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						txtInput.value = clipboardText;
+					try {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							txtInput.value = clipboardText;
+						}
+						showToast("Pasted from clipboard", true);
+					} catch {
+						showToast("Failed to paste", false);
 					}
 				});
 				btnConvert.addEventListener("click", async () => {
 					const input = txtInput.value.trim();
 					if (input) {
-						txtOutput.value = transformText(input);
+						try {
+							txtOutput.value = transformText(input);
+							showToast("Conversion successful", true);
+						} catch {
+							showToast("Failed to convert", false);
+						}
 					} else {
 						txtOutput.value = "";
 					}
 				});
 				btnCopy.addEventListener("click", async event => {
-					const target = event.target;
-					await navigator.clipboard.writeText(txtOutput.value);
-					target.setAttribute("disabled", true);
-					target.textContent = "Copied!";
-					setTimeout(() => {
-						target.textContent = "Copy";
-						target.removeAttribute("disabled");
-					}, 1500);
+					try {
+						await navigator.clipboard.writeText(txtOutput.value);
+						showToast("Copied to clipboard", true);
+					} catch {
+						showToast("Failed to copy", false);
+					}
 				});
 			});
 		</script>
 	</head>
 	<body>
+		<div id="toast" class="toast"></div>
+		<h1>Navashashti</h1>
+		<hr/>
+		<br/>
 		<div class="grid">
 			<div class="row">
 				<div class="cell">
@@ -147,7 +209,7 @@
 					<strong>Output</strong>
 				</div>
 				<div class="cell align-end">
-					<button id="copy" class="btn-copy">Copy</button>
+					<button id="copy">Copy</button>
 				</div>
 			</div>
 			<div class="row">

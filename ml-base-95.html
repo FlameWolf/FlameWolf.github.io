@@ -15,6 +15,29 @@
 			* {
 				box-sizing: border-box;
 			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+			}
 			.message {
 				padding: calc(2 * var(--padding));
 				border-radius: var(--border-radius);
@@ -38,6 +61,7 @@
 				display: flex;
 				gap: 2px;
 				background-color: var(--background-hover);
+				min-width: fit-content;
 				border: solid 2px var(--background-hover);
 				border-radius: calc(var(--border-radius) + 2px);
 				> .tab-btn {
@@ -105,12 +129,6 @@
 				.align-end {
 					justify-content: flex-end;
 				}
-				button {
-					min-width: 5rem;
-					&.btn-copy {
-						min-width: 6.75rem;
-					}
-				}
 			}
 			@media (max-width: 767px) {
 				.grid {
@@ -125,6 +143,14 @@
 							}
 						}
 					}
+				}
+			}
+			@media (max-width: 479px) {
+				.toast {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
 				}
 			}
 		</style>
@@ -153,34 +179,60 @@
 						.map(byte => (byte > ASCII_COMPRESSION_OFFSET ? byte - ASCII_COMPRESSION_OFFSET : byte + MALAYALAM_BLOCK_OFFSET))
 						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
 				};
-				const btnPastePlainText = document.getElementById("paste-plain-text");
+				const divToast = document.getElementById("toast");
 				const btnEncode = document.getElementById("encode");
-				const btnPasteEncoded = document.getElementById("paste-encoded");
 				const btnDecode = document.getElementById("decode");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncodedOutput = document.getElementById("encoded-output");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecodedOutput = document.getElementById("decoded-output");
-				const pasteInto = async input => {
-					const clipboardText = await navigator.clipboard.readText();
-					if (clipboardText) {
-						input.value = clipboardText;
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					if (success) {
+						divToast.classList.add("success");
+					} else {
+						divToast.classList.add("error");
+					}
+					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				const pasteToTarget = async event => {
+					const sender = event.target;
+					const targetElement = document.getElementById(sender.dataset["target"]);
+					try {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							targetElement.value = clipboardText;
+						}
+						showToast("Pasted from clipboard", true);
+					} catch {
+						showToast("Failed to paste", false);
 					}
 				};
-				const flashCopiedMessage = elem => {
-					elem.setAttribute("disabled", true);
-					elem.textContent = "Copied!";
-					setTimeout(() => {
-						elem.textContent = "Copy";
-						elem.removeAttribute("disabled");
-					}, 1500);
+				const copyFromSource = async event => {
+					const sender = event.target;
+					const sourceElement = document.getElementById(sender.dataset["source"]);
+					try {
+						await navigator.clipboard.writeText(sourceElement.value);
+						showToast("Copied to clipboard", true);
+					} catch {
+						showToast("Failed to copy", false);
+					}
 				};
-				const copyAndFlash = async event => {
-					const target = event.target;
-					const sourceElement = document.getElementById(target.dataset["source"]);
-					await navigator.clipboard.writeText(sourceElement.value);
-					flashCopiedMessage(target);
-				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = "";
+					}
+				});
+				divToast.addEventListener("click", hideToast);
 				[...document.getElementsByClassName("tab-container")].forEach(tc => {
 					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
 					tabBarButtons.forEach(btn => {
@@ -196,31 +248,43 @@
 						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
-				btnPastePlainText.addEventListener("click", async () => await pasteInto(txtPlainText));
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value.trim();
 					if (input) {
-						txtEncodedOutput.value = await encodeMalayalam(input);
+						try {
+							txtEncodedOutput.value = await encodeMalayalam(input);
+							showToast("Encoded successfully", true);
+						} catch {
+							showToast("Failed to encode", false);
+						}
 					} else {
 						txtEncodedOutput.value = "";
 					}
 				});
-				btnPasteEncoded.addEventListener("click", async () => await pasteInto(txtCipherText));
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
-						txtDecodedOutput.value = await decodeMalayalam(cipherText);
+						try {
+							txtDecodedOutput.value = await decodeMalayalam(cipherText);
+							showToast("Decoded successfully", true);
+						} catch {
+							showToast("Failed to decode", false);
+						}
 					} else {
 						txtDecodedOutput.value = "";
 					}
 				});
+				[...document.getElementsByClassName("btn-paste")].forEach(btnPaste => {
+					btnPaste.addEventListener("click", pasteToTarget);
+				});
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
-					btnCopy.addEventListener("click", copyAndFlash);
+					btnCopy.addEventListener("click", copyFromSource);
 				});
 			});
 		</script>
 	</head>
 	<body>
+		<div id="toast" class="toast"></div>
 		<div class="message">
 			<span>Utility for converting Malayalam text to/from base-95 using range compression and GZip. This tool supports Malayalam characters (Unicode range 3328-3455) and ASCII characters (Unicode range 1-127). &#x26A0;&#xFE0F; Warning: Characters outside these Unicode ranges will not be processed correctly.</span>
 		</div>
@@ -237,7 +301,7 @@
 							<strong>Plain Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button id="paste-plain-text">Paste</button>
+							<button class="btn-paste" data-target="plain-text">Paste</button>
 							<button id="encode">Encode</button>
 						</div>
 					</div>
@@ -272,7 +336,7 @@
 							<strong>Base-95 Encoded Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button id="paste-encoded">Paste</button>
+							<button class="btn-paste" data-target="cipher-text">Paste</button>
 							<button id="decode">Decode</button>
 						</div>
 					</div>
