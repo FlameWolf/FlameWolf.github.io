@@ -24,11 +24,13 @@
 				position: fixed;
 				top: 1rem;
 				right: 1rem;
+				opacity: 0;
 				box-shadow: var(--box-shadow);
 				transform: translateX(calc(100% + 2rem));
 				transition: all 0.25s ease-in-out;
 				&.success,
 				&.error {
+					opacity: 1;
 					transform: none;
 				}
 				&.success {
@@ -182,11 +184,7 @@
 				const showToast = (message, success) => {
 					hideToast();
 					divToast.textContent = message;
-					if (success) {
-						divToast.classList.add("success");
-					} else {
-						divToast.classList.add("error");
-					}
+					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
 				divToast.addEventListener("transitionend", () => {
