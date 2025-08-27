@@ -236,8 +236,8 @@
 				];
 				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
 				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
-				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, encoder.encode(plainText)));
-				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext)));
+				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
+				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext))));
 				const divToast = document.getElementById("toast");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnDecrypt = document.getElementById("decrypt");
