@@ -87,7 +87,7 @@
 			.tab-panel {
 				display: none;
 				&.visible {
-					display: block;
+					display: unset;
 				}
 			}
 			.grid {
@@ -121,12 +121,12 @@
 					color: rgb(255, 255, 255);
 				}
 			}
-			@media (min-width: 768px) {
+			@media (width >= 768px) {
 				.align-end {
 					justify-content: flex-end;
 				}
 			}
-			@media (max-width: 767px) {
+			@media (width < 768px) {
 				.grid {
 					> .row {
 						display: flex;
@@ -135,13 +135,13 @@
 						gap: var(--margin);
 						> .cell {
 							> button {
-								flex-grow: 1;
+								flex: 1;
 							}
 						}
 					}
 				}
 			}
-			@media (max-width: 479px) {
+			@media (width < 480px) {
 				.toast {
 					right: unset;
 					left: unset;

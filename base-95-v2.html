@@ -65,45 +65,45 @@
 				border-radius: var(--border-radius);
 				overflow: hidden;
 				box-shadow: var(--box-shadow);
-			}
-			.tab-bar {
-				display: flex;
-				background: var(--surface-color);
-				border-bottom: 1px solid var(--border-color);
-			}
-			.tab-btn {
-				flex: 1;
-				background: transparent;
-				color: var(--text-secondary);
-				font-weight: 500;
-				cursor: pointer;
-				padding: 1rem;
-				border: none;
-				position: relative;
-				transition: var(--transition);
-				&:hover {
-					background: var(--bg-color);
-					color: var(--text-color);
-				}
-				&.active {
-					background: var(--bg-color);
-					color: var(--primary-color);
-					&::after {
-						content: "";
-						background: var(--primary-color);
-						height: 2px;
-						position: absolute;
-						bottom: 0;
-						left: 0;
-						right: 0;
+				> .tab-bar {
+					display: flex;
+					background: var(--surface-color);
+					border-bottom: 1px solid var(--border-color);
+					> .tab-btn {
+						flex: 1;
+						background: transparent;
+						color: var(--text-secondary);
+						font-weight: 500;
+						cursor: pointer;
+						padding: 1rem;
+						border: none;
+						position: relative;
+						transition: var(--transition);
+						&:hover {
+							background: var(--bg-color);
+							color: var(--text-color);
+						}
+						&.active {
+							background: var(--bg-color);
+							color: var(--primary-color);
+							&::after {
+								content: "";
+								background: var(--primary-color);
+								height: 2px;
+								position: absolute;
+								bottom: 0;
+								left: 0;
+								right: 0;
+							}
+						}
 					}
 				}
-			}
-			.tab-panel {
-				display: none;
-				padding: 2rem;
-				&.active {
-					display: block;
+				> .tab-panel {
+					display: none;
+					padding: 2rem;
+					&.active {
+						display: unset;
+					}
 				}
 			}
 			.section {
@@ -279,7 +279,7 @@
 					align-items: stretch;
 				}
 				.btn {
-					flex-grow: 1;
+					flex: 1;
 					justify-content: center;
 				}
 			}

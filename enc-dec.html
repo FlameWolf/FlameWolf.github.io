@@ -40,15 +40,47 @@
 					background-color: darkred;
 				}
 			}
-			dialog {
-				& > header {
-					font-weight: bold;
-				}
-			}
 			.tab-container {
 				display: flex;
 				flex-direction: column;
 				gap: var(--margin);
+				> .tab-bar {
+					display: flex;
+					gap: 2px;
+					background-color: var(--background-hover);
+					min-width: fit-content;
+					border: solid 2px var(--background-hover);
+					border-radius: calc(var(--border-radius) + 2px);
+					> .tab-btn {
+						flex: 1;
+						border-style: none;
+						border-radius: unset;
+						&.active {
+							background-color: blue;
+							color: antiquewhite;
+						}
+						&:focus {
+							outline-offset: -2px;
+						}
+						&:focus-visible {
+							outline-color: var(--focus);
+						}
+						&:first-child {
+							border-top-left-radius: var(--border-radius);
+							border-bottom-left-radius: var(--border-radius);
+						}
+						&:last-child {
+							border-top-right-radius: var(--border-radius);
+							border-bottom-right-radius: var(--border-radius);
+						}
+					}
+				}
+				> .tab-panel {
+					display: none;
+					&.visible {
+						display: unset;
+					}
+				}
 			}
 			button {
 				font-size: 0.9rem;
@@ -61,43 +93,6 @@
 				&:disabled,
 				&:disabled:hover {
 					cursor: default;
-				}
-			}
-			.tab-bar {
-				display: flex;
-				gap: 2px;
-				background-color: var(--background-hover);
-				min-width: fit-content;
-				border: solid 2px var(--background-hover);
-				border-radius: calc(var(--border-radius) + 2px);
-				> .tab-btn {
-					flex: 1;
-					border-style: none;
-					border-radius: unset;
-					&.active {
-						background-color: blue;
-						color: antiquewhite;
-					}
-					&:focus {
-						outline-offset: -2px;
-					}
-					&:focus-visible {
-						outline-color: var(--focus);
-					}
-					&:first-child {
-						border-top-left-radius: var(--border-radius);
-						border-bottom-left-radius: var(--border-radius);
-					}
-					&:last-child {
-						border-top-right-radius: var(--border-radius);
-						border-bottom-right-radius: var(--border-radius);
-					}
-				}
-			}
-			.tab-panel {
-				display: none;
-				&.visible {
-					display: block;
 				}
 			}
 			.grid {
@@ -156,12 +151,12 @@
 					color: rgb(255, 255, 255);
 				}
 			}
-			@media (min-width: 768px) {
+			@media (width >= 768px) {
 				.align-end {
 					justify-content: flex-end;
 				}
 			}
-			@media (max-width: 767px) {
+			@media (width < 768px) {
 				.grid {
 					> .row {
 						display: flex;
@@ -170,7 +165,7 @@
 						gap: var(--margin);
 						> .cell {
 							> button {
-								flex-grow: 1;
+								flex: 1;
 							}
 						}
 					}
@@ -184,7 +179,7 @@
 					}
 				}
 			}
-			@media (max-width: 479px) {
+			@media (width < 480px) {
 				.toast {
 					right: unset;
 					left: unset;

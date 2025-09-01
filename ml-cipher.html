@@ -53,14 +53,14 @@
 					cursor: default;
 				}
 			}
-			.tab-bar {
+			.btn-group {
 				display: flex;
 				gap: 2px;
 				background-color: var(--background-hover);
 				min-width: fit-content;
 				border: solid 2px var(--background-hover);
 				border-radius: calc(var(--border-radius) + 2px);
-				> .tab-btn {
+				> .cipher-btn {
 					flex: 1;
 					border-style: none;
 					border-radius: unset;
@@ -82,12 +82,6 @@
 						border-top-right-radius: var(--border-radius);
 						border-bottom-right-radius: var(--border-radius);
 					}
-				}
-			}
-			.tab-panel {
-				display: none;
-				&.visible {
-					display: block;
 				}
 			}
 			#cipher-description {
@@ -130,12 +124,12 @@
 					color: rgb(255, 255, 255);
 				}
 			}
-			@media (min-width: 768px) {
+			@media (width >= 768px) {
 				.align-end {
 					justify-content: flex-end;
 				}
 			}
-			@media (max-width: 767px) {
+			@media (width < 768px) {
 				.grid {
 					> .row {
 						display: flex;
@@ -144,13 +138,13 @@
 						gap: var(--margin);
 						> .cell {
 							> button {
-								flex-grow: 1;
+								flex: 1;
 							}
 						}
 					}
 				}
 			}
-			@media (max-width: 479px) {
+			@media (width < 480px) {
 				.toast {
 					right: unset;
 					left: unset;
@@ -165,8 +159,8 @@
 
 			document.addEventListener("DOMContentLoaded", async () => {
 				const divToast = document.getElementById("toast");
-				const selectCipherTabContainer = document.getElementById("select-cipher");
-				const selectCipherTabBar = selectCipherTabContainer.querySelector(".tab-bar");
+				const divSelectCipher = document.getElementById("select-cipher");
+				const cipherButtonGroup = divSelectCipher.querySelector(".btn-group");
 				const cipherDescription = document.getElementById("cipher-description");
 				const btnPaste = document.getElementById("paste");
 				const btnConvert = document.getElementById("convert");
@@ -196,15 +190,15 @@
 				for (const schemeId in cipherSchemes) {
 					const scheme = cipherSchemes[schemeId];
 					const btnCipher = document.createElement("button");
-					btnCipher.setAttribute("class", "tab-btn");
+					btnCipher.setAttribute("class", "cipher-btn");
 					btnCipher.dataset["schemeId"] = schemeId;
 					btnCipher.dataset["schemeName"] = scheme.name;
 					btnCipher.dataset["schemeDescription"] = scheme.description;
 					btnCipher.textContent = scheme.name;
-					selectCipherTabBar.appendChild(btnCipher);
+					cipherButtonGroup.appendChild(btnCipher);
 				}
-				const selectCipherTabBarButtons = selectCipherTabBar.querySelectorAll(".tab-btn");
-				selectCipherTabBarButtons.forEach(btn => {
+				const cipherButtons = cipherButtonGroup.querySelectorAll(".cipher-btn");
+				cipherButtons.forEach(btn => {
 					btn.addEventListener("click", () => {
 						const prevSchemeName = activeCipherScheme.name;
 						activeCipherScheme = cipherSchemes[btn.dataset["schemeId"]];
@@ -212,7 +206,7 @@
 						if (currSchemeName !== prevSchemeName) {
 							localStorage.setItem("schemeName", currSchemeName);
 						}
-						selectCipherTabBarButtons.forEach(x => x.classList.remove("active"));
+						cipherButtons.forEach(x => x.classList.remove("active"));
 						cipherDescription.textContent = btn.dataset["schemeDescription"];
 						btn.classList.add("active");
 					});
@@ -249,10 +243,10 @@
 				});
 				const schemeName = localStorage.getItem("schemeName");
 				if (schemeName) {
-					const schemeButton = [...selectCipherTabBarButtons].find(x => x.dataset["schemeName"] === schemeName) ?? selectCipherTabBarButtons[0];
+					const schemeButton = [...cipherButtons].find(x => x.dataset["schemeName"] === schemeName) ?? cipherButtons[0];
 					schemeButton.dispatchEvent(new Event("click"));
 				} else {
-					selectCipherTabBarButtons[0].dispatchEvent(new Event("click"));
+					cipherButtons[0].dispatchEvent(new Event("click"));
 				}
 			});
 		</script>
@@ -261,7 +255,7 @@
 		<div id="toast" class="toast"></div>
 		<p>Choose an encryption scheme</p>
 		<div id="select-cipher" data-default="moolabhadri">
-			<div class="tab-bar"></div>
+			<div class="btn-group"></div>
 		</div>
 		<p id="cipher-description" data-name="cipher-description"></p>
 		<br/>
