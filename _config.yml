@@ -1,3 +1,7 @@
-theme: jekyll-theme-cayman
+plugins:
+  - jekyll-remote-theme
+remote_theme: jekyll/minima
+minima:
+  skin: auto
 title: Welcome to FlameWolf's home page
 description: Feel free to bookmark this to keep an eye on my project updates
