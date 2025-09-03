@@ -7,249 +7,266 @@
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style type="text/css">
 			:root {
-				--bg-primary: light-dark(#ffffff, #1a1a1a);
-				--bg-secondary: light-dark(#f8f9fa, #2d2d2d);
-				--bg-tertiary: light-dark(#e9ecef, #404040);
-				--text-primary: light-dark(#212529, #ffffff);
-				--text-secondary: light-dark(#6c757d, #adb5bd);
-				--error-color: light-dark(#dc3545, #f5c6cb);
-				--success-color: light-dark(#28a745, #d4edda);
-				--accent-primary: light-dark(#0066cc, #4dabf7);
-				--accent-hover: light-dark(#0056b3, #339af0);
-				--border-color: light-dark(#dee2e6, #495057);
-				--shadow-color: light-dark(rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.75));
-				--padding: 1rem;
-				--border-radius: 0.375rem;
-				--box-shadow: 0 0 0.25rem var(--shadow-color);
-				--margin: 1rem;
+				--padding: 0.75rem;
+				--border-radius: 0.5rem;
+				--shadow-color: light-dark(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.75));
+				--box-shadow: 0 0 0.5rem var(--shadow-color);
+				--box-shadow-hover: 0 0 0.75rem var(--shadow-color);
+				--margin: 0.75rem;
+				--primary-color: #2563eb;
+				--primary-hover: #1d4ed8;
+				--success-color: #16a34a;
+				--error-color: #dc2626;
+				--border-color: light-dark(#d1d5db, #374151);
+				--text-muted: light-dark(#6b7280, #9ca3af);
+				--focus-ring: light-dark(#3b82f6, #60a5fa);
+				--transition: all 0.25s ease-in-out;
 				color-scheme: light dark;
-				@media (width < 768px) {
-					--padding: 0.75rem;
-					--margin: 0.75rem;
-				}
-				@media (prefers-contrast: high) {
-					--box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.75);
-				}
 			}
 			* {
 				box-sizing: border-box;
 			}
+			body {
+				background-color: light-dark(white, #111827);
+				color: light-dark(#111827, #f3f4f6);
+				font-family: system-ui, -apple-system, sans-serif;
+				line-height: 1.6;
+				min-width: min-content;
+				padding: 2rem 1rem;
+				margin: 0 auto;
+			}
 			.toast {
-				background-color: black;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: #1f2937;
 				color: white;
+				font-size: 0.95rem;
 				cursor: pointer;
-				padding: calc(var(--padding) / 2) var(--padding);
+				padding: var(--padding) calc(var(--padding) * 2);
 				border-radius: var(--border-radius);
 				position: fixed;
-				top: 1rem;
-				right: 1rem;
+				top: 1.5rem;
+				right: 1.5rem;
 				opacity: 0;
-				box-shadow: var(--box-shadow);
+				box-shadow: var(--box-shadow-hover);
 				transform: translateX(calc(100% + 2rem));
-				transition: all 0.25s ease-in-out;
+				transition: var(--transition);
 				&.success,
 				&.error {
 					opacity: 1;
 					transform: none;
 				}
 				&.success {
-					background-color: darkgreen;
+					background-color: var(--success-color);
 				}
 				&.error {
-					background-color: darkred;
+					background-color: var(--error-color);
 				}
-				@media (width < 480px) {
-					right: unset;
-					left: unset;
-					width: 90%;
-					margin: 0 auto;
-				}
-			}
-			.container {
-				width: 100%;
-				margin: 0 auto;
 			}
 			.tab-container {
 				display: flex;
 				flex-direction: column;
-				gap: calc(var(--margin) / 2);
-				background-color: var(--bg-secondary);
-				overflow: hidden;
-				border-radius: calc(var(--border-radius) * 2);
-				box-shadow: var(--box-shadow);
+				gap: calc(var(--margin) * 2);
 				> .tab-bar {
 					display: flex;
-					background-color: var(--bg-tertiary);
-					min-width: fit-content;
-					border-bottom: 1px solid var(--border-color);
+					gap: 0.25rem;
+					background-color: light-dark(#f3f4f6, #1f2937);
+					width: 100%;
+					padding: 0.25rem;
+					border: 1px solid var(--border-color);
+					border-radius: calc(var(--border-radius) + 0.25rem);
 					> .tab-btn {
 						flex: 1;
-						font-size: 1rem;
-						cursor: pointer;
-						padding: var(--padding);
-						border-style: none;
-						border-radius: 0;
+						align-items: center;
+						justify-content: center;
+						background-color: transparent;
+						color: var(--text-muted);
+						font-size: 0.95rem;
+						padding: 0.625rem 1.75rem;
+						border: none;
+						border-radius: var(--border-radius);
+						transition: var(--transition);
+						&:hover:not(.active) {
+							background-color: light-dark(#e5e7eb, #374151);
+							color: light-dark(#374151, #e5e7eb);
+						}
 						&.active {
-							background-color: var(--accent-primary);
+							background-color: var(--primary-color);
 							color: white;
 						}
-						&:focus {
-							outline-color: cyan;
-							outline-offset: -4px;
-						}
-						&:active {
-							transform: none;
-						}
-						&:first-child {
-							border-top-left-radius: calc(var(--border-radius) * 2);
-						}
-						&:last-child {
-							border-top-right-radius: calc(var(--border-radius) * 2);
+						&:focus-visible {
+							outline: 2px solid var(--focus-ring);
+							outline-offset: -2px;
 						}
 					}
 				}
 				> .tab-panel {
 					display: none;
-					padding: var(--padding);
 					&.visible {
 						display: unset;
 					}
 				}
 			}
 			.grid {
-				display: flex;
-				flex-direction: column;
-				gap: var(--margin);
+				display: grid;
+				grid-auto-flow: row;
+				gap: calc(var(--margin) * 1.5);
 				> .row {
-					display: flex;
-					flex-direction: column;
-					gap: calc(var(--margin) / 2);
-					@media (width >= 768px) {
-						flex-direction: row;
-						align-items: flex-start;
-						justify-content: space-between;
-					}
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
 					> .cell {
 						display: flex;
-						align-items: center;
-						align-self: stretch;
-						flex: 1;
+						gap: var(--margin);
 					}
 				}
 			}
 			.encrypt-key-holder {
 				display: grid;
-				grid-template-columns: 1fr;
-				gap: var(--margin);
-				@media (width >= 768px) {
-					grid-template-columns: 3fr 1fr;
-				}
+				grid-template-columns: 1fr auto;
+				grid-template-rows: auto auto;
+				gap: calc(var(--margin) * 1.5);
+				width: 100%;
 				> .key {
-					grid-column: 1;
-					grid-row: 1;
+					grid-column: 1 / span 1;
+					grid-row: 1 / span 1;
 				}
 				> .message {
-					grid-column: 1;
-					grid-row: 2;
-					background-color: var(--bg-tertiary);
-					font-size: 0.9rem;
+					display: flex;
+					align-items: center;
+					grid-column: 1 / span 1;
+					grid-row: 2 / span 1;
+					background-color: light-dark(#fef3c7, #451a03);
+					color: light-dark(#92400e, #fde68a);
+					font-size: 0.95rem;
 					line-height: 1.5;
-					padding: var(--padding);
-					border: solid 1px var(--border-color);
+					padding: calc(var(--padding) * 1.5);
+					border-style: solid;
+					border-width: 1px;
+					border-color: light-dark(#fde68a, #78350f);
 					border-radius: var(--border-radius);
 				}
 				> .qr-code {
-					grid-column: 1;
-					grid-row: 3;
-					justify-self: center;
-					max-width: 12.5rem;
+					display: block;
+					grid-column: 2 / span 1;
+					grid-row: 1 / span 2;
+					width: 256px;
+					height: 256px;
+					padding: 0.5rem;
+					border: 2px solid var(--border-color);
 					border-radius: var(--border-radius);
-					box-shadow: var(--box-shadow);
-					@media (width >= 768px) {
-						grid-column: 2;
-						grid-row: 1 / span 2;
-						place-self: stretch;
-						min-width: 256px;
-						max-width: 100%;
-					}
+					background-color: white;
 				}
-			}
-			.button-group {
-				display: flex;
-				justify-content: flex-end;
-				gap: calc(var(--margin) / 2);
-				@media (width < 768px) {
-					justify-content: stretch;
-					> button {
-						flex: 1;
-					}
-				}
-			}
-			.align-start {
-				text-align: start;
-			}
-			.align-end {
-				text-align: end;
 			}
 			button {
-				background-color: var(--bg-secondary);
-				color: var(--text-primary);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				background-color: light-dark(white, #1f2937);
+				color: light-dark(#374151, #e5e7eb);
 				font-size: 0.9rem;
-				cursor: pointer;
-				min-width: 5rem;
-				padding: 0.75rem 1.5rem;
-				border: solid 2px var(--border-color);
+				padding: 0.625rem 1.5rem;
+				border: 1px solid var(--border-color);
 				border-radius: var(--border-radius);
-				&:hover {
-					background-color: var(--accent-hover);
-					color: white;
-					border-color: var(--accent-hover);
-					&:disabled {
-						color: var(--text-primary);
-						cursor: default;
-					}
+				transition: var(--transition);
+				&:hover:not(:disabled) {
+					background-color: light-dark(#f9fafb, #374151);
+					border-color: light-dark(#9ca3af, #4b5563);
+					box-shadow: inset 0 0 0.25rem currentColor;
 				}
-				&:focus {
-					outline: 2px solid var(--accent-hover);
+				&:focus-visible {
+					outline: 2px solid var(--focus-ring);
 					outline-offset: 2px;
 				}
-				&:active {
-					transform: scale(0.98);
+				&:disabled,
+				&:disabled:hover {
+					background-color: light-dark(#f3f4f6, #1f2937);
+					color: light-dark(#9ca3af, 4b5563);
+					cursor: default;
+					border-color: light-dark(#e5e7eb, #374151);
 				}
-				@media (width < 768px) {
-					min-width: unset;
+				&#encrypt,
+				&#decrypt {
+					background-color: var(--primary-color);
+					color: white;
+					border-color: var(--primary-color);
+				}
+				&#encrypt:hover:not(:disabled),
+				&#decrypt:hover:not(:disabled) {
+					background-color: var(--primary-hover);
+					border-color: var(--primary-hover);
 				}
 			}
 			textarea {
-				background-color: var(--bg-primary);
-				color: var(--text-primary);
-				font-size: 0.9rem;
-				line-height: 1.4;
+				font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+				font-size: 0.95rem;
+				line-height: 1.5;
 				width: 100%;
-				min-height: 12.5rem;
-				padding: var(--padding);
-				border: solid 1px var(--border-color);
+				min-height: 32rem;
+				padding: calc(var(--padding) * 1.25);
+				border: 1px solid var(--border-color);
 				border-radius: var(--border-radius);
+				background-color: light-dark(#fafafa, #1f2937);
+				color: light-dark(#111827, #f3f4f6);
 				resize: vertical;
-				box-shadow: var(--box-shadow);
+				transition: var(--transition);
 				&:focus {
-					outline: none;
-					border-color: var(--accent-primary);
-					box-shadow: 0 0 0.25rem var(--accent-primary);
+					outline: 2px solid var(--focus-ring);
+					outline-offset: -1px;
+					border-color: var(--focus-ring);
+					background-color: light-dark(white, #111827);
 				}
 				&.key {
-					font-size: 0.8rem;
-					min-height: 4rem;
+					font-size: 0.875rem;
+					font-weight: bold;
+					min-height: 4.5rem;
+					background-color: light-dark(#f9fafb, #1f2937);
+					resize: none;
 				}
 				&[readonly] {
-					background-color: var(--bg-secondary);
-					cursor: default;
+					background-color: light-dark(#f3f4f6, #1f2937);
+					color: light-dark(#4b5563, #9ca3af);
 				}
-				@media (width >= 768px) {
-					min-height: 20rem;
-					&.key {
-						min-height: 6rem;
+			}
+			@media (width >= 768px) {
+				.align-end {
+					justify-content: flex-end;
+				}
+			}
+			@media (width < 768px) {
+				body {
+					padding: 1rem 0.75rem;
+				}
+				.grid > .row {
+					display: flex;
+					flex-direction: column;
+					align-items: stretch;
+					gap: var(--margin);
+					> .cell {
+						justify-content: center;
+						> button {
+							flex: 1;
+						}
 					}
+				}
+				.encrypt-key-holder {
+					display: flex;
+					flex-direction: column;
+					> .qr-code {
+						align-self: center;
+						max-width: 256px;
+					}
+				}
+				textarea {
+					min-height: 32rem;
+				}
+			}
+			@media (width < 480px) {
+				.toast {
+					top: 1rem;
+					right: 0.75rem;
+					left: 0.75rem;
 				}
 			}
 		</style>
@@ -323,7 +340,7 @@
 					hideToast();
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
-					toastTimeout = setTimeout(hideToast, 1500);
+					toastTimeout = setTimeout(hideToast, 2000);
 				};
 				const pasteToTarget = async event => {
 					const sender = event.target;
@@ -436,113 +453,113 @@
 	</head>
 	<body>
 		<div id="toast" class="toast"></div>
-		<div class="container">
-			<div class="tab-container" data-default="tab-encrypt">
-				<div class="tab-bar">
-					<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
-					<button class="tab-btn" data-href="tab-decrypt">Decrypt</button>
-				</div>
-				<div class="tab-panel" data-name="tab-encrypt">
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Encryption Key</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-copy" data-source="encrypt-key">Copy</button>
-							</div>
+		<div class="tab-container" data-default="tab-encrypt">
+			<div class="tab-bar">
+				<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
+				<button class="tab-btn" data-href="tab-decrypt">Decrypt</button>
+			</div>
+			<div class="tab-panel" data-name="tab-encrypt">
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Encryption Key</strong>
 						</div>
-						<div class="row">
-							<div class="cell">
-								<div class="encrypt-key-holder">
-									<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
-									<div class="message"><strong>Important:</strong> The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it. Note down the above key and send it to the receiver via a secure channel separately from the message. Alternatively, you can send them the QR code, which when scanned would produce the above key.</div>
-									<img id="output-qr-code" class="qr-code" alt="QR code containing the encryption key"/>
+						<div class="cell align-end">
+							<button class="btn-copy" data-source="encrypt-key">Copy Key</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<div class="encrypt-key-holder">
+								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+								<div class="message">
+									<span><strong>Important:</strong> This key changes with every page reload. Messages can only be decrypted with the exact key used for encryption. Share this key securely with your recipient, separately from the encrypted message. You can also share the QR code.</span>
 								</div>
-							</div>
-						</div>
-					</div>
-					<br/>
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Plain Text</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-paste" data-target="plain-text">Paste</button>
-								<button id="encrypt">Encrypt</button>
-							</div>
-						</div>
-						<div class="row">
-							<div class="cell">
-								<textarea id="plain-text" placeholder="Enter your message here..."></textarea>
-							</div>
-						</div>
-					</div>
-					<br/>
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Encrypted Text</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-copy" data-source="encrypted-output">Copy</button>
-							</div>
-						</div>
-						<div class="row">
-							<div class="cell">
-								<textarea id="encrypted-output" readonly="readonly" placeholder="Encrypted text will appear here..."></textarea>
+								<img id="output-qr-code" class="qr-code" alt="Encryption key QR code"/>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="tab-panel" data-name="tab-decrypt">
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Decryption Key</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-paste" data-target="decrypt-key">Paste</button>
-							</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text Message</strong>
 						</div>
-						<div class="row">
-							<div class="cell">
-								<textarea id="decrypt-key" class="key" placeholder="Paste the decryption key here..."></textarea>
-							</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="plain-text">Paste</button>
+							<button id="encrypt">Encrypt Message</button>
 						</div>
 					</div>
-					<br/>
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Encrypted Text</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-paste" data-target="cipher-text">Paste</button>
-								<button id="decrypt">Decrypt</button>
-							</div>
-						</div>
-						<div class="row">
-							<div class="cell">
-								<textarea id="cipher-text" placeholder="Paste the encrypted message here..."></textarea>
-							</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="plain-text" placeholder="Enter your message here..."></textarea>
 						</div>
 					</div>
-					<br/>
-					<div class="grid">
-						<div class="row">
-							<div class="cell">
-								<strong>Decrypted Text</strong>
-							</div>
-							<div class="cell button-group">
-								<button class="btn-copy" data-source="decrypted-output">Copy</button>
-							</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Encrypted Output</strong>
 						</div>
-						<div class="row">
-							<div class="cell">
-								<textarea id="decrypted-output" readonly="readonly" placeholder="Decrypted text will appear here..."></textarea>
-							</div>
+						<div class="cell align-end">
+							<button class="btn-copy" data-source="encrypted-output">Copy Output</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="encrypted-output" readonly="readonly" placeholder="Encrypted message will appear here..."></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="tab-panel" data-name="tab-decrypt">
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Decryption Key</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="decrypt-key">Paste Key</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypt-key" class="key" placeholder="Paste the decryption key here..."></textarea>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Encrypted Message</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="cipher-text">Paste</button>
+							<button id="decrypt">Decrypt Message</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="cipher-text" placeholder="Paste the encrypted message here..."></textarea>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Decrypted Output</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-copy" data-source="decrypted-output">Copy Output</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypted-output" readonly="readonly" placeholder="Decrypted message will appear here..."></textarea>
 						</div>
 					</div>
 				</div>

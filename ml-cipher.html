@@ -15,6 +15,11 @@
 			* {
 				box-sizing: border-box;
 			}
+			body {
+				min-width: min-content;
+				max-width: 75rem;
+				padding-inline: 5%;
+			}
 			.toast {
 				background-color: black;
 				color: white;
@@ -57,7 +62,6 @@
 				display: flex;
 				gap: 2px;
 				background-color: var(--background-hover);
-				min-width: fit-content;
 				border: solid 2px var(--background-hover);
 				border-radius: calc(var(--border-radius) + 2px);
 				> .cipher-btn {
@@ -109,11 +113,11 @@
 			}
 			textarea {
 				width: 100%;
-				min-height: 40rem;
+				min-height: 32rem;
 				padding: var(--padding);
 				border-style: solid;
 				border-radius: var(--border-radius);
-				resize: none;
+				resize: vertical;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
