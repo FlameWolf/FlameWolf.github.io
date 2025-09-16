@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>FlameWolf | &#x1F525;&#x1F43A;</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style>
+			:root {
+				--margin: 1rem;
+				--border-color: #cccccc;
+			}
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					> .cell {
+						display: table-cell;
+					}
+				}
+			}
+			ul {
+				list-style-type: "\2726\20";
+				list-style-position: inside;
+				padding-left: 0;
+			}
+		</style>
+		<base target="_blank"/>
+	</head>
+	<body>
+		<h2>About Me</h2>
+		<p>Autistic dimwit.</p>
+		<h2>Interests</h2>
+		<ul>
+			<li>Programming</li>
+			<li>Linguistics</li>
+			<li>Prosody</li>
+			<li>Music</li>
+			<li>Art</li>
+			<li>Creative writing</li>
+			<li>Nature</li>
+			<li>Birds</li>
+			<li>Guns</li>
+			<li>Movies</li>
+			<li>History</li>
+			<li>Philosophy</li>
+			<li>Psychology</li>
+			<li>Gender issues</li>
+		</ul>
+		<h2 id="links">Links</h2>
+		<h3 id="base-95-converter"><a href="base-95.html">Base-95 Converter</a></h3>
+		<p>A web utility for encoding and decoding text using Base-95 conversion and GZip compression.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Two tabs: Encode and Decode.</li>
+			<li>Encoding: Compresses input text with GZip, then encodes it in Base-95.</li>
+			<li>Decoding: Decodes Base-95 input, decompresses with GZip, and displays the original text.</li>
+			<li>Clipboard integration: Paste and Copy buttons for input/output fields.</li>
+			<li>Toast notifications for user feedback.</li>
+			<li>Responsive design.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Encode sensitive or large text for compact transmission/storage.</li>
+			<li>Decode previously encoded Base-95 strings.</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>Only works with text; binary data must be converted to text first.</li>
+			<li>Relies on browser support for GZip and clipboard APIs.</li>
+			<li>No authentication or security features.</li>
+		</ul>
+		<hr/>
+		<h3 id="encrypted-message-generator"><a href="enc-dec.html">Encrypted Message Generator</a></h3>
+		<p>A web tool for encrypting and decrypting text using AES-GCM, GZip, and Base-95 encoding.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Two tabs: Encrypt and Decrypt.</li>
+			<li>Encryption: Generates a random AES-GCM key, compresses and encodes input, encrypts, and outputs Base-95 cipher text.</li>
+			<li>Decryption: Requires the correct key to decrypt cipher text.</li>
+			<li>Key is displayed and can be copied or shared via QR code.</li>
+			<li>Clipboard integration.</li>
+			<li>Toast notifications.</li>
+			<li>Responsive design.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Securely transmit messages; receiver must have the key.</li>
+			<li>Share key via QR code for convenience.</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>Key changes on every page reload; must be shared securely.</li>
+			<li>If key is lost, message cannot be decrypted.</li>
+			<li>No password-based key derivation.</li>
+			<li>Relies on browser crypto APIs.</li>
+		</ul>
+		<hr/>
+		<h3 id="malayalam-base-95-converter"><a href="ml-base-95.html">Malayalam Base-95 converter</a></h3>
+		<p>Malayalam text to/from Base-95 encoding using range compression and GZip.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Two tabs: Encode and Decode.</li>
+			<li>Encoding: Compresses Malayalam and ASCII text, applies range compression, encodes in Base-95.</li>
+			<li>Decoding: Decodes Base-95, decompresses, reconstructs Malayalam text.</li>
+			<li>Clipboard integration.</li>
+			<li>Toast notifications.</li>
+			<li>Warning for unsupported Unicode ranges.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Compactly encode Malayalam and ASCII text for transmission/storage.</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>Only supports Malayalam (Unicode 3328-3455) and ASCII (1-127).</li>
+			<li>Characters outside these ranges are not processed correctly.</li>
+		</ul>
+		<hr/>
+		<h3 id="moolabhadri-converter"><a href="ml-cipher.html">Moolabhadri Converter</a></h3>
+		<p>A tool for encrypting/decrypting Malayalam text using either of the two versions of the Moolabhadri substitution cipher scheme.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Cipher scheme selection (from <code class="language-plaintext highlighter-rouge">cipherSchemes</code> in ml-cipher.js).</li>
+			<li>Input and Output text areas.</li>
+			<li>Paste, Convert, and Copy buttons.</li>
+			<li>Displays description of selected cipher.</li>
+			<li>Remembers last used scheme via localStorage.</li>
+			<li>Toast notifications.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Encrypt/decrypt Malayalam text using different schemes.</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>Only supports schemes defined in the JS file.</li>
+			<li>No details on the security of each scheme.</li>
+			<li>No error details for failed conversions.</li>
+		</ul>
+		<hr/>
+		<h3 id="unicode-text-reverser"><a href="reverse-unicode-text.html">Unicode Text Reverser</a></h3>
+		<p>A utility to reverse Unicode text.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Input and Output text areas.</li>
+			<li>Paste and Copy buttons.</li>
+			<li>Output updates live as input changes.</li>
+			<li>Uses <code class="language-plaintext highlighter-rouge">reverseUnicodeText</code> from reverseUnicodeText.js.</li>
+			<li>Toast notifications.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Reverse the order of Unicode characters in a string (useful for palindromes, RTL/LTR text, etc.).</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>No options for word/character-level reversal.</li>
+			<li>No error details for failed operations.</li>
+		</ul>
+		<hr/>
+		<h3 id="rot-18-converter"><a href="rot-18.html">ROT-18 Converter</a></h3>
+		<p>A utility for ROT-18 encoding/decoding.</p>
+		<p><strong>Features:</strong></p>
+		<ul>
+			<li>Input and Output text areas.</li>
+			<li>Paste and Copy buttons.</li>
+			<li>Output updates live as input changes.</li>
+			<li>Uses <code class="language-plaintext highlighter-rouge">rot18</code> from rot-18.js.</li>
+			<li>Toast notifications.</li>
+		</ul>
+		<p><strong>Usage:</strong></p>
+		<ul>
+			<li>Apply ROT-18 cipher (a combination of ROT-13 for letters and ROT-5 for digits).</li>
+		</ul>
+		<p><strong>Limitations:</strong></p>
+		<ul>
+			<li>Only works for Latin letters and digits.</li>
+			<li>No error details for failed operations.</li>
+		</ul>
+	</body>
+</html>
