@@ -108,6 +108,10 @@
 					display: grid;
 					grid-auto-flow: column;
 					align-items: center;
+					&.footer {
+						color: var(--text-muted);
+						font-size: 0.8rem;
+					}
 					> .cell {
 						display: flex;
 						gap: var(--margin);
@@ -192,6 +196,12 @@
 				const txtEncodedOutput = document.getElementById("encoded-output");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecodedOutput = document.getElementById("decoded-output");
+				const emPlainTextByteCount = document.getElementById("plain-text-bytes");
+				const emEncodedOutputByteCount = document.getElementById("encoded-output-bytes");
+				const emCipherTextByteCount = document.getElementById("cipher-text-bytes");
+				const emDecodedOutputByteCount = document.getElementById("decoded-output-bytes");
+				const emPlainToEncodedRatio = document.getElementById("plain-to-encoded-ratio");
+				const emEncodedToPlainRatio = document.getElementById("encoded-to-plain-ratio");
 				let toastTimeout = null;
 				const hideToast = () => {
 					if (toastTimeout) {
@@ -213,6 +223,7 @@
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
 							targetElement.value = clipboardText;
+							targetElement.dispatchEvent(new Event("input"));
 						}
 						showToast("Pasted from clipboard", true);
 					} catch {
@@ -228,6 +239,26 @@
 					} catch {
 						showToast("Failed to copy", false);
 					}
+				};
+				const calculateRatio = (inputByteCount, outputByteCount) => {
+					const size = outputByteCount > inputByteCount ? "larger" : "smaller";
+					if (inputByteCount && outputByteCount) {
+						const ratio = Math.abs(((inputByteCount - outputByteCount) / inputByteCount) * 100).toFixed(2);
+						return `(${ratio}% ${size})`;
+					}
+					return "";
+				};
+				const updateStatistics = () => {
+					const plainTextByteCount = new Blob([txtPlainText.value]).size;
+					const encodedOutputByteCount = new Blob([txtEncodedOutput.value]).size;
+					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
+					const decodedOutputByteCount = new Blob([txtDecodedOutput.value]).size;
+					emPlainTextByteCount.textContent = plainTextByteCount;
+					emEncodedOutputByteCount.textContent = encodedOutputByteCount;
+					emCipherTextByteCount.textContent = cipherTextByteCount;
+					emDecodedOutputByteCount.textContent = decodedOutputByteCount;
+					emPlainToEncodedRatio.textContent = calculateRatio(plainTextByteCount, encodedOutputByteCount);
+					emEncodedToPlainRatio.textContent = calculateRatio(cipherTextByteCount, decodedOutputByteCount);
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
@@ -250,11 +281,16 @@
 						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
+				txtPlainText.addEventListener("input", updateStatistics);
+				txtEncodedOutput.addEventListener("input", updateStatistics);
+				txtCipherText.addEventListener("input", updateStatistics);
+				txtDecodedOutput.addEventListener("input", updateStatistics);
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value.trim();
 					if (input) {
 						try {
 							txtEncodedOutput.value = await encodeMalayalam(input);
+							txtEncodedOutput.dispatchEvent(new Event("input"));
 							showToast("Encoded successfully", true);
 						} catch {
 							showToast("Failed to encode", false);
@@ -268,6 +304,7 @@
 					if (cipherText) {
 						try {
 							txtDecodedOutput.value = await decodeMalayalam(cipherText);
+							txtDecodedOutput.dispatchEvent(new Event("input"));
 							showToast("Decoded successfully", true);
 						} catch {
 							showToast("Failed to decode", false);
@@ -282,6 +319,7 @@
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
+				updateStatistics();
 			});
 		</script>
 	</head>
@@ -312,6 +350,12 @@
 							<textarea id="plain-text"></textarea>
 						</div>
 					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="plain-text-bytes">0</em>
+						</div>
+					</div>
 				</div>
 				<br/>
 				<div class="grid">
@@ -326,6 +370,13 @@
 					<div class="row">
 						<div class="cell">
 							<textarea id="encoded-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="encoded-output-bytes">0</em>
+							<em id="plain-to-encoded-ratio"></em>
 						</div>
 					</div>
 				</div>
@@ -347,6 +398,12 @@
 							<textarea id="cipher-text"></textarea>
 						</div>
 					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="cipher-text-bytes">0</em>
+						</div>
+					</div>
 				</div>
 				<br/>
 				<div class="grid">
@@ -361,6 +418,13 @@
 					<div class="row">
 						<div class="cell">
 							<textarea id="decoded-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="decoded-output-bytes">0</em>
+							<em id="encoded-to-plain-ratio"></em>
 						</div>
 					</div>
 				</div>
