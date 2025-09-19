@@ -397,7 +397,7 @@
 				tmpImgOutputQrCode.src = `data:image/svg+xml;base64,${btoa(encryptKeyQr.outerHTML)}`;
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
-					const input = txtPlainText.value.trim();
+					const input = txtPlainText.value
 					if (input) {
 						try {
 							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));

@@ -268,7 +268,7 @@
 				txtCipherText.addEventListener("input", updateStatistics);
 				txtDecodedOutput.addEventListener("input", updateStatistics);
 				btnEncode.addEventListener("click", async () => {
-					const input = txtPlainText.value.trim();
+					const input = txtPlainText.value;
 					if (input) {
 						try {
 							txtEncodedOutput.value = await encodeText(input);
