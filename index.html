@@ -15,10 +15,25 @@
 				grid-template: auto / 1fr 1fr 1fr 1fr;
 				gap: calc(var(--margin) / 2);
 				> .cell {
+					display: flex;
+					align-items: center;
+					justify-content: center;
 					text-align: center;
 					padding: calc(var(--margin) / 2);
 					border: dotted 1px var(--border-color);
 					border-radius: 0.375rem;
+					&:empty::before {
+						content: "\023F3";
+					}
+				}
+				@media (width < 768px) {
+					grid-template: auto / 1fr 1fr;
+					> .cell:empty {
+						display: none;
+					}
+				}
+				@media (width < 480px) {
+					grid-template: auto / 1fr;
 				}
 			}
 			.strong {
@@ -51,8 +66,8 @@
 			<div class="cell">Philosophy</div>
 			<div class="cell">Psychology</div>
 			<div class="cell">Gender issues</div>
-			<div class="cell">&#x23F3;</div>
-			<div class="cell">&#x23F3;</div>
+			<div class="cell"></div>
+			<div class="cell"></div>
 		</div>
 		<h2>Links</h2>
 		<h3><a href="base-95.html">Base-95 Converter</a></h3>
