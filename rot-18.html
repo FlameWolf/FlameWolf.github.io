@@ -66,6 +66,7 @@
 					display: grid;
 					grid-auto-flow: column;
 					align-items: center;
+					gap: var(--margin);
 					> .cell {
 						display: flex;
 						gap: var(--margin);
@@ -95,16 +96,12 @@
 				}
 			}
 			@media (width < 768px) {
-				.grid {
-					> .row {
-						display: flex;
-						flex-direction: column;
-						align-items: stretch;
-						gap: var(--margin);
-						> .cell {
-							> button {
-								flex: 1;
-							}
+				.grid > .row {
+					grid-auto-flow: row;
+					> .cell {
+						justify-content: center;
+						> button {
+							flex: 1;
 						}
 					}
 				}
