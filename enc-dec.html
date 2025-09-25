@@ -104,6 +104,22 @@
 					display: grid;
 					grid-auto-flow: column;
 					align-items: center;
+					gap: var(--margin);
+					&.warning {
+						padding: var(--padding) calc(var(--padding) * 2);
+						border: solid 1px darkviolet;
+						border-radius: var(--border-radius);
+					}
+					&.footer {
+						color: var(--text-muted);
+						font-size: 0.8rem;
+						> em {
+							overflow-wrap: anywhere;
+						}
+					}
+					&.hidden {
+						display: none;
+					}
 					> .cell {
 						display: flex;
 						gap: var(--margin);
@@ -160,16 +176,12 @@
 				}
 			}
 			@media (width < 768px) {
-				.grid {
-					> .row {
-						display: flex;
-						flex-direction: column;
-						align-items: stretch;
-						gap: var(--margin);
-						> .cell {
-							> button {
-								flex: 1;
-							}
+				.grid > .row {
+					grid-auto-flow: row;
+					> .cell {
+						justify-content: center;
+						> button {
+							flex: 1;
 						}
 					}
 				}
@@ -238,6 +250,8 @@
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
 				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext))));
 				const divToast = document.getElementById("toast");
+				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
+				const imgOutputQrCode = document.getElementById("output-qr-code");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnDecrypt = document.getElementById("decrypt");
 				const txtEncryptKey = document.getElementById("encrypt-key");
@@ -246,9 +260,13 @@
 				const txtDecryptKey = document.getElementById("decrypt-key");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecryptedOutput = document.getElementById("decrypted-output");
-				const imgOutputQrCode = document.getElementById("output-qr-code");
-				const canOutputQrCode = document.createElement("canvas");
-				const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
+				const spnTrailingSpaceCount = document.getElementById("trailing-space-count");
+				const emPlainTextByteCount = document.getElementById("plain-text-bytes");
+				const emEncryptedOutputByteCount = document.getElementById("encrypted-output-bytes");
+				const emCipherTextByteCount = document.getElementById("cipher-text-bytes");
+				const emDecryptedOutputByteCount = document.getElementById("decrypted-output-bytes");
+				const emPlainToEncryptedRatio = document.getElementById("plain-to-encrypted-ratio");
+				const emEncryptedToPlainRatio = document.getElementById("encrypted-to-plain-ratio");
 				const tmpImgOutputQrCode = new Image();
 				let toastTimeout = null;
 				const hideToast = () => {
@@ -271,6 +289,7 @@
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
 							targetElement.value = clipboardText;
+							targetElement.dispatchEvent(new Event("input"));
 						}
 						showToast("Pasted from clipboard", true);
 					} catch {
@@ -286,6 +305,30 @@
 					} catch {
 						showToast("Failed to copy", false);
 					}
+				};
+				const calculateRatio = (inputByteCount, outputByteCount) => {
+					const size = outputByteCount > inputByteCount ? "larger" : "smaller";
+					if (inputByteCount && outputByteCount) {
+						const ratio = Math.abs(((inputByteCount - outputByteCount) / inputByteCount) * 100).toFixed(2);
+						return `(${ratio}% ${size})`;
+					}
+					return "";
+				};
+				const updateStatistics = () => {
+					const encryptedOutput = txtEncryptedOutput.value;
+					const trailingSpaceCount = encryptedOutput.match(/\s+$/)?.[0]?.length;
+					const plainTextByteCount = new Blob([txtPlainText.value]).size;
+					const encryptedOutputByteCount = new Blob([encryptedOutput]).size;
+					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
+					const deccryptedOutputByteCount = new Blob([txtDecryptedOutput.value]).size;
+					spnTrailingSpaceCount.textContent = trailingSpaceCount || "0";
+					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
+					emPlainTextByteCount.textContent = plainTextByteCount;
+					emEncryptedOutputByteCount.textContent = encryptedOutputByteCount;
+					emCipherTextByteCount.textContent = cipherTextByteCount;
+					emDecryptedOutputByteCount.textContent = deccryptedOutputByteCount;
+					emPlainToEncryptedRatio.textContent = calculateRatio(plainTextByteCount, encryptedOutputByteCount);
+					emEncryptedToPlainRatio.textContent = calculateRatio(cipherTextByteCount, deccryptedOutputByteCount);
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
@@ -310,15 +353,21 @@
 				});
 				txtEncryptKey.value = encryptKeySecret;
 				tmpImgOutputQrCode.addEventListener("load", async () => {
+					const canOutputQrCode = document.createElement("canvas");
+					const ctxCanOutputQrCode = canOutputQrCode.getContext("2d");
 					canOutputQrCode.height = imgDim;
 					canOutputQrCode.width = imgDim;
 					ctxCanOutputQrCode.drawImage(tmpImgOutputQrCode, 0, 0, imgDim, imgDim);
 					imgOutputQrCode.src = canOutputQrCode.toDataURL();
 				});
 				tmpImgOutputQrCode.src = `data:image/svg+xml;base64,${btoa(encryptKeyQr.outerHTML)}`;
+				txtPlainText.addEventListener("input", updateStatistics);
+				txtEncryptedOutput.addEventListener("input", updateStatistics);
+				txtCipherText.addEventListener("input", updateStatistics);
+				txtDecryptedOutput.addEventListener("input", updateStatistics);
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
-					const input = txtPlainText.value
+					const input = txtPlainText.value;
 					if (input) {
 						try {
 							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
@@ -333,6 +382,7 @@
 					} else {
 						txtEncryptedOutput.value = "";
 					}
+					txtEncryptedOutput.dispatchEvent(new Event("input"));
 				});
 				btnDecrypt.addEventListener("click", async () => {
 					const decryptKeySecret = txtDecryptKey.value;
@@ -363,6 +413,7 @@
 					} else {
 						txtDecryptedOutput.value = "";
 					}
+					txtDecryptedOutput.dispatchEvent(new Event("input"));
 				});
 				[...document.getElementsByClassName("btn-paste")].forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
@@ -370,6 +421,7 @@
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
+				updateStatistics();
 			});
 		</script>
 	</head>
@@ -419,6 +471,12 @@
 							<textarea id="plain-text"></textarea>
 						</div>
 					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="plain-text-bytes">0</em>
+						</div>
+					</div>
 				</div>
 				<br/>
 				<div class="grid">
@@ -430,9 +488,21 @@
 							<button class="btn-copy" data-source="encrypted-output">Copy</button>
 						</div>
 					</div>
+					<div id="trailing-spaces-message" class="row warning hidden">
+						<div class="cell">
+							<em>Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+						</div>
+					</div>
 					<div class="row">
 						<div class="cell">
 							<textarea id="encrypted-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="encrypted-output-bytes">0</em>
+							<em id="plain-to-encrypted-ratio"></em>
 						</div>
 					</div>
 				</div>
@@ -469,6 +539,12 @@
 							<textarea id="cipher-text"></textarea>
 						</div>
 					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="cipher-text-bytes">0</em>
+						</div>
+					</div>
 				</div>
 				<br/>
 				<div class="grid">
@@ -483,6 +559,13 @@
 					<div class="row">
 						<div class="cell">
 							<textarea id="decrypted-output" readonly="readonly"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="decrypted-output-bytes">0</em>
+							<em id="encrypted-to-plain-ratio"></em>
 						</div>
 					</div>
 				</div>
