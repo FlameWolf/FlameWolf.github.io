@@ -121,11 +121,15 @@
 						padding: var(--padding) calc(var(--padding) * 2);
 						border: solid 1px darkviolet;
 						border-radius: var(--border-radius);
+						> .cell > em {
+							text-align: center;
+							width: 100%;
+						}
 					}
 					&.footer {
 						color: var(--text-muted);
 						font-size: 0.8rem;
-						> em {
+						> .cell > em {
 							overflow-wrap: anywhere;
 						}
 					}
