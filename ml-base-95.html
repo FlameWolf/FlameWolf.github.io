@@ -108,9 +108,21 @@
 					display: grid;
 					grid-auto-flow: column;
 					align-items: center;
+					gap: var(--margin);
+					&.warning {
+						padding: var(--padding) calc(var(--padding) * 2);
+						border: solid 1px darkviolet;
+						border-radius: var(--border-radius);
+					}
 					&.footer {
 						color: var(--text-muted);
 						font-size: 0.8rem;
+						> em {
+							overflow-wrap: anywhere;
+						}
+					}
+					&.hidden {
+						display: none;
 					}
 					> .cell {
 						display: flex;
@@ -141,16 +153,12 @@
 				}
 			}
 			@media (width < 768px) {
-				.grid {
-					> .row {
-						display: flex;
-						flex-direction: column;
-						align-items: stretch;
-						gap: var(--margin);
-						> .cell {
-							> button {
-								flex: 1;
-							}
+				.grid > .row {
+					grid-auto-flow: row;
+					> .cell {
+						justify-content: center;
+						> button {
+							flex: 1;
 						}
 					}
 				}
@@ -190,12 +198,14 @@
 						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
 				};
 				const divToast = document.getElementById("toast");
+				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const btnEncode = document.getElementById("encode");
 				const btnDecode = document.getElementById("decode");
 				const txtPlainText = document.getElementById("plain-text");
 				const txtEncodedOutput = document.getElementById("encoded-output");
 				const txtCipherText = document.getElementById("cipher-text");
 				const txtDecodedOutput = document.getElementById("decoded-output");
+				const spnTrailingSpaceCount = document.getElementById("trailing-space-count");
 				const emPlainTextByteCount = document.getElementById("plain-text-bytes");
 				const emEncodedOutputByteCount = document.getElementById("encoded-output-bytes");
 				const emCipherTextByteCount = document.getElementById("cipher-text-bytes");
@@ -249,10 +259,14 @@
 					return "";
 				};
 				const updateStatistics = () => {
+					const encodedOutput = txtEncodedOutput.value;
+					const trailingSpaceCount = encodedOutput.match(/\s+$/)?.[0]?.length;
 					const plainTextByteCount = new Blob([txtPlainText.value]).size;
-					const encodedOutputByteCount = new Blob([txtEncodedOutput.value]).size;
+					const encodedOutputByteCount = new Blob([encodedOutput]).size;
 					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
 					const decodedOutputByteCount = new Blob([txtDecodedOutput.value]).size;
+					spnTrailingSpaceCount.textContent = trailingSpaceCount || "0";
+					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
 					emPlainTextByteCount.textContent = plainTextByteCount;
 					emEncodedOutputByteCount.textContent = encodedOutputByteCount;
 					emCipherTextByteCount.textContent = cipherTextByteCount;
@@ -290,7 +304,6 @@
 					if (input) {
 						try {
 							txtEncodedOutput.value = await encodeMalayalam(input);
-							txtEncodedOutput.dispatchEvent(new Event("input"));
 							showToast("Encoded successfully", true);
 						} catch {
 							showToast("Failed to encode", false);
@@ -298,13 +311,13 @@
 					} else {
 						txtEncodedOutput.value = "";
 					}
+					txtEncodedOutput.dispatchEvent(new Event("input"));
 				});
 				btnDecode.addEventListener("click", async () => {
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
 						try {
 							txtDecodedOutput.value = await decodeMalayalam(cipherText);
-							txtDecodedOutput.dispatchEvent(new Event("input"));
 							showToast("Decoded successfully", true);
 						} catch {
 							showToast("Failed to decode", false);
@@ -312,6 +325,7 @@
 					} else {
 						txtDecodedOutput.value = "";
 					}
+					txtDecodedOutput.dispatchEvent(new Event("input"));
 				});
 				[...document.getElementsByClassName("btn-paste")].forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
@@ -365,6 +379,11 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-copy" data-source="encoded-output">Copy</button>
+						</div>
+					</div>
+					<div id="trailing-spaces-message" class="row warning hidden">
+						<div class="cell">
+							<em>Warning: The encoded text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
 						</div>
 					</div>
 					<div class="row">
