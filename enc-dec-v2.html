@@ -64,6 +64,45 @@
 					background-color: var(--error-color);
 				}
 			}
+			button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				background-color: light-dark(white, #1f2937);
+				color: light-dark(#374151, #e5e7eb);
+				font-size: 0.9rem;
+				padding: 0.625rem 1.5rem;
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
+				transition: var(--transition);
+				&:hover:not(:disabled) {
+					background-color: light-dark(#f9fafb, #374151);
+					border-color: light-dark(#9ca3af, #4b5563);
+					box-shadow: inset 0 0 0.25rem currentColor;
+				}
+				&:focus-visible {
+					outline: 2px solid var(--focus-ring);
+					outline-offset: 2px;
+				}
+				&:disabled,
+				&:disabled:hover {
+					background-color: light-dark(#f3f4f6, #1f2937);
+					color: light-dark(#9ca3af, 4b5563);
+					cursor: default;
+					border-color: light-dark(#e5e7eb, #374151);
+				}
+				&#encrypt,
+				&#decrypt {
+					background-color: var(--primary-color);
+					color: white;
+					border-color: var(--primary-color);
+				}
+				&#encrypt:hover:not(:disabled),
+				&#decrypt:hover:not(:disabled) {
+					background-color: var(--primary-hover);
+					border-color: var(--primary-hover);
+				}
+			}
 			.tab-container {
 				display: flex;
 				flex-direction: column;
@@ -179,45 +218,6 @@
 					background-color: white;
 				}
 			}
-			button {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				background-color: light-dark(white, #1f2937);
-				color: light-dark(#374151, #e5e7eb);
-				font-size: 0.9rem;
-				padding: 0.625rem 1.5rem;
-				border: 1px solid var(--border-color);
-				border-radius: var(--border-radius);
-				transition: var(--transition);
-				&:hover:not(:disabled) {
-					background-color: light-dark(#f9fafb, #374151);
-					border-color: light-dark(#9ca3af, #4b5563);
-					box-shadow: inset 0 0 0.25rem currentColor;
-				}
-				&:focus-visible {
-					outline: 2px solid var(--focus-ring);
-					outline-offset: 2px;
-				}
-				&:disabled,
-				&:disabled:hover {
-					background-color: light-dark(#f3f4f6, #1f2937);
-					color: light-dark(#9ca3af, 4b5563);
-					cursor: default;
-					border-color: light-dark(#e5e7eb, #374151);
-				}
-				&#encrypt,
-				&#decrypt {
-					background-color: var(--primary-color);
-					color: white;
-					border-color: var(--primary-color);
-				}
-				&#encrypt:hover:not(:disabled),
-				&#decrypt:hover:not(:disabled) {
-					background-color: var(--primary-hover);
-					border-color: var(--primary-hover);
-				}
-			}
 			textarea {
 				font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
 				font-size: 0.95rem;
@@ -249,9 +249,12 @@
 					color: light-dark(#4b5563, #9ca3af);
 				}
 			}
+			.hidden {
+				display: none;
+			}
 			@media (width >= 768px) {
 				.align-end {
-					justify-content: flex-end;
+					justify-content: end;
 				}
 			}
 			@media (width < 768px) {
@@ -264,6 +267,7 @@
 						justify-content: center;
 						> button {
 							flex: 1;
+							padding: var(--padding);
 						}
 					}
 				}
@@ -281,6 +285,10 @@
 				}
 			}
 			@media (width < 480px) {
+				:root {
+					--padding: 0.5rem;
+					--margin: 0.5rem;
+				}
 				.toast {
 					top: 1rem;
 					right: 0.75rem;
@@ -289,6 +297,7 @@
 			}
 		</style>
 		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
+		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
 		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
@@ -388,6 +397,51 @@
 						showToast("Copied to clipboard", true);
 					} catch {
 						showToast("Failed to copy", false);
+					}
+				};
+				const triggerUpload = async event => {
+					document.getElementById(event.target.dataset["target"]).click();
+				};
+				const uploadFile = async event => {
+					const sender = event.target;
+					const targetElement = document.getElementById(sender.dataset["target"]);
+					const file = sender.files[0];
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = progressEvent => {
+							targetElement.value = progressEvent.target.result;
+							targetElement.dispatchEvent(new Event("input"));
+							showToast("File loaded", true);
+						};
+						reader.onerror = () => {
+							showToast("Failed to read file", false);
+						};
+						if (file.type?.startsWith("text/") || (await isTextFile(file))) {
+							reader.readAsText(file);
+						} else {
+							showToast("Only text files are supported", false);
+						}
+					}
+					sender.value = null;
+				};
+				const downloadFile = async event => {
+					const sender = event.target;
+					const sourceElement = document.getElementById(sender.dataset["source"]);
+					const text = sourceElement.value;
+					if (text) {
+						const blob = new Blob([text], { type: "text/plain" });
+						const url = URL.createObjectURL(blob);
+						const anchorElement = document.createElement("a");
+						anchorElement.href = url;
+						anchorElement.download = `${crypto.randomUUID().replace(/\-/g, "").substring(0, 16)}_${Date.now()}.txt`;
+						anchorElement.className = "hidden";
+						document.body.appendChild(anchorElement);
+						anchorElement.click();
+						document.body.removeChild(anchorElement);
+						URL.revokeObjectURL(url);
+						showToast("Download triggered", true);
+					} else {
+						showToast("Nothing to download", false);
 					}
 				};
 				const calculateRatio = (inputByteCount, outputByteCount) => {
@@ -505,6 +559,15 @@
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
+				[...document.getElementsByClassName("btn-upload")].forEach(btnUpload => {
+					btnUpload.addEventListener("click", triggerUpload);
+				});
+				[...document.getElementsByClassName("btn-download")].forEach(btnDownload => {
+					btnDownload.addEventListener("click", downloadFile);
+				});
+				[...document.querySelectorAll('input[type="file"]')].forEach(fileInput => {
+					fileInput.addEventListener("input", uploadFile);
+				});
 				updateStatistics();
 			});
 		</script>
@@ -546,6 +609,8 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="plain-text">Paste</button>
+							<input id="plain-text-file-input" type="file" class="hidden" data-target="plain-text"/>
+							<button class="btn-upload" data-target="plain-text-file-input">Upload File</button>
 							<button id="encrypt">Encrypt Message</button>
 						</div>
 					</div>
@@ -569,6 +634,7 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-copy" data-source="encrypted-output">Copy Output</button>
+							<button class="btn-download" data-source="encrypted-output">Download</button>
 						</div>
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
@@ -614,6 +680,8 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="cipher-text">Paste</button>
+							<input id="cipher-text-file-input" type="file" class="hidden" data-target="cipher-text"/>
+							<button class="btn-upload" data-target="cipher-text-file-input">Upload File</button>
 							<button id="decrypt">Decrypt Message</button>
 						</div>
 					</div>
@@ -637,6 +705,7 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-copy" data-source="decrypted-output">Copy Output</button>
+							<button class="btn-download" data-source="decrypted-output">Download</button>
 						</div>
 					</div>
 					<div class="row">

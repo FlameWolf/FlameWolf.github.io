@@ -129,12 +129,15 @@
 				}
 			}
 			textarea {
-				width: 100%;
+				flex: 1;
 				min-height: 32rem;
 				padding: var(--padding);
 				border-style: solid;
 				border-radius: var(--border-radius);
 				resize: vertical;
+			}
+			.hidden {
+				display: none;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
@@ -147,7 +150,7 @@
 			}
 			@media (width >= 768px) {
 				.align-end {
-					justify-content: flex-end;
+					justify-content: end;
 				}
 			}
 			@media (width < 768px) {
@@ -157,6 +160,7 @@
 						justify-content: center;
 						> button {
 							flex: 1;
+							padding: var(--padding) calc(var(--padding) * 2);
 						}
 					}
 				}
@@ -168,8 +172,12 @@
 					width: 90%;
 					margin: 0 auto;
 				}
+				.grid > .row > .cell > button {
+					padding: var(--padding);
+				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
 		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
@@ -234,6 +242,51 @@
 						showToast("Copied to clipboard", true);
 					} catch {
 						showToast("Failed to copy", false);
+					}
+				};
+				const triggerUpload = async event => {
+					document.getElementById(event.target.dataset["target"]).click();
+				};
+				const uploadFile = async event => {
+					const sender = event.target;
+					const targetElement = document.getElementById(sender.dataset["target"]);
+					const file = sender.files[0];
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = progressEvent => {
+							targetElement.value = progressEvent.target.result;
+							targetElement.dispatchEvent(new Event("input"));
+							showToast("File loaded", true);
+						};
+						reader.onerror = () => {
+							showToast("Failed to read file", false);
+						};
+						if (file.type?.startsWith("text/") || (await isTextFile(file))) {
+							reader.readAsText(file);
+						} else {
+							showToast("Only text files are supported", false);
+						}
+					}
+					sender.value = null;
+				};
+				const downloadFile = async event => {
+					const sender = event.target;
+					const sourceElement = document.getElementById(sender.dataset["source"]);
+					const text = sourceElement.value;
+					if (text) {
+						const blob = new Blob([text], { type: "text/plain" });
+						const url = URL.createObjectURL(blob);
+						const anchorElement = document.createElement("a");
+						anchorElement.href = url;
+						anchorElement.download = `${crypto.randomUUID().replace(/\-/g, "").substring(0, 16)}_${Date.now()}.txt`;
+						anchorElement.className = "hidden";
+						document.body.appendChild(anchorElement);
+						anchorElement.click();
+						document.body.removeChild(anchorElement);
+						URL.revokeObjectURL(url);
+						showToast("Download triggered", true);
+					} else {
+						showToast("Nothing to download", false);
 					}
 				};
 				const calculateRatio = (inputByteCount, outputByteCount) => {
@@ -319,6 +372,15 @@
 				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
+				[...document.getElementsByClassName("btn-upload")].forEach(btnUpload => {
+					btnUpload.addEventListener("click", triggerUpload);
+				});
+				[...document.getElementsByClassName("btn-download")].forEach(btnDownload => {
+					btnDownload.addEventListener("click", downloadFile);
+				});
+				[...document.querySelectorAll('input[type="file"]')].forEach(fileInput => {
+					fileInput.addEventListener("input", uploadFile);
+				});
 				updateStatistics();
 			});
 		</script>
@@ -340,6 +402,8 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="plain-text">Paste</button>
+							<input id="plain-text-file-input" type="file" class="hidden" data-target="plain-text"/>
+							<button class="btn-upload" data-target="plain-text-file-input">Upload File</button>
 							<button id="encode">Encode</button>
 						</div>
 					</div>
@@ -363,6 +427,7 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-copy" data-source="encoded-output">Copy</button>
+							<button class="btn-download" data-source="encoded-output">Download</button>
 						</div>
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
@@ -393,6 +458,8 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="cipher-text">Paste</button>
+							<input id="encoded-text-file-input" type="file" class="hidden" data-target="cipher-text"/>
+							<button class="btn-upload" data-target="encoded-text-file-input">Upload File</button>
 							<button id="decode">Decode</button>
 						</div>
 					</div>
@@ -416,6 +483,7 @@
 						</div>
 						<div class="cell align-end">
 							<button class="btn-copy" data-source="decoded-output">Copy</button>
+							<button class="btn-download" data-source="decoded-output">Download</button>
 						</div>
 					</div>
 					<div class="row">
