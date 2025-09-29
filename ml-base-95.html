@@ -94,11 +94,8 @@
 					}
 				}
 			}
-			.tab-panel {
+			.hidden {
 				display: none;
-				&.visible {
-					display: unset;
-				}
 			}
 			.grid {
 				display: grid;
@@ -142,8 +139,13 @@
 				border-radius: var(--border-radius);
 				resize: vertical;
 			}
-			.hidden {
-				display: none;
+			.overlay {
+				cursor: wait;
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				left: 0;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
@@ -190,14 +192,15 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
-				const MALAYALAM_BLOCK_OFFSET = 3327;
-				const ASCII_COMPRESSION_OFFSET = 128;
+				const emptyString = "";
+				const malayalamBlockOffset = 3327;
+				const asciiCompressionOffset = 128;
 				const encodeMalayalam = async text => {
 					const bytes = new Uint8Array(text.length);
 					bytes.set(
 						Array.from(text).map(char => {
 							const codePoint = char.codePointAt(0);
-							return codePoint <= MALAYALAM_BLOCK_OFFSET ? codePoint + ASCII_COMPRESSION_OFFSET : codePoint - MALAYALAM_BLOCK_OFFSET;
+							return codePoint <= malayalamBlockOffset ? codePoint + asciiCompressionOffset : codePoint - malayalamBlockOffset;
 						}),
 						0
 					);
@@ -206,11 +209,12 @@
 				const decodeMalayalam = async encoded => {
 					const bytes = await gunzip(decodeBase95(encoded));
 					return Array.from(bytes)
-						.map(byte => (byte > ASCII_COMPRESSION_OFFSET ? byte - ASCII_COMPRESSION_OFFSET : byte + MALAYALAM_BLOCK_OFFSET))
-						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, "");
+						.map(byte => (byte > asciiCompressionOffset ? byte - asciiCompressionOffset : byte + malayalamBlockOffset))
+						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, emptyString);
 				};
 				const divToast = document.getElementById("toast");
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
+				const divOverlay = document.getElementById("overlay");
 				const btnEncode = document.getElementById("encode");
 				const btnDecode = document.getElementById("decode");
 				const txtPlainText = document.getElementById("plain-text");
@@ -242,6 +246,7 @@
 					const sender = event.target;
 					const targetElement = document.getElementById(sender.dataset["target"]);
 					try {
+						divOverlay.classList.remove("hidden");
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
 							targetElement.value = clipboardText;
@@ -250,16 +255,21 @@
 						showToast("Pasted from clipboard", true);
 					} catch {
 						showToast("Failed to paste", false);
+					} finally {
+						divOverlay.classList.add("hidden");
 					}
 				};
 				const copyFromSource = async event => {
 					const sender = event.target;
 					const sourceElement = document.getElementById(sender.dataset["source"]);
 					try {
+						divOverlay.classList.remove("hidden");
 						await navigator.clipboard.writeText(sourceElement.value);
 						showToast("Copied to clipboard", true);
 					} catch {
 						showToast("Failed to copy", false);
+					} finally {
+						divOverlay.classList.add("hidden");
 					}
 				};
 				const triggerUpload = async event => {
@@ -270,19 +280,23 @@
 					const targetElement = document.getElementById(sender.dataset["target"]);
 					const file = sender.files[0];
 					if (file) {
-						const reader = new FileReader();
-						reader.onload = progressEvent => {
-							targetElement.value = progressEvent.target.result;
-							targetElement.dispatchEvent(new Event("input"));
-							showToast("File loaded", true);
-						};
-						reader.onerror = () => {
+						try {
+							divOverlay.classList.remove("hidden");
+							const reader = new FileReader();
+							reader.onload = progressEvent => {
+								targetElement.value = progressEvent.target.result;
+								targetElement.dispatchEvent(new Event("input"));
+								showToast("File loaded", true);
+							};
+							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
+								reader.readAsText(file);
+							} else {
+								showToast("Only text files are supported", false);
+							}
+						} catch {
 							showToast("Failed to read file", false);
-						};
-						if (file.type?.startsWith("text/") || (await isTextFile(file))) {
-							reader.readAsText(file);
-						} else {
-							showToast("Only text files are supported", false);
+						} finally {
+							divOverlay.classList.add("hidden");
 						}
 					}
 					sender.value = null;
@@ -292,17 +306,24 @@
 					const sourceElement = document.getElementById(sender.dataset["source"]);
 					const text = sourceElement.value;
 					if (text) {
-						const blob = new Blob([text], { type: "text/plain" });
-						const url = URL.createObjectURL(blob);
-						const anchorElement = document.createElement("a");
-						anchorElement.href = url;
-						anchorElement.download = `${crypto.randomUUID().replace(/\-/g, "").substring(0, 16)}_${Date.now()}.txt`;
-						anchorElement.className = "hidden";
-						document.body.appendChild(anchorElement);
-						anchorElement.click();
-						document.body.removeChild(anchorElement);
-						URL.revokeObjectURL(url);
-						showToast("Download triggered", true);
+						try {
+							divOverlay.classList.remove("hidden");
+							const blob = new Blob([text], { type: "text/plain" });
+							const url = URL.createObjectURL(blob);
+							const anchorElement = document.createElement("a");
+							anchorElement.href = url;
+							anchorElement.download = `${crypto.randomUUID().replace(/\-/g, emptyString).substring(0, 16)}_${Date.now()}.txt`;
+							anchorElement.className = "hidden";
+							document.body.appendChild(anchorElement);
+							anchorElement.click();
+							document.body.removeChild(anchorElement);
+							URL.revokeObjectURL(url);
+							showToast("Download triggered", true);
+						} catch {
+							showToast("Failed to download", false);
+						} finally {
+							divOverlay.classList.add("hidden");
+						}
 					} else {
 						showToast("Nothing to download", false);
 					}
@@ -313,7 +334,7 @@
 						const ratio = Math.abs(((inputByteCount - outputByteCount) / inputByteCount) * 100).toFixed(2);
 						return `(${ratio}% ${size})`;
 					}
-					return "";
+					return emptyString;
 				};
 				const updateStatistics = () => {
 					const encodedOutput = txtEncodedOutput.value;
@@ -333,40 +354,24 @@
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
-						divToast.textContent = "";
+						divToast.textContent = emptyString;
 					}
 				});
 				divToast.addEventListener("click", hideToast);
-				[...document.getElementsByClassName("tab-container")].forEach(tc => {
-					const tabBarButtons = tc.querySelectorAll(".tab-bar .tab-btn");
-					tabBarButtons.forEach(btn => {
-						btn.addEventListener("click", () => {
-							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tc.querySelectorAll(".tab-panel").forEach(tp => tp.classList.remove("visible"));
-							tc.querySelector(`[data-name="${btn.getAttribute("data-href")}"]`)?.classList.add("visible");
-							btn.classList.add("active");
-						});
-					});
-					const defaultPanelName = tc.getAttribute("data-default");
-					if (defaultPanelName) {
-						tc.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
-					}
-				});
-				txtPlainText.addEventListener("input", updateStatistics);
-				txtEncodedOutput.addEventListener("input", updateStatistics);
-				txtCipherText.addEventListener("input", updateStatistics);
-				txtDecodedOutput.addEventListener("input", updateStatistics);
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value;
 					if (input) {
 						try {
+							divOverlay.classList.remove("hidden");
 							txtEncodedOutput.value = await encodeMalayalam(input);
 							showToast("Encoded successfully", true);
 						} catch {
 							showToast("Failed to encode", false);
+						} finally {
+							divOverlay.classList.add("hidden");
 						}
 					} else {
-						txtEncodedOutput.value = "";
+						txtEncodedOutput.value = emptyString;
 					}
 					txtEncodedOutput.dispatchEvent(new Event("input"));
 				});
@@ -374,29 +379,50 @@
 					const cipherText = txtCipherText.value;
 					if (cipherText) {
 						try {
+							divOverlay.classList.remove("hidden");
 							txtDecodedOutput.value = await decodeMalayalam(cipherText);
 							showToast("Decoded successfully", true);
 						} catch {
 							showToast("Failed to decode", false);
+						} finally {
+							divOverlay.classList.add("hidden");
 						}
 					} else {
-						txtDecodedOutput.value = "";
+						txtDecodedOutput.value = emptyString;
 					}
 					txtDecodedOutput.dispatchEvent(new Event("input"));
 				});
-				[...document.getElementsByClassName("btn-paste")].forEach(btnPaste => {
+				[txtPlainText, txtEncodedOutput, txtCipherText, txtDecodedOutput].forEach(x => {
+					x.addEventListener("input", updateStatistics);
+				});
+				Array.from(document.getElementsByClassName("tab-container")).forEach(tabContainer => {
+					const tabBarButtons = tabContainer.querySelectorAll(".tab-bar .tab-btn");
+					tabBarButtons.forEach(button => {
+						button.addEventListener("click", () => {
+							tabBarButtons.forEach(x => x.classList.remove("active"));
+							tabContainer.querySelectorAll(".tab-panel").forEach(tp => tp.classList.add("hidden"));
+							tabContainer.querySelector(`[data-name="${button.getAttribute("data-href")}"]`)?.classList.remove("hidden");
+							button.classList.add("active");
+						});
+					});
+					const defaultPanelName = tabContainer.getAttribute("data-default");
+					if (defaultPanelName) {
+						tabContainer.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
+					}
+				});
+				Array.from(document.getElementsByClassName("btn-paste")).forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
 				});
-				[...document.getElementsByClassName("btn-copy")].forEach(btnCopy => {
+				Array.from(document.getElementsByClassName("btn-copy")).forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
-				[...document.getElementsByClassName("btn-upload")].forEach(btnUpload => {
+				Array.from(document.getElementsByClassName("btn-upload")).forEach(btnUpload => {
 					btnUpload.addEventListener("click", triggerUpload);
 				});
-				[...document.getElementsByClassName("btn-download")].forEach(btnDownload => {
+				Array.from(document.getElementsByClassName("btn-download")).forEach(btnDownload => {
 					btnDownload.addEventListener("click", downloadFile);
 				});
-				[...document.querySelectorAll('input[type="file"]')].forEach(fileInput => {
+				Array.from(document.querySelectorAll("input[type=\"file\"]")).forEach(fileInput => {
 					fileInput.addEventListener("input", uploadFile);
 				});
 				updateStatistics();
@@ -521,5 +547,6 @@
 				</div>
 			</div>
 		</div>
+		<div id="overlay" class="overlay hidden"></div>
 	</body>
 </html>
