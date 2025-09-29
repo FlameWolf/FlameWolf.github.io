@@ -71,139 +71,140 @@
 		</div>
 		<h2>Links</h2>
 		<h3><a href="base-95.html">Base-95 Converter</a></h3>
-		<p>A web utility for encoding and decoding text using Base-95 conversion and GZip compression.</p>
+		<p>A web-based utility to encode and decode text. It uses a combination of GZip compression and a custom Base-95 encoding scheme. The primary goal is to represent binary data in a text format that is more compact than alternatives like Base64, especially for compressible data.</p>
+		<p class="strong">How it Works:</p>
+		<ul>
+			<li><span class="strong">Encoding:</span> The user provides plain text and clicks <code>Encode</code>. The application first compresses this text into a binary format using the GZip algorithm. This binary data is then encoded into a string using a Base-95 character set (which uses 95 printable ASCII characters).</li>
+			<li><span class="strong">Decoding:</span> The user provides the Base-95 encoded string and clicks <code>Decode</code>. The application first decodes it back into its binary GZip format. It then decompresses this data to retrieve the original plain text.</li>
+		</ul>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Two tabs: Encode and Decode.</li>
-			<li>Encoding: Compresses input text with GZip, then encodes it in Base-95.</li>
-			<li>Decoding: Decodes Base-95 input, decompresses with GZip, and displays the original text.</li>
-			<li>Clipboard integration: Paste and Copy buttons for input/output fields.</li>
-			<li>Displays input and output lengths in bytes along with the conversion ratios.</li>
-			<li>Toast notifications for user feedback.</li>
-			<li>Responsive design.</li>
-		</ul>
-		<p class="strong">Usage:</p>
-		<ul>
-			<li>Encode sensitive or large text for compact transmission/storage.</li>
-			<li>Decode previously encoded Base-95 strings.</li>
+			<li><span class="strong">Tabbed UI:</span> A clean interface with separate &quot;Encode&quot; and &quot;Decode&quot; tabs.</li>
+			<li><span class="strong">Multiple Inputs:</span> Users can type text directly, paste from the clipboard, or upload a text file.</li>
+			<li><span class="strong">Output Handling:</span> The generated output can be easily copied to the clipboard or downloaded as a <code>.txt</code> file.</li>
+			<li><span class="strong">Statistics:</span> It calculates and displays the byte size of the input and output, along with the percentage change. This is useful for visualizing the efficiency of the GZip compression.</li>
+			<li><span class="strong">UX Enhancements:</span> It includes toast notifications for user actions, a loading overlay during processing, and a warning if the encoded output contains trailing spaces, which can be fragile.</li>
+			<li><span class="strong">Client-Side:</span> All operations are performed locally in the user&#39;s browser.</li>
 		</ul>
 		<p class="strong">Limitations:</p>
 		<ul>
-			<li>Only works with text; binary data must be converted to text first.</li>
-			<li>Relies on browser support for GZip and clipboard APIs.</li>
-			<li>No authentication or security features.</li>
+			<li>The Base-95 character set might not be safe for all transmission channels if it includes special characters.</li>
 		</ul>
 		<hr/>
-		<h3><a href="enc-dec.html">Encrypted Message Generator</a></h3>
-		<p>A web tool for encrypting and decrypting text using AES-GCM, GZip, and Base-95 encoding.</p>
+		<h3><a href="brahmi.html">Brahmi Converter</a></h3>
+		<p>A tool to transliterate text written in Malayalam script to Brahmi script and vice versa. Uses Tamil Brahmi characters and one extra character, not present in the extended Brahmi character set and hence borrowed from Grantha script, for a complete representation of Malayalam script.</p>
+		<p><span class="strong">How it works:</span> The user provides input written in Malayalam or Brahmi and clicks <code>Convert</code>. The application performs transliteration across scripts by using a predefined map of equivalent characters in both.</p>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Two tabs: Encrypt and Decrypt.</li>
-			<li>Encryption: Generates a random AES-GCM key, compresses and encodes input, encrypts, and outputs Base-95 cipher text.</li>
-			<li>Decryption: Requires the correct key to decrypt cipher text.</li>
-			<li>Key is displayed and can be copied or shared via QR code.</li>
-			<li>Clipboard integration.</li>
-			<li>Toast notifications.</li>
-			<li>Responsive design.</li>
-		</ul>
-		<p class="strong">Usage:</p>
-		<ul>
-			<li>Securely transmit messages; receiver must have the key.</li>
-			<li>Share key via QR code for convenience.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>Key changes on every page reload; must be shared securely.</li>
-			<li>If key is lost, message cannot be decrypted.</li>
-			<li>No password-based key derivation.</li>
-			<li>Relies on browser crypto APIs.</li>
+			<li><span class="strong">Simple Interface:</span> A clean layout with one textarea for input and another for the read-only output.</li>
+			<li><span class="strong">Clipboard Integration:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are provided for convenience.</li>
+			<li><span class="strong">User Feedback:</span> Toast notifications confirm the success or failure of clipboard operations.</li>
 		</ul>
 		<hr/>
-		<h3><a href="ml-base-95.html">Malayalam Base-95 converter</a></h3>
-		<p>Malayalam text to/from Base-95 encoding using range compression and GZip.</p>
+		<h3><a href="enc-dec.html">Text Encryption/Decryption Tool</a></h3>
+		<p>For securely encrypting messages that can only be decrypted with a secret key. The key must be shared securely with the recipient.</p>
+		<p><span class="strong">How it works:</span> This file implements a tool for symmetric encryption and decryption using the AES-GCM algorithm from the Web Crypto API.</p>
+		<ul>
+			<li><span class="strong">Encryption:</span> A new 256-bit AES key is generated on each page load and displayed as text and a QR code. The user enters the plain text input and clicks <code>Encrypt</code>. The input is first compressed with GZip, then encrypted. The resulting ciphertext is combined with the initialization vector (IV) and encoded in Base-95 for display.</li>
+			<li><span class="strong">Decryption:</span> The user provides the ciphertext along with the exact key used for encryption and clicks <code>Decrypt</code>. The tool decodes the input, separates the IV, decrypts the data, and decompresses it to get the original text.</li>
+		</ul>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Two tabs: Encode and Decode.</li>
-			<li>Encoding: Compresses Malayalam and ASCII text, applies range compression, encodes in Base-95.</li>
-			<li>Decoding: Decodes Base-95, decompresses, reconstructs Malayalam text.</li>
-			<li>Clipboard integration.</li>
-			<li>Displays input and output lengths in bytes along with the conversion ratios.</li>
-			<li>Toast notifications.</li>
-			<li>Responsive design.</li>
-		</ul>
-		<p class="strong">Usage:</p>
-		<ul>
-			<li>Compactly encode Malayalam and ASCII text for transmission/storage.</li>
+			<li><span class="strong">Strong Encryption:</span> Uses the modern and secure AES-256-GCM standard.</li>
+			<li><span class="strong">Key Generation:</span> Automatically generates a strong key and a QR code for easy sharing.</li>
+			<li><span class="strong">Compression:</span> Uses GZip to reduce the message size before encryption.</li>
+			<li><span class="strong">Full-Featured UI:</span> Includes file I/O, clipboard support, byte counters, and user feedback notifications.</li>
 		</ul>
 		<p class="strong">Limitations:</p>
 		<ul>
-			<li>Only supports Malayalam (Unicode 3328-3455) and ASCII (1-127). Characters outside these ranges are not processed correctly.</li>
+			<li>The key is ephemeral and changes on page reload. Users must manually save and securely transmit the key for the recipient to decrypt the message. Losing the key means the data is irrecoverable.</li>
 		</ul>
 		<hr/>
-		<h3><a href="ml-cipher.html">Moolabhadri Converter</a></h3>
-		<p>A tool for encrypting/decrypting Malayalam text using either of the two versions of the Moolabhadri substitution cipher scheme.</p>
+		<h3><a href="keelakam.html">Keelakam Cipher</a></h3>
+		<p>A simple Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf">FlameWolf</a>.</p>
+		<p><span class="strong">How it works:</span> The user inputs Malayalam text and clicks <code>Convert</code>. The application performs text transformation using the Keelakam substitution cipher scheme.</p>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Cipher scheme selection (from <code>cipherSchemes</code> in ml-cipher.js).</li>
-			<li>Input and Output text areas.</li>
-			<li>Paste, Convert, and Copy buttons.</li>
-			<li>Displays description of selected cipher.</li>
-			<li>Remembers last used scheme via localStorage.</li>
-			<li>Toast notifications.</li>
-			<li>Responsive design.</li>
+			<li><span class="strong">Minimalist UI:</span> Consists of an input field, an output field, and buttons for conversion and clipboard actions.</li>
+			<li><span class="strong">Clipboard Support:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are included.</li>
+			<li><span class="strong">User Feedback:</span> Uses toast notifications to inform the user about clipboard operations.</li>
 		</ul>
-		<p class="strong">Usage:</p>
+		<hr/>
+		<h3><a href="ml-base-95.html">Malayalam Base-95 Converter</a></h3>
+		<p>Optimized base-95 text conversion for encoding and compressing Malayalam text to a greater degree than a generic Unicode-to-GZip pipeline would allow.</p>
+		<p><span class="strong">How it works:</span> This is a specialized version of the <a href="base-95.html">Base-95 Converter</a> designed to efficiently handle text containing both Malayalam and ASCII characters. It uses a &quot;range compression&quot; technique:</p>
 		<ul>
-			<li>Encrypt/decrypt Malayalam text using different schemes.</li>
+			<li><span class="strong">Encoding:</span> It maps Malayalam characters (Unicode range U+0D00&ndash;U+0D7F) and ASCII characters to a compact single-byte representation before applying GZip and Base-95 encoding.</li>
+			<li><span class="strong">Decoding:</span> It reverses the process, decoding from Base-95, decompressing with GZip, and then mapping the bytes back to their original Malayalam and ASCII characters.</li>
+		</ul>
+		<p class="strong">Features:</p>
+		<ul>
+			<li><span class="strong">Optimized for Malayalam:</span> The range compression technique significantly reduces the size of Malayalam text.</li>
+			<li><span class="strong">Character Normalization:</span> It attempts to replace some common non-ASCII/non-Malayalam symbols (like smart quotes) with their ASCII equivalents.</li>
+			<li><span class="strong">Rich UI:</span> Inherits all the features of base-95.html, including file I/O, clipboard support, and statistics.</li>
 		</ul>
 		<p class="strong">Limitations:</p>
 		<ul>
-			<li>Only supports schemes defined in the JS file.</li>
+			<li>Characters outside the ASCII and Malayalam Unicode ranges will not be processed correctly and may be replaced with <code>[UNK]</code>.</li>
+		</ul>
+		<hr/>
+		<h3><a href="ml-cipher.html">Moolabhadri Cipher</a></h3>
+		<p>An implementation of Moolabhadri, an ancient Malayalam substitution cipher.</p>
+		<p><span class="strong">How it works:</span> It allows the user to choose any of the two known versions of the Moolabhadri cipher and then apply it to the input text.</p>
+		<ul>
+			<li>The page displays the defined transformation rules of the selected cipher.</li>
+			<li>When the user clicks <code>Convert</code>, the selected cipher&#39;s transformation is applied to the input text.</li>
+		</ul>
+		<p class="strong">Features:</p>
+		<ul>
+			<li><span class="strong">State Persistence:</span> Remembers the last selected cipher using <code>localStorage</code>.</li>
+			<li><span class="strong">Simple UI:</span> Provides a straightforward interface for pasting, converting, and copying text.</li>
+			<li><span class="strong">Clipboard Support:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are available.</li>
+			<li><span class="strong">User Feedback:</span> Toast notifications for text transformations and clipboard actions.</li>
+		</ul>
+		<p class="strong">Limitations:</p>
+		<ul>
 			<li>Cannot automatically differentiate between dental 'ന' and alveolar 'ന' (ഩ); so the transformation results might not align with the pronunciation. (Though it doesn't affect the involutory nature of the transformation at all: applying a transformation on the result of the same transformation will yield the original input.)</li>
 			<li>When 'ര്യ' is written using the Dot Reph ('ൎ') character, it becomes 'ൎയ' (or 'ൎയ്യ' by convention), but this edge case is not handled.</li>
-			<li>No error details for failed conversions.</li>
+		</ul>
+		<hr/>
+		<h3><a href="navashashti.html">Navashashti Cipher</a></h3>
+		<p>Another Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf">FlameWolf</a>.</p>
+		<p><span class="strong">How it works:</span> The user inputs Malayalam text and clicks <code>Convert</code>. The application performs text transformation using the Navashashti substitution cipher scheme.</p>
+		<p class="strong">Features:</p>
+		<ul>
+			<li><span class="strong">Minimalist UI:</span> Clean input/output layout with conversion and clipboard buttons.</li>
+			<li><span class="strong">Clipboard Integration:</span> &quot;Paste&quot; and &quot;Copy&quot; functionality.</li>
+			<li><span class="strong">User Feedback:</span> Toast notifications for user actions.</li>
 		</ul>
 		<hr/>
 		<h3><a href="reverse-unicode-text.html">Unicode Text Reverser</a></h3>
-		<p>A utility to reverse Unicode text.</p>
+		<p>For correctly reversing any Unicode text, which is useful in text processing, creative text effects, or for languages written right-to-left.</p>
+		<p><span class="strong">How it works:</span> This tool reverses a string of text while correctly handling Unicode characters, including complex grapheme clusters (like characters with diacritics or emojis). A simple <code>string.split(&#39;&#39;).reverse().join(&#39;&#39;)</code> in JavaScript would break such characters. This tool uses a more sophisticated approach.</p>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Input and Output text areas.</li>
-			<li>Paste and Copy buttons.</li>
-			<li>Output updates live as input changes.</li>
-			<li>Uses <code>reverseUnicodeText</code> from reverseUnicodeText.js.</li>
-			<li>Toast notifications.</li>
-			<li>Responsive design.</li>
-		</ul>
-		<p class="strong">Usage:</p>
-		<ul>
-			<li>Reverse the order of Unicode characters in a string (useful for palindromes, RTL/LTR text, etc.).</li>
+			<li><span class="strong">Unicode-Aware:</span> Correctly handles multi-byte characters and grapheme clusters.</li>
+			<li><span class="strong">Live Update:</span> The output is updated in real-time as the user types in the input field.</li>
+			<li><span class="strong">Simple UI:</span> A very intuitive interface with input/output fields and clipboard buttons.</li>
 		</ul>
 		<p class="strong">Limitations:</p>
 		<ul>
 			<li>No options for word/character-level reversal.</li>
-			<li>No error details for failed operations.</li>
 		</ul>
 		<hr/>
 		<h3><a href="rot-18.html">ROT-18 Converter</a></h3>
-		<p>A utility for ROT-18 encoding/decoding.</p>
+		<p>A simple and fun way to obscure text. It is not a secure form of encryption.</p>
+		<p><span class="strong">How it works:</span> This file provides a tool to apply the ROT-18 cipher to text. ROT-18 is a combination of ROT-13 (for letters) and ROT-5 (for numbers).</p>
+		<ul>
+			<li>Letters <code>A-Z</code> are shifted 13 places (e.g., <code>A</code> becomes <code>N</code>).</li>
+			<li>Numbers <code>0-9</code> are shifted 5 places (e.g., <code>1</code> becomes <code>6</code>).</li>
+			<li>Applying the cipher a second time restores the original text.</li>
+		</ul>
 		<p class="strong">Features:</p>
 		<ul>
-			<li>Input and Output text areas.</li>
-			<li>Paste and Copy buttons.</li>
-			<li>Output updates live as input changes.</li>
-			<li>Uses <code>rot18</code> from rot-18.js.</li>
-			<li>Toast notifications.</li>
-			<li>Responsive design.</li>
-		</ul>
-		<p class="strong">Usage:</p>
-		<ul>
-			<li>Apply ROT-18 cipher (a combination of ROT-13 for letters and ROT-5 for digits).</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>Only works for Latin letters and digits.</li>
-			<li>No error details for failed operations.</li>
+			<li><span class="strong">Live Transformation:</span> The output is updated instantly as the user types.</li>
+			<li><span class="strong">Simple and Fast:</span> The logic is straightforward and executes quickly.</li>
+			<li><span class="strong">Easy to Use:</span> A clean interface with clipboard support.</li>
 		</ul>
 	</body>
 </html>
