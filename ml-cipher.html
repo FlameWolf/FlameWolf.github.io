@@ -244,7 +244,7 @@
 				});
 				const schemeName = localStorage.getItem("schemeName");
 				if (schemeName) {
-					const schemeButton = [...cipherButtons].find(x => x.dataset["schemeName"] === schemeName) ?? cipherButtons[0];
+					const schemeButton = Array.from(cipherButtons).find(x => x.dataset["schemeName"] === schemeName) ?? cipherButtons[0];
 					schemeButton.dispatchEvent(new Event("click"));
 				} else {
 					cipherButtons[0].dispatchEvent(new Event("click"));
