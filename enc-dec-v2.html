@@ -215,6 +215,9 @@
 					background-color: white;
 				}
 			}
+			.separator {
+				border: solid 1px var(--background-hover);
+			}
 			textarea {
 				font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
 				font-size: 0.95rem;
@@ -267,6 +270,7 @@
 					grid-auto-flow: row;
 					> .cell {
 						justify-content: center;
+						text-align: center;
 						> button {
 							flex: 1;
 							padding: var(--padding);
@@ -299,6 +303,7 @@
 			}
 		</style>
 		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
+		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
 		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
 		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
@@ -349,6 +354,7 @@
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const divOverlay = document.getElementById("overlay");
 				const imgEncryptKeyQrCode = document.getElementById("encrypt-key-qr-code");
+				const ancInsertSample = document.getElementById("insert-sample");
 				const btnEncrypt = document.getElementById("encrypt");
 				const btnDecrypt = document.getElementById("decrypt");
 				const txtEncryptKey = document.getElementById("encrypt-key");
@@ -378,6 +384,11 @@
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				const insertSampleText = (lang, inputElement) => {
+					inputElement.value = sampleTexts[lang] ?? emptyString;
+					showToast("Sample text inserted", true);
+					inputElement.dispatchEvent(new Event("input"));
 				};
 				const pasteToTarget = async event => {
 					const sender = event.target;
@@ -480,7 +491,7 @@
 					const encryptedOutputByteCount = new Blob([encryptedOutput]).size;
 					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
 					const deccryptedOutputByteCount = new Blob([txtDecryptedOutput.value]).size;
-					spnTrailingSpaceCount.textContent = trailingSpaceCount || "0";
+					spnTrailingSpaceCount.textContent = trailingSpaceCount ?? "0";
 					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
 					emPlainTextByteCount.textContent = plainTextByteCount;
 					emEncryptedOutputByteCount.textContent = encryptedOutputByteCount;
@@ -495,6 +506,9 @@
 					}
 				});
 				divToast.addEventListener("click", hideToast);
+				ancInsertSample.addEventListener("click", () => {
+					insertSampleText("en", txtPlainText);
+				});
 				btnEncrypt.addEventListener("click", async () => {
 					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 					const input = txtPlainText.value;
@@ -634,6 +648,8 @@
 					<div class="row">
 						<div class="cell">
 							<strong>Plain Text Message</strong>
+							<div class="separator"></div>
+							<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="plain-text">Paste</button>

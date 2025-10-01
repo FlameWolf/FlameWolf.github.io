@@ -131,6 +131,9 @@
 					}
 				}
 			}
+			.separator {
+				border: solid 1px var(--background-hover);
+			}
 			textarea {
 				flex: 1;
 				min-height: 32rem;
@@ -166,6 +169,7 @@
 					grid-auto-flow: row;
 					> .cell {
 						justify-content: center;
+						text-align: center;
 						> button {
 							flex: 1;
 							padding: var(--padding) calc(var(--padding) * 2);
@@ -185,6 +189,7 @@
 				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
 		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
 		<script type="text/javascript" src="JavaScript/gzip.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
@@ -233,6 +238,7 @@
 				const divToast = document.getElementById("toast");
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const divOverlay = document.getElementById("overlay");
+				const ancInsertSample = document.getElementById("insert-sample");
 				const btnEncode = document.getElementById("encode");
 				const btnDecode = document.getElementById("decode");
 				const txtPlainText = document.getElementById("plain-text");
@@ -259,6 +265,11 @@
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
+				};
+				const insertSampleText = (lang, inputElement) => {
+					inputElement.value = sampleTexts[lang] ?? emptyString;
+					showToast("Sample text inserted", true);
+					inputElement.dispatchEvent(new Event("input"));
 				};
 				const pasteToTarget = async event => {
 					const sender = event.target;
@@ -361,7 +372,7 @@
 					const encodedOutputByteCount = new Blob([encodedOutput]).size;
 					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
 					const decodedOutputByteCount = new Blob([txtDecodedOutput.value]).size;
-					spnTrailingSpaceCount.textContent = trailingSpaceCount || "0";
+					spnTrailingSpaceCount.textContent = trailingSpaceCount ?? "0";
 					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
 					emPlainTextByteCount.textContent = plainTextByteCount;
 					emEncodedOutputByteCount.textContent = encodedOutputByteCount;
@@ -376,6 +387,9 @@
 					}
 				});
 				divToast.addEventListener("click", hideToast);
+				ancInsertSample.addEventListener("click", () => {
+					insertSampleText("ml", txtPlainText);
+				});
 				btnEncode.addEventListener("click", async () => {
 					const input = txtPlainText.value;
 					if (input) {
@@ -463,6 +477,8 @@
 					<div class="row">
 						<div class="cell">
 							<strong>Plain Text</strong>
+							<div class="separator"></div>
+							<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
 						</div>
 						<div class="cell align-end">
 							<button class="btn-paste" data-target="plain-text">Paste</button>

@@ -73,6 +73,9 @@
 					}
 				}
 			}
+			.separator {
+				border: solid 1px var(--background-hover);
+			}
 			textarea {
 				flex: 1;
 				min-height: 32rem;
@@ -100,6 +103,7 @@
 					grid-auto-flow: row;
 					> .cell {
 						justify-content: center;
+						text-align: center;
 						> button {
 							flex: 1;
 						}
@@ -115,10 +119,12 @@
 				}
 			}
 		</style>
+		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
 		<script type="text/javascript" src="JavaScript/rot-18.js"></script>
 		<script type="text/javascript">
 			document.addEventListener("DOMContentLoaded", function () {
 				const divToast = document.getElementById("toast");
+				const ancInsertSample = document.getElementById("insert-sample");
 				const btnPaste = document.getElementById("paste");
 				const btnCopy = document.getElementById("copy");
 				const txtInput = document.getElementById("input");
@@ -137,12 +143,20 @@
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
+				const insertSampleText = (lang, inputElement) => {
+					inputElement.value = sampleTexts[lang] ?? emptyString;
+					showToast("Sample text inserted", true);
+					inputElement.dispatchEvent(new Event("input"));
+				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
 						divToast.textContent = "";
 					}
 				});
 				divToast.addEventListener("click", hideToast);
+				ancInsertSample.addEventListener("click", () => {
+					insertSampleText("en", txtInput);
+				});
 				btnPaste.addEventListener("click", async () => {
 					try {
 						const clipboardText = await navigator.clipboard.readText();
@@ -178,6 +192,8 @@
 			<div class="row">
 				<div class="cell">
 					<strong>Input</strong>
+					<div class="separator"></div>
+					<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
 				</div>
 				<div class="cell align-end">
 					<button id="paste">Paste</button>
