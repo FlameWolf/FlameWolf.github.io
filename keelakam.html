@@ -84,6 +84,17 @@
 				border-radius: var(--border-radius);
 				resize: vertical;
 			}
+			.overlay {
+				cursor: wait;
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				left: 0;
+			}
+			.hidden {
+				display: none;
+			}
 			@media (prefers-color-scheme: dark) {
 				:root {
 					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
@@ -125,7 +136,9 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const emptyString = "";
 				const divToast = document.getElementById("toast");
+				const divOverlay = document.getElementById("overlay");
 				const ancInsertSample = document.getElementById("insert-sample");
 				const btnPaste = document.getElementById("paste");
 				const btnConvert = document.getElementById("convert");
@@ -146,51 +159,80 @@
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
-				const insertSampleText = (lang, inputElement) => {
-					inputElement.value = sampleTexts[lang] ?? emptyString;
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
-					inputElement.dispatchEvent(new Event("input"));
+				};
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
-						divToast.textContent = "";
+						divToast.textContent = emptyString;
 					}
 				});
 				divToast.addEventListener("click", hideToast);
-				ancInsertSample.addEventListener("click", () => {
-					insertSampleText("ml", txtInput);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("ml", txtInput);
+					}, "Failed to insert sample text");
 				});
 				btnPaste.addEventListener("click", async () => {
-					try {
+					await withUiBlocked(async () => {
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
-							txtInput.value = clipboardText;
+							await updateValue(txtInput, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
 						}
-						showToast("Pasted from clipboard", true);
-					} catch {
-						showToast("Failed to paste", false);
-					}
+					}, "Failed to paste");
 				});
 				btnConvert.addEventListener("click", async () => {
-					const input = txtInput.value;
-					if (input) {
-						try {
-							txtOutput.value = transformText(input);
+					await withUiBlocked(async () => {
+						const input = txtInput.value;
+						if (input) {
+							await updateValue(txtOutput, transformText(input));
 							showToast("Conversion successful", true);
-						} catch {
-							showToast("Failed to convert", false);
+						} else {
+							showToast("Nothing to convert", false);
 						}
-					} else {
-						txtOutput.value = "";
-					}
+					}, "Failed to convert");
 				});
 				btnCopy.addEventListener("click", async event => {
-					try {
-						await navigator.clipboard.writeText(txtOutput.value);
+					await withUiBlocked(async () => {
+						const output = txtOutput.value;
+						if (!output) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(output);
 						showToast("Copied to clipboard", true);
-					} catch {
-						showToast("Failed to copy", false);
-					}
+					}, "Failed to copy");
 				});
 			});
 		</script>
@@ -234,5 +276,6 @@
 				</div>
 			</div>
 		</div>
+		<div id="overlay" class="overlay hidden"></div>
 	</body>
 </html>

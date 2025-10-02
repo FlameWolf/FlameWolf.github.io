@@ -346,10 +346,6 @@
 					key,
 					data
 				];
-				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
-				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
-				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
-				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext))));
 				const divToast = document.getElementById("toast");
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const divOverlay = document.getElementById("overlay");
@@ -385,55 +381,81 @@
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
-				const insertSampleText = (lang, inputElement) => {
-					inputElement.value = sampleTexts[lang] ?? emptyString;
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						element.dispatchEvent(new Event("input"));
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							element.dispatchEvent(new Event("input"));
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
-					inputElement.dispatchEvent(new Event("input"));
+				};
+				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
+				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
+				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
+				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext))));
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
 				};
 				const pasteToTarget = async event => {
-					const sender = event.target;
-					const targetElement = document.getElementById(sender.dataset["target"]);
-					try {
-						divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
-							targetElement.value = clipboardText;
-							targetElement.dispatchEvent(new Event("input"));
+							await updateValue(targetElement, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
 						}
-						showToast("Pasted from clipboard", true);
-					} catch {
-						showToast("Failed to paste", false);
-					} finally {
-						divOverlay.classList.add("hidden");
-					}
+					}, "Failed to paste");
 				};
 				const copyFromSource = async event => {
-					const sender = event.target;
-					const sourceElement = document.getElementById(sender.dataset["source"]);
-					try {
-						divOverlay.classList.remove("hidden");
-						await navigator.clipboard.writeText(sourceElement.value);
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (!text) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(text);
 						showToast("Copied to clipboard", true);
-					} catch {
-						showToast("Failed to copy", false);
-					} finally {
-						divOverlay.classList.add("hidden");
-					}
+					}, "Failed to copy");
 				};
 				const triggerUpload = async event => {
 					document.getElementById(event.target.dataset["target"]).click();
 				};
 				const uploadFile = async event => {
-					const sender = event.target;
-					const targetElement = document.getElementById(sender.dataset["target"]);
-					const file = sender.files[0];
-					if (file) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
+						const file = sender.files[0];
+						if (file) {
 							const reader = new FileReader();
-							reader.onload = progressEvent => {
-								targetElement.value = progressEvent.target.result;
-								targetElement.dispatchEvent(new Event("input"));
+							reader.onload = async progressEvent => {
+								await updateValue(targetElement, progressEvent.target.result);
 								showToast("File loaded", true);
 							};
 							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
@@ -441,21 +463,16 @@
 							} else {
 								showToast("Only text files are supported", false);
 							}
-						} catch {
-							showToast("Failed to read file", false);
-						} finally {
-							divOverlay.classList.add("hidden");
 						}
-					}
-					sender.value = null;
+						sender.value = null;
+					}, "Failed to read file");
 				};
 				const downloadFile = async event => {
-					const sender = event.target;
-					const sourceElement = document.getElementById(sender.dataset["source"]);
-					const text = sourceElement.value;
-					if (text) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(() => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (text) {
 							const blob = new Blob([text], { type: "text/plain" });
 							const url = URL.createObjectURL(blob);
 							const anchorElement = document.createElement("a");
@@ -467,14 +484,10 @@
 							document.body.removeChild(anchorElement);
 							URL.revokeObjectURL(url);
 							showToast("Download triggered", true);
-						} catch {
-							showToast("Failed to download", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to download", false);
 						}
-					} else {
-						showToast("Nothing to download", false);
-					}
+					}, "Failed to download");
 				};
 				const calculateRatio = (inputByteCount, outputByteCount) => {
 					const size = outputByteCount > inputByteCount ? "larger" : "smaller";
@@ -506,41 +519,36 @@
 					}
 				});
 				divToast.addEventListener("click", hideToast);
-				ancInsertSample.addEventListener("click", () => {
-					insertSampleText("en", txtPlainText);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("en", txtPlainText);
+					}, "Failed to insert sample text");
 				});
 				btnEncrypt.addEventListener("click", async () => {
-					const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
-					const input = txtPlainText.value;
-					if (input) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
+						const input = txtPlainText.value;
+						if (input) {
 							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
 							const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
 							combinedArray.set(encryptIv, 0);
 							combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
-							txtEncryptedOutput.value = encodeBase95(combinedArray);
+							await updateValue(txtEncryptedOutput, encodeBase95(combinedArray));
 							showToast("Encryption successful", true);
-						} catch {
-							showToast("Failed to encrypt", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to encrypt", false);
 						}
-					} else {
-						txtEncryptedOutput.value = emptyString;
-					}
-					txtEncryptedOutput.dispatchEvent(new Event("input"));
+					}, "Failed to encrypt");
 				});
 				btnDecrypt.addEventListener("click", async () => {
-					const decryptKeySecret = txtDecryptKey.value;
-					if (!decryptKeySecret) {
-						showToast("Key must be a non-empty string", false);
-						return;
-					}
-					const cipherText = txtCipherText.value;
-					if (cipherText) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const decryptKeySecret = txtDecryptKey.value;
+						if (!decryptKeySecret) {
+							showToast("Key must be a non-empty string", false);
+							return;
+						}
+						const cipherText = txtCipherText.value;
+						if (cipherText) {
 							const decryptKey = await crypto.subtle.importKey(
 								keyFormat,
 								Object.assign(jwkBase, {
@@ -553,17 +561,12 @@
 							const combinedArray = decodeBase95(cipherText);
 							const decryptIv = combinedArray.slice(0, ivLength);
 							const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
-							txtDecryptedOutput.value = await base95ToUnicode(decryptedBytes);
+							await updateValue(txtDecryptedOutput, await base95ToUnicode(decryptedBytes));
 							showToast("Decryption successful", true);
-						} catch {
-							showToast("Failed to decrypt", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to decrypt", false);
 						}
-					} else {
-						txtDecryptedOutput.value = emptyString;
-					}
-					txtDecryptedOutput.dispatchEvent(new Event("input"));
+					}, "Failed to decrypt");
 				});
 				[txtPlainText, txtEncryptedOutput, txtCipherText, txtDecryptedOutput].forEach(x => {
 					x.addEventListener("input", updateStatistics);
@@ -603,7 +606,7 @@
 				Array.from(document.getElementsByClassName("btn-download")).forEach(btnDownload => {
 					btnDownload.addEventListener("click", downloadFile);
 				});
-				Array.from(document.querySelectorAll("input[type=\"file\"]")).forEach(fileInput => {
+				Array.from(document.querySelectorAll('input[type="file"]')).forEach(fileInput => {
 					fileInput.addEventListener("input", uploadFile);
 				});
 				txtEncryptKey.value = encryptKeySecret;

@@ -201,40 +201,22 @@
 				const malayalamBlockOffset = 3327;
 				const asciiCompressionOffset = 128;
 				const normalisationMap = new Map([
-					["\u2010", "-"],
-					["\u2011", "-"],
-					["\u2012", "--"],
-					["\u2013", "--"],
-					["\u2014", "--"],
-					["\u2015", "--"],
-					["\u2018", "'"],
-					["\u2019", "'"],
-					["\u201A", ","],
-					["\u201B", "'"],
-					["\u201C", '"'],
-					["\u201D", '"'],
-					["\u201E", '"'],
-					["\u201F", '"'],
-					["\u2026", "..."]
+					["\u{2010}", "-"],
+					["\u{2011}", "-"],
+					["\u{2012}", "--"],
+					["\u{2013}", "--"],
+					["\u{2014}", "--"],
+					["\u{2015}", "--"],
+					["\u{2018}", "'"],
+					["\u{2019}", "'"],
+					["\u{201A}", ","],
+					["\u{201B}", "'"],
+					["\u{201C}", '"'],
+					["\u{201D}", '"'],
+					["\u{201E}", '"'],
+					["\u{201F}", '"'],
+					["\u{2026}", "..."]
 				]);
-				const normaliseText = text => text.replace(/[^\u0001-\u007F\u0D00-\u0D7F]/gu, match => normalisationMap.get(match) || "[UNK]");
-				const encodeMalayalam = async text => {
-					const bytes = new Uint8Array(text.length);
-					bytes.set(
-						Array.from(text).map(char => {
-							const codePoint = char.codePointAt(0);
-							return codePoint <= malayalamBlockOffset ? codePoint + asciiCompressionOffset : codePoint - malayalamBlockOffset;
-						}),
-						0
-					);
-					return encodeBase95(await gzip(bytes));
-				};
-				const decodeMalayalam = async encoded => {
-					const bytes = await gunzip(decodeBase95(encoded));
-					return Array.from(bytes)
-						.map(byte => (byte > asciiCompressionOffset ? byte - asciiCompressionOffset : byte + malayalamBlockOffset))
-						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, emptyString);
-				};
 				const divToast = document.getElementById("toast");
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const divOverlay = document.getElementById("overlay");
@@ -266,55 +248,95 @@
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
-				const insertSampleText = (lang, inputElement) => {
-					inputElement.value = sampleTexts[lang] ?? emptyString;
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						element.dispatchEvent(new Event("input"));
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							element.dispatchEvent(new Event("input"));
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
-					inputElement.dispatchEvent(new Event("input"));
+				};
+				const normaliseText = text => text.replace(/[^\u0001-\u007F\u0D00-\u0D7F]/gu, match => normalisationMap.get(match) || "[UNK]");
+				const encodeMalayalam = async text => {
+					const bytes = new Uint8Array(text.length);
+					bytes.set(
+						Array.from(text).map(char => {
+							const codePoint = char.codePointAt(0);
+							return codePoint <= malayalamBlockOffset ? codePoint + asciiCompressionOffset : codePoint - malayalamBlockOffset;
+						}),
+						0
+					);
+					return encodeBase95(await gzip(bytes));
+				};
+				const decodeMalayalam = async encoded => {
+					const bytes = await gunzip(decodeBase95(encoded));
+					return Array.from(bytes)
+						.map(byte => (byte > asciiCompressionOffset ? byte - asciiCompressionOffset : byte + malayalamBlockOffset))
+						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, emptyString);
+				};
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
 				};
 				const pasteToTarget = async event => {
-					const sender = event.target;
-					const targetElement = document.getElementById(sender.dataset["target"]);
-					try {
-						divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
-							targetElement.value = clipboardText;
-							targetElement.dispatchEvent(new Event("input"));
+							await updateValue(targetElement, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
 						}
-						showToast("Pasted from clipboard", true);
-					} catch {
-						showToast("Failed to paste", false);
-					} finally {
-						divOverlay.classList.add("hidden");
-					}
+					}, "Failed to paste");
 				};
 				const copyFromSource = async event => {
-					const sender = event.target;
-					const sourceElement = document.getElementById(sender.dataset["source"]);
-					try {
-						divOverlay.classList.remove("hidden");
-						await navigator.clipboard.writeText(sourceElement.value);
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (!text) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(text);
 						showToast("Copied to clipboard", true);
-					} catch {
-						showToast("Failed to copy", false);
-					} finally {
-						divOverlay.classList.add("hidden");
-					}
+					}, "Failed to copy");
 				};
 				const triggerUpload = async event => {
 					document.getElementById(event.target.dataset["target"]).click();
 				};
 				const uploadFile = async event => {
-					const sender = event.target;
-					const targetElement = document.getElementById(sender.dataset["target"]);
-					const file = sender.files[0];
-					if (file) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
+						const file = sender.files[0];
+						if (file) {
 							const reader = new FileReader();
-							reader.onload = progressEvent => {
-								targetElement.value = progressEvent.target.result;
-								targetElement.dispatchEvent(new Event("input"));
+							reader.onload = async progressEvent => {
+								await updateValue(targetElement, progressEvent.target.result);
 								showToast("File loaded", true);
 							};
 							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
@@ -322,21 +344,16 @@
 							} else {
 								showToast("Only text files are supported", false);
 							}
-						} catch {
-							showToast("Failed to read file", false);
-						} finally {
-							divOverlay.classList.add("hidden");
 						}
-					}
-					sender.value = null;
+						sender.value = null;
+					}, "Failed to read file");
 				};
 				const downloadFile = async event => {
-					const sender = event.target;
-					const sourceElement = document.getElementById(sender.dataset["source"]);
-					const text = sourceElement.value;
-					if (text) {
-						try {
-							divOverlay.classList.remove("hidden");
+					await withUiBlocked(() => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (text) {
 							const blob = new Blob([text], { type: "text/plain" });
 							const url = URL.createObjectURL(blob);
 							const anchorElement = document.createElement("a");
@@ -348,14 +365,10 @@
 							document.body.removeChild(anchorElement);
 							URL.revokeObjectURL(url);
 							showToast("Download triggered", true);
-						} catch {
-							showToast("Failed to download", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to download", false);
 						}
-					} else {
-						showToast("Nothing to download", false);
-					}
+					}, "Failed to download");
 				};
 				const calculateRatio = (inputByteCount, outputByteCount) => {
 					const size = outputByteCount > inputByteCount ? "larger" : "smaller";
@@ -387,42 +400,32 @@
 					}
 				});
 				divToast.addEventListener("click", hideToast);
-				ancInsertSample.addEventListener("click", () => {
-					insertSampleText("ml", txtPlainText);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("ml", txtPlainText);
+					}, "Failed to insert sample text");
 				});
 				btnEncode.addEventListener("click", async () => {
-					const input = txtPlainText.value;
-					if (input) {
-						try {
-							divOverlay.classList.remove("hidden");
-							txtEncodedOutput.value = await encodeMalayalam(normaliseText(input));
+					await withUiBlocked(async () => {
+						const input = txtPlainText.value;
+						if (input) {
+							await updateValue(txtEncodedOutput, await encodeMalayalam(normaliseText(input)));
 							showToast("Encoded successfully", true);
-						} catch {
-							showToast("Failed to encode", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to encode", false);
 						}
-					} else {
-						txtEncodedOutput.value = emptyString;
-					}
-					txtEncodedOutput.dispatchEvent(new Event("input"));
+					}, "Failed to encode");
 				});
 				btnDecode.addEventListener("click", async () => {
-					const cipherText = txtCipherText.value;
-					if (cipherText) {
-						try {
-							divOverlay.classList.remove("hidden");
-							txtDecodedOutput.value = await decodeMalayalam(cipherText);
+					await withUiBlocked(async () => {
+						const cipherText = txtCipherText.value;
+						if (cipherText) {
+							await updateValue(txtDecodedOutput, await decodeMalayalam(cipherText));
 							showToast("Decoded successfully", true);
-						} catch {
-							showToast("Failed to decode", false);
-						} finally {
-							divOverlay.classList.add("hidden");
+						} else {
+							showToast("Nothing to decode", false);
 						}
-					} else {
-						txtDecodedOutput.value = emptyString;
-					}
-					txtDecodedOutput.dispatchEvent(new Event("input"));
+					}, "Failed to decode");
 				});
 				[txtPlainText, txtEncodedOutput, txtCipherText, txtDecodedOutput].forEach(x => {
 					x.addEventListener("input", updateStatistics);
@@ -454,7 +457,7 @@
 				Array.from(document.getElementsByClassName("btn-download")).forEach(btnDownload => {
 					btnDownload.addEventListener("click", downloadFile);
 				});
-				Array.from(document.querySelectorAll("input[type=\"file\"]")).forEach(fileInput => {
+				Array.from(document.querySelectorAll("input[type=\u{22}file\u{22}]")).forEach(fileInput => {
 					fileInput.addEventListener("input", uploadFile);
 				});
 				updateStatistics();

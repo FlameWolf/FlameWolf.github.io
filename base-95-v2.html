@@ -286,6 +286,7 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", () => {
+				const emptyString = "";
 				const encoder = new TextEncoder();
 				const decoder = new TextDecoder();
 				let currentTab = "encode";
@@ -336,7 +337,7 @@
 				}
 				async function encodeText(text) {
 					if (!text.trim()) {
-						return "";
+						return emptyString;
 					}
 					return encodeBase95(await gzip(encoder.encode(text)));
 				}
@@ -369,7 +370,7 @@
 				}
 				async function decodeText(encoded) {
 					if (!encoded.trim()) {
-						return "";
+						return emptyString;
 					}
 					return decoder.decode(await gunzip(decodeBase95(encoded)));
 				}

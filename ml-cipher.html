@@ -123,6 +123,17 @@
 				border-radius: var(--border-radius);
 				resize: vertical;
 			}
+			.overlay {
+				cursor: wait;
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				left: 0;
+			}
+			.hidden {
+				display: none;
+			}
 			@media (prefers-color-scheme: dark) {
 				:root {
 					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
@@ -164,10 +175,11 @@
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
+				const emptyString = "";
 				const divToast = document.getElementById("toast");
-				const divSelectCipher = document.getElementById("select-cipher");
-				const cipherButtonGroup = divSelectCipher.querySelector(".btn-group");
-				const cipherDescription = document.getElementById("cipher-description");
+				const divCipherButtonGroup = document.getElementById("cipher-button-group");
+				const divOverlay = document.getElementById("overlay");
+				const parCipherDescription = document.getElementById("cipher-description");
 				const ancInsertSample = document.getElementById("insert-sample");
 				const btnPaste = document.getElementById("paste");
 				const btnConvert = document.getElementById("convert");
@@ -188,19 +200,80 @@
 					divToast.classList.add(success ? "success" : "error");
 					toastTimeout = setTimeout(hideToast, 1500);
 				};
-				const insertSampleText = (lang, inputElement) => {
-					inputElement.value = sampleTexts[lang] ?? emptyString;
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
-					inputElement.dispatchEvent(new Event("input"));
+				};
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
-						divToast.textContent = "";
+						divToast.textContent = emptyString;
 					}
 				});
 				divToast.addEventListener("click", hideToast);
-				ancInsertSample.addEventListener("click", () => {
-					insertSampleText("ml", txtInput);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("ml", txtInput);
+					}, "Failed to insert sample text");
+				});
+				btnPaste.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							await updateValue(txtInput, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
+						}
+					}, "Failed to paste");
+				});
+				btnConvert.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const input = txtInput.value;
+						if (input) {
+							await updateValue(txtOutput, transformText(input));
+							showToast("Conversion successful", true);
+						} else {
+							showToast("Nothing to convert", false);
+						}
+					}, "Failed to convert");
+				});
+				btnCopy.addEventListener("click", async event => {
+					await withUiBlocked(async () => {
+						const output = txtOutput.value;
+						if (!output) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(output);
+						showToast("Copied to clipboard", true);
+					}, "Failed to copy");
 				});
 				for (const schemeId in cipherSchemes) {
 					const scheme = cipherSchemes[schemeId];
@@ -210,9 +283,9 @@
 					btnCipher.dataset["schemeName"] = scheme.name;
 					btnCipher.dataset["schemeDescription"] = scheme.description;
 					btnCipher.textContent = scheme.name;
-					cipherButtonGroup.appendChild(btnCipher);
+					divCipherButtonGroup.appendChild(btnCipher);
 				}
-				const cipherButtons = cipherButtonGroup.querySelectorAll(".cipher-btn");
+				const cipherButtons = divCipherButtonGroup.querySelectorAll(".cipher-btn");
 				cipherButtons.forEach(btn => {
 					btn.addEventListener("click", () => {
 						const prevSchemeName = activeCipherScheme.name;
@@ -222,39 +295,9 @@
 							localStorage.setItem("schemeName", currSchemeName);
 						}
 						cipherButtons.forEach(x => x.classList.remove("active"));
-						cipherDescription.textContent = btn.dataset["schemeDescription"];
+						parCipherDescription.textContent = btn.dataset["schemeDescription"];
 						btn.classList.add("active");
 					});
-				});
-				btnPaste.addEventListener("click", async () => {
-					try {
-						const clipboardText = await navigator.clipboard.readText();
-						if (clipboardText) {
-							txtInput.value = clipboardText;
-						}
-						showToast("Pasted from clipboard", true);
-					} catch {
-						showToast("Failed to paste", false);
-					}
-				});
-				btnConvert.addEventListener("click", async () => {
-					try {
-						const input = txtInput.value;
-						if (input) {
-							txtOutput.value = transformText(input);
-						}
-						showToast("Conversion successful", true);
-					} catch {
-						showToast("Failed to convert", false);
-					}
-				});
-				btnCopy.addEventListener("click", async event => {
-					try {
-						await navigator.clipboard.writeText(txtOutput.value);
-						showToast("Copied to clipboard", true);
-					} catch {
-						showToast("Failed to copy", false);
-					}
 				});
 				const schemeName = localStorage.getItem("schemeName");
 				if (schemeName) {
@@ -269,8 +312,8 @@
 	<body>
 		<div id="toast" class="toast"></div>
 		<p>Choose an encryption scheme</p>
-		<div id="select-cipher" data-default="moolabhadri">
-			<div class="btn-group"></div>
+		<div>
+			<div id="cipher-button-group" class="btn-group"></div>
 		</div>
 		<p id="cipher-description" data-name="cipher-description"></p>
 		<br/>
@@ -308,5 +351,6 @@
 				</div>
 			</div>
 		</div>
+		<div id="overlay" class="overlay hidden"></div>
 	</body>
 </html>
