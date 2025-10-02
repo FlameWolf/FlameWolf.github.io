@@ -430,34 +430,34 @@
 				[txtPlainText, txtEncodedOutput, txtCipherText, txtDecodedOutput].forEach(x => {
 					x.addEventListener("input", updateStatistics);
 				});
-				Array.from(document.getElementsByClassName("tab-container")).forEach(tabContainer => {
-					const tabBarButtons = tabContainer.querySelectorAll(".tab-bar .tab-btn");
+				document.querySelectorAll(".tab-container").forEach(tabContainer => {
+					const tabBarButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
 					tabBarButtons.forEach(button => {
 						button.addEventListener("click", () => {
 							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tabContainer.querySelectorAll(".tab-panel").forEach(tp => tp.classList.add("hidden"));
-							tabContainer.querySelector(`[data-name="${button.getAttribute("data-href")}"]`)?.classList.remove("hidden");
+							tabContainer.querySelectorAll("&> .tab-panel").forEach(tp => tp.classList.add("hidden"));
+							tabContainer.querySelector(`&> [data-name="${button.getAttribute("data-href")}"]`)?.classList.remove("hidden");
 							button.classList.add("active");
 						});
 					});
 					const defaultPanelName = tabContainer.getAttribute("data-default");
 					if (defaultPanelName) {
-						tabContainer.querySelector(`[data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
+						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
 				});
-				Array.from(document.getElementsByClassName("btn-paste")).forEach(btnPaste => {
+				document.querySelectorAll(".btn-paste").forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
 				});
-				Array.from(document.getElementsByClassName("btn-copy")).forEach(btnCopy => {
+				document.querySelectorAll(".btn-copy").forEach(btnCopy => {
 					btnCopy.addEventListener("click", copyFromSource);
 				});
-				Array.from(document.getElementsByClassName("btn-upload")).forEach(btnUpload => {
+				document.querySelectorAll(".btn-upload").forEach(btnUpload => {
 					btnUpload.addEventListener("click", triggerUpload);
 				});
-				Array.from(document.getElementsByClassName("btn-download")).forEach(btnDownload => {
+				document.querySelectorAll(".btn-download").forEach(btnDownload => {
 					btnDownload.addEventListener("click", downloadFile);
 				});
-				Array.from(document.querySelectorAll("input[type=\u{22}file\u{22}]")).forEach(fileInput => {
+				document.querySelectorAll("input[type=\u{22}file\u{22}]").forEach(fileInput => {
 					fileInput.addEventListener("input", uploadFile);
 				});
 				updateStatistics();
