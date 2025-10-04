@@ -53,10 +53,6 @@
 					outline-offset: -4px;
 					transform: none;
 				}
-				&:disabled,
-				&:disabled:hover {
-					cursor: default;
-				}
 			}
 			.grid {
 				display: grid;
@@ -223,7 +219,7 @@
 						}
 					}, "Failed to convert");
 				});
-				btnCopy.addEventListener("click", async event => {
+				btnCopy.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
 						const output = txtOutput.value;
 						if (!output) {

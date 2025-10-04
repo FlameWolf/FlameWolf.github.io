@@ -77,23 +77,11 @@
 				&:active {
 					transform: none;
 				}
-				&:disabled,
-				&:disabled:hover {
-					background-color: light-dark(#f3f4f6, #1f2937);
-					color: light-dark(#9ca3af, 4b5563);
-					cursor: default;
-					border-color: light-dark(#e5e7eb, #374151);
-				}
 				&#encrypt,
 				&#decrypt {
 					background-color: var(--primary-color);
 					color: white;
 					border-color: var(--primary-color);
-				}
-				&#encrypt:hover:not(:disabled),
-				&#decrypt:hover:not(:disabled) {
-					background-color: var(--primary-hover);
-					border-color: var(--primary-hover);
 				}
 			}
 			.tab-container {
