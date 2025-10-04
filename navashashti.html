@@ -53,10 +53,6 @@
 					outline-offset: -4px;
 					transform: none;
 				}
-				&:disabled,
-				&:disabled:hover {
-					cursor: default;
-				}
 			}
 			.grid {
 				display: grid;
@@ -202,7 +198,7 @@
 					}, "Failed to insert sample text");
 				});
 				btnPaste.addEventListener("click", async () => {
-					try {
+					await withUiBlocked(async () => {
 						const clipboardText = await navigator.clipboard.readText();
 						if (clipboardText) {
 							await updateValue(txtInput, clipboardText);
@@ -210,9 +206,7 @@
 						} else {
 							showToast("Nothing to paste", false);
 						}
-					} catch {
-						showToast("Failed to paste", false);
-					}
+					}, "Failed to paste");
 				});
 				btnConvert.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
@@ -225,7 +219,7 @@
 						}
 					}, "Failed to convert");
 				});
-				btnCopy.addEventListener("click", async event => {
+				btnCopy.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
 						const output = txtOutput.value;
 						if (!output) {
