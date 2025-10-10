@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -227,7 +227,7 @@
 					hideToast();
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
-					toastTimeout = setTimeout(hideToast, 1500);
+					toastTimeout = setTimeout(hideToast, 2500);
 				};
 				const updateValue = async (element, value) => {
 					element.value = emptyString;
@@ -412,12 +412,21 @@
 					x.addEventListener("input", updateStatistics);
 				});
 				document.querySelectorAll(".tab-container").forEach(tabContainer => {
-					const tabBarButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
-					tabBarButtons.forEach(button => {
+					const tabButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
+					tabButtons.forEach(button => {
 						button.addEventListener("click", () => {
-							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tabContainer.querySelectorAll("&> .tab-panel").forEach(tp => tp.classList.add("hidden"));
-							tabContainer.querySelector(`&> [data-name="${button.getAttribute("data-href")}"]`)?.classList.remove("hidden");
+							for (const item of tabButtons) {
+								item.classList.remove("active");
+								item.removeAttribute("aria-selected");
+							}
+							tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
+								if (tabPanel.id === button.getAttribute("data-href")) {
+									tabPanel.classList.remove("hidden");
+									return;
+								}
+								tabPanel.classList.add("hidden");
+							});
+							button.setAttribute("aria-selected", "true");
 							button.classList.add("active");
 						});
 					});
@@ -425,6 +434,14 @@
 					if (defaultPanelName) {
 						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
+				});
+				document.querySelectorAll("a[href=\u{22}javascript:void 0\u{22}]").forEach(ancAction => {
+					ancAction.addEventListener("keypress", event => {
+						if (event.key === " ") {
+							event.preventDefault();
+							event.target.click();
+						}
+					});
 				});
 				document.querySelectorAll(".btn-paste").forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
@@ -446,40 +463,40 @@
 		</script>
 	</head>
 	<body>
-		<div id="toast" class="toast"></div>
+		<div id="toast" class="toast" role="status"></div>
 		<div class="message">
 			<span>Utility for converting Malayalam text to/from base-95 using range compression and GZip. This tool supports Malayalam characters (Unicode range 3328-3455) and ASCII characters (Unicode range 1-127). &#x26A0;&#xFE0F; Warning: Characters outside these Unicode ranges will not be processed correctly.</span>
 		</div>
-		<div class="tab-container" data-default="tab-encode">
-			<div class="tab-bar">
-				<button class="tab-btn" data-href="tab-encode">Encode</button>
-				<button class="tab-btn" data-href="tab-decode">Decode</button>
+		<div class="tab-container" data-default="encode-tab-panel">
+			<div class="tab-bar" role="tablist">
+				<button id="encode-tab" class="tab-btn" data-href="encode-tab-panel" role="tab" aria-controls="encode-tab-panel">Encode</button>
+				<button id="decode-tab" class="tab-btn" data-href="decode-tab-panel" role="tab" aria-controls="decode-tab-panel">Decode</button>
 			</div>
-			<div class="tab-panel" data-name="tab-encode">
+			<div id="encode-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="encode-tab">
 				<br/>
 				<div class="grid">
 					<div class="row">
 						<div class="cell">
 							<strong>Plain Text</strong>
 							<div class="separator"></div>
-							<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
+							<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-paste" data-target="plain-text">Paste</button>
+							<button class="btn-paste" data-target="plain-text" aria-label="Paste the plain text input">Paste</button>
 							<input id="plain-text-file-input" type="file" class="hidden" data-target="plain-text"/>
-							<button class="btn-upload" data-target="plain-text-file-input">Upload File</button>
-							<button id="encode">Encode</button>
+							<button class="btn-upload" data-target="plain-text-file-input" aria-label="Upload a file to encode">Upload File</button>
+							<button id="encode" aria-label="Encode the input">Encode</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="plain-text"></textarea>
+							<textarea id="plain-text" aria-label="Plain text input to encode"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="plain-text-bytes">0</em>
+							<em id="plain-text-bytes" role="status" aria-label="Plain text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -490,30 +507,30 @@
 							<strong>Base-95 Encoded Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-copy" data-source="encoded-output">Copy</button>
-							<button class="btn-download" data-source="encoded-output">Download</button>
+							<button class="btn-copy" data-source="encoded-output" aria-label="Copy the encoded output">Copy</button>
+							<button class="btn-download" data-source="encoded-output" aria-label="Download the encoded output">Download</button>
 						</div>
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
 						<div class="cell">
-							<em>Warning: The encoded text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+							<em role="status">Warning: The encoded text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="encoded-output" readonly="readonly"></textarea>
+							<textarea id="encoded-output" readonly="readonly" aria-label="Base-95 encoded output"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="encoded-output-bytes">0</em>
-							<em id="plain-to-encoded-ratio"></em>
+							<em id="encoded-output-bytes" role="status" aria-label="Base-95 encoded output bytes">0</em>
+							<em id="plain-to-encoded-ratio" role="status" aria-label="The encoded output is"></em>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="tab-panel" data-name="tab-decode">
+			<div id="decode-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="decode-tab">
 				<br/>
 				<div class="grid">
 					<div class="row">
@@ -521,21 +538,21 @@
 							<strong>Base-95 Encoded Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-paste" data-target="cipher-text">Paste</button>
+							<button class="btn-paste" data-target="cipher-text" aria-label="Paste the base-95 encoded input">Paste</button>
 							<input id="encoded-text-file-input" type="file" class="hidden" data-target="cipher-text"/>
-							<button class="btn-upload" data-target="encoded-text-file-input">Upload File</button>
-							<button id="decode">Decode</button>
+							<button class="btn-upload" data-target="encoded-text-file-input" aria-label="Upload a file to decode">Upload File</button>
+							<button id="decode" aria-label="Decode the input">Decode</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="cipher-text"></textarea>
+							<textarea id="cipher-text" aria-label="Base-95 encoded input to decode"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="cipher-text-bytes">0</em>
+							<em id="cipher-text-bytes" role="status" aria-label="Base-95 encoded input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -546,20 +563,20 @@
 							<strong>Plain Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-copy" data-source="decoded-output">Copy</button>
-							<button class="btn-download" data-source="decoded-output">Download</button>
+							<button class="btn-copy" data-source="decoded-output" aria-label="Copy the decoded output">Copy</button>
+							<button class="btn-download" data-source="decoded-output" aria-label="Download the decoded output">Download</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="decoded-output" readonly="readonly"></textarea>
+							<textarea id="decoded-output" readonly="readonly" aria-label="Base-95 decoded plain text output"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="decoded-output-bytes">0</em>
-							<em id="encoded-to-plain-ratio"></em>
+							<em id="decoded-output-bytes" role="status" aria-label="Plain text output bytes">0</em>
+							<em id="encoded-to-plain-ratio" role="status" aria-label="The decoded output is"></em>
 						</div>
 					</div>
 				</div>

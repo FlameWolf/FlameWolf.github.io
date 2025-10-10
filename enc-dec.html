@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -279,7 +279,7 @@
 					hideToast();
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
-					toastTimeout = setTimeout(hideToast, 1500);
+					toastTimeout = setTimeout(hideToast, 2500);
 				};
 				const updateValue = async (element, value) => {
 					element.value = emptyString;
@@ -480,12 +480,21 @@
 					imgEncryptKeyQrCode.src = canQrCode.toDataURL();
 				});
 				document.querySelectorAll(".tab-container").forEach(tabContainer => {
-					const tabBarButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
-					tabBarButtons.forEach(button => {
+					const tabButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
+					tabButtons.forEach(button => {
 						button.addEventListener("click", () => {
-							tabBarButtons.forEach(x => x.classList.remove("active"));
-							tabContainer.querySelectorAll("&> .tab-panel").forEach(tp => tp.classList.add("hidden"));
-							tabContainer.querySelector(`&> [data-name="${button.getAttribute("data-href")}"]`)?.classList.remove("hidden");
+							for (const item of tabButtons) {
+								item.classList.remove("active");
+								item.removeAttribute("aria-selected");
+							}
+							tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
+								if (tabPanel.id === button.getAttribute("data-href")) {
+									tabPanel.classList.remove("hidden");
+									return;
+								}
+								tabPanel.classList.add("hidden");
+							});
+							button.setAttribute("aria-selected", "true");
 							button.classList.add("active");
 						});
 					});
@@ -493,6 +502,14 @@
 					if (defaultPanelName) {
 						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
 					}
+				});
+				document.querySelectorAll("a[href=\u{22}javascript:void 0\u{22}]").forEach(ancAction => {
+					ancAction.addEventListener("keypress", event => {
+						if (event.key === " ") {
+							event.preventDefault();
+							event.target.click();
+						}
+					});
 				});
 				document.querySelectorAll(".btn-paste").forEach(btnPaste => {
 					btnPaste.addEventListener("click", pasteToTarget);
@@ -518,31 +535,31 @@
 		</script>
 	</head>
 	<body>
-		<div id="toast" class="toast"></div>
-		<div class="tab-container" data-default="tab-encrypt">
-			<div class="tab-bar">
-				<button class="tab-btn" data-href="tab-encrypt">Encrypt</button>
-				<button class="tab-btn" data-href="tab-decrypt">Decrypt</button>
+		<div id="toast" class="toast" role="status"></div>
+		<div class="tab-container" data-default="encrypt-tab-panel">
+			<div class="tab-bar" role="tablist">
+				<button id="encrypt-tab" class="tab-btn" data-href="encrypt-tab-panel" role="tab" aria-controls="encrypt-tab-panel">Encrypt</button>
+				<button id="decrypt-tab" class="tab-btn" data-href="decrypt-tab-panel" role="tab" aria-controls="decrypt-tab-panel">Decrypt</button>
 			</div>
 			<br/>
-			<div class="tab-panel hidden" data-name="tab-encrypt">
+			<div id="encrypt-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="encrypt-tab">
 				<div class="grid">
 					<div class="row">
 						<div class="cell">
 							<strong>Key</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-copy" data-source="encrypt-key">Copy</button>
+							<button class="btn-copy" data-source="encrypt-key" aria-label="Copy the encryption key">Copy</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
 							<div class="encrypt-key-holder">
-								<textarea id="encrypt-key" class="key" readonly="readonly"></textarea>
+								<textarea id="encrypt-key" class="key" readonly="readonly" aria-label="Encryption key"></textarea>
 								<div class="message">
-									<span><strong>The key displayed above will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the above key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code, which when scanned would produce the above key.</span>
+									<span><strong>The encryption key will change with every page reload. A message can be decrypted only with the key that was used to encrypt it.</strong> Note down the key and send it to the receiver via a secure channel separately from the message. Alternately, you can send them the QR code, which when scanned would produce the encryption key.</span>
 								</div>
-								<img id="encrypt-key-qr-code" class="qr-code"/>
+								<img id="encrypt-key-qr-code" class="qr-code" alt="QR code containing the encryption key"/>
 							</div>
 						</div>
 					</div>
@@ -553,24 +570,24 @@
 						<div class="cell">
 							<strong>Plain Text</strong>
 							<div class="separator"></div>
-							<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
+							<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-paste" data-target="plain-text">Paste</button>
+							<button class="btn-paste" data-target="plain-text" aria-label="Paste the plain text input">Paste</button>
 							<input id="plain-text-file-input" type="file" class="hidden" data-target="plain-text"/>
-							<button class="btn-upload" data-target="plain-text-file-input">Upload File</button>
-							<button id="encrypt">Encrypt</button>
+							<button class="btn-upload" data-target="plain-text-file-input" aria-label="Upload a file to encrypt">Upload File</button>
+							<button id="encrypt" aria-label="Encrypt the input">Encrypt</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="plain-text"></textarea>
+							<textarea id="plain-text" aria-label="Plain text input to encrypt"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="plain-text-bytes">0</em>
+							<em id="plain-text-bytes" role="status" aria-label="Plain text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -581,42 +598,42 @@
 							<strong>Cipher Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-copy" data-source="encrypted-output">Copy</button>
-							<button class="btn-download" data-source="encrypted-output">Download</button>
+							<button class="btn-copy" data-source="encrypted-output" aria-label="Copy the encrypted output">Copy</button>
+							<button class="btn-download" data-source="encrypted-output" aria-label="Download the encrypted output">Download</button>
 						</div>
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
 						<div class="cell">
-							<em>Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+							<em role="status">Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="encrypted-output" readonly="readonly"></textarea>
+							<textarea id="encrypted-output" readonly="readonly" aria-label="Encrypted output"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="encrypted-output-bytes">0</em>
-							<em id="plain-to-encrypted-ratio"></em>
+							<em id="encrypted-output-bytes" role="status" aria-label="Encrypted output bytes">0</em>
+							<em id="plain-to-encrypted-ratio" role="status" aria-label="The encrypted output is"></em>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="tab-panel hidden" data-name="tab-decrypt">
+			<div id="decrypt-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="decrypt-tab">
 				<div class="grid">
 					<div class="row">
 						<div class="cell">
 							<strong>Key</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-paste" data-target="decrypt-key">Paste</button>
+							<button class="btn-paste" data-target="decrypt-key" aria-label="Paste the decryption key">Paste</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="decrypt-key" class="key"></textarea>
+							<textarea id="decrypt-key" class="key" aria-label="Decryption key"></textarea>
 						</div>
 					</div>
 				</div>
@@ -627,21 +644,21 @@
 							<strong>Cipher Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-paste" data-target="cipher-text">Paste</button>
+							<button class="btn-paste" data-target="cipher-text" aria-label="Paste the cipher text input">Paste</button>
 							<input id="cipher-text-file-input" type="file" class="hidden" data-target="cipher-text"/>
-							<button class="btn-upload" data-target="cipher-text-file-input">Upload File</button>
-							<button id="decrypt">Decrypt</button>
+							<button class="btn-upload" data-target="cipher-text-file-input" aria-label="Upload a file to decrypt">Upload File</button>
+							<button id="decrypt" aria-label="Decrypt the input">Decrypt</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="cipher-text"></textarea>
+							<textarea id="cipher-text" aria-label="Cipher text input to decrypt"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="cipher-text-bytes">0</em>
+							<em id="cipher-text-bytes" role="status" aria-label="Cipher text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -652,20 +669,20 @@
 							<strong>Plain Text</strong>
 						</div>
 						<div class="cell align-end">
-							<button class="btn-copy" data-source="decrypted-output">Copy</button>
-							<button class="btn-download" data-source="decrypted-output">Download</button>
+							<button class="btn-copy" data-source="decrypted-output" aria-label="Copy the decrypted output">Copy</button>
+							<button class="btn-download" data-source="decrypted-output" aria-label="Download the decrypted output">Download</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">
-							<textarea id="decrypted-output" readonly="readonly"></textarea>
+							<textarea id="decrypted-output" readonly="readonly" aria-label="Decrypted plain text output"></textarea>
 						</div>
 					</div>
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="decrypted-output-bytes">0</em>
-							<em id="encrypted-to-plain-ratio"></em>
+							<em id="decrypted-output-bytes" role="status" aria-label="Plain text output bytes">0</em>
+							<em id="encrypted-to-plain-ratio" role="status" aria-label="The decrypted output is"></em>
 						</div>
 					</div>
 				</div>
