@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -179,7 +179,7 @@
 					hideToast();
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
-					toastTimeout = setTimeout(hideToast, 1500);
+					toastTimeout = setTimeout(hideToast, 2500);
 				};
 				const updateValue = async (element, value) => {
 					element.value = emptyString;
@@ -223,6 +223,12 @@
 						await insertSampleText("ml", txtInput);
 					}, "Failed to insert sample text");
 				});
+				ancInsertSample.addEventListener("keypress", event => {
+					if (event.key === " ") {
+						event.preventDefault();
+						ancInsertSample.click();
+					}
+				});
 				btnPaste.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
 						const clipboardText = await navigator.clipboard.readText();
@@ -263,6 +269,7 @@
 					btnCipher.dataset["schemeId"] = schemeId;
 					btnCipher.dataset["schemeName"] = scheme.name;
 					btnCipher.dataset["schemeDescription"] = scheme.description;
+					btnCipher.setAttribute("aria-label", `Select the ${scheme.name} cipher scheme`);
 					btnCipher.textContent = scheme.name;
 					divCipherButtonGroup.appendChild(btnCipher);
 				}
@@ -291,28 +298,26 @@
 		</script>
 	</head>
 	<body>
-		<div id="toast" class="toast"></div>
-		<p>Choose an encryption scheme</p>
-		<div>
-			<div id="cipher-button-group" class="btn-group"></div>
-		</div>
-		<p id="cipher-description" data-name="cipher-description"></p>
+		<div id="toast" class="toast" role="status"></div>
+		<p>Choose a cipher scheme</p>
+		<div id="cipher-button-group" class="btn-group" role="group" aria-label="Cipher schemes"></div>
+		<p id="cipher-description" data-name="cipher-description" role="status" aria-label="Cihper scheme mnemonic"></p>
 		<br/>
 		<div class="grid">
 			<div class="row">
 				<div class="cell">
 					<strong>Input</strong>
 					<div class="separator"></div>
-					<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
+					<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
 				</div>
 				<div class="cell align-end">
-					<button id="paste">Paste</button>
-					<button id="convert">Convert</button>
+					<button id="paste" aria-label="Paste the input">Paste</button>
+					<button id="convert" aria-label="Convert the input">Convert</button>
 				</div>
 			</div>
 			<div class="row">
 				<div class="cell">
-					<textarea id="input"></textarea>
+					<textarea id="input" aria-label="Input text to convert"></textarea>
 				</div>
 			</div>
 		</div>
@@ -323,12 +328,12 @@
 					<strong>Output</strong>
 				</div>
 				<div class="cell align-end">
-					<button id="copy" class="btn-copy">Copy</button>
+					<button id="copy" class="btn-copy" aria-label="Copy the converted output">Copy</button>
 				</div>
 			</div>
 			<div class="row">
 				<div class="cell">
-					<textarea id="output" readonly="readonly"></textarea>
+					<textarea id="output" readonly="readonly" aria-label="Converted output"></textarea>
 				</div>
 			</div>
 		</div>

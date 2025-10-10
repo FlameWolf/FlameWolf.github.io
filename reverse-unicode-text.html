@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -150,7 +150,7 @@
 					hideToast();
 					divToast.textContent = message;
 					divToast.classList.add(success ? "success" : "error");
-					toastTimeout = setTimeout(hideToast, 1500);
+					toastTimeout = setTimeout(hideToast, 2500);
 				};
 				const updateValue = async (element, value) => {
 					element.value = emptyString;
@@ -196,6 +196,12 @@
 						await insertSampleText("ml", txtInput);
 					}, "Failed to insert sample text");
 				});
+				ancInsertSample.addEventListener("keypress", event => {
+					if (event.key === " ") {
+						event.preventDefault();
+						ancInsertSample.click();
+					}
+				});
 				btnPaste.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
 						const clipboardText = await navigator.clipboard.readText();
@@ -225,7 +231,7 @@
 		</script>
 	</head>
 	<body>
-		<div id="toast" class="toast"></div>
+		<div id="toast" class="toast" role="status"></div>
 		<h1>Reverse Unicode Text</h1>
 		<hr/>
 		<br/>
@@ -234,15 +240,15 @@
 				<div class="cell">
 					<strong>Input</strong>
 					<div class="separator"></div>
-					<a id="insert-sample" href="javascript:void 0">Insert Sample</a>
+					<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
 				</div>
 				<div class="cell align-end">
-					<button id="paste">Paste</button>
+					<button id="paste" aria-label="Paste the input">Paste</button>
 				</div>
 			</div>
 			<div class="row">
 				<div class="cell">
-					<textarea id="input" placeholder="Enter text here..."></textarea>
+					<textarea id="input" placeholder="Enter text here..." aria-label="Input text to reverse"></textarea>
 				</div>
 			</div>
 		</div>
@@ -253,12 +259,12 @@
 					<strong>Output</strong>
 				</div>
 				<div class="cell align-end">
-					<button id="copy">Copy</button>
+					<button id="copy" aria-label="Copy the reversed output">Copy</button>
 				</div>
 			</div>
 			<div class="row">
 				<div class="cell">
-					<textarea id="output" placeholder="Output will appear here..." readonly></textarea>
+					<textarea id="output" placeholder="Output will appear here..." readonly="readonly" aria-label="Reversed output"></textarea>
 				</div>
 			</div>
 		</div>
