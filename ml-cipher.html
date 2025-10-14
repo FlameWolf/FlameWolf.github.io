@@ -279,22 +279,28 @@
 					btnCipher.dataset["schemeId"] = schemeId;
 					btnCipher.dataset["schemeName"] = scheme.name;
 					btnCipher.dataset["schemeDescription"] = scheme.description;
+					btnCipher.setAttribute("role", "radio");
 					btnCipher.setAttribute("aria-label", `Select the ${scheme.name} cipher scheme`);
 					btnCipher.textContent = scheme.name;
 					divCipherButtonGroup.appendChild(btnCipher);
 				}
 				const cipherButtons = divCipherButtonGroup.querySelectorAll(".cipher-btn");
-				cipherButtons.forEach(btn => {
-					btn.addEventListener("click", () => {
+				cipherButtons.forEach(button => {
+					button.addEventListener("click", () => {
 						const prevSchemeName = activeCipherScheme.name;
-						activeCipherScheme = cipherSchemes[btn.dataset["schemeId"]];
+						activeCipherScheme = cipherSchemes[button.dataset["schemeId"]];
 						const currSchemeName = activeCipherScheme.name;
 						if (currSchemeName !== prevSchemeName) {
 							localStorage.setItem("schemeName", currSchemeName);
 						}
+						for (const item of cipherButtons) {
+							item.classList.remove("active");
+							item.setAttribute("aria-checked", "false");
+						}
 						cipherButtons.forEach(x => x.classList.remove("active"));
-						parCipherDescription.textContent = btn.dataset["schemeDescription"];
-						btn.classList.add("active");
+						parCipherDescription.textContent = button.dataset["schemeDescription"];
+						button.setAttribute("aria-checked", "true");
+						button.classList.add("active");
 					});
 				});
 				const schemeName = localStorage.getItem("schemeName");
@@ -311,10 +317,10 @@
 		<noscript>
 			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
 		</noscript>
-		<div id="toast" class="toast" role="status"></div>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 		<p>Choose a cipher scheme</p>
-		<div id="cipher-button-group" class="btn-group" role="group" aria-label="Cipher schemes"></div>
-		<p id="cipher-description" data-name="cipher-description" role="status" aria-label="Cihper scheme mnemonic"></p>
+		<div id="cipher-button-group" class="btn-group" role="radiogroup" aria-label="Cipher schemes"></div>
+		<p id="cipher-description" data-name="cipher-description" role="status" aria-live="polite" aria-label="Cihper scheme mnemonic"></p>
 		<br/>
 		<div class="grid">
 			<div class="row">

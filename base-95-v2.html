@@ -489,10 +489,13 @@
 				function switchTab(tabName) {
 					currentTab = tabName;
 					document.querySelectorAll(".tab-btn").forEach(btn => {
-						btn.classList.toggle("active", btn.dataset.tab === tabName);
+						const isActive = btn.dataset.tab === tabName;
+						btn.classList.toggle("active", isActive);
+						btn.setAttribute("aria-selected", isActive.toString());
 					});
 					document.querySelectorAll(".tab-panel").forEach(panel => {
-						panel.classList.toggle("active", panel.dataset.panel === tabName);
+						const isActive = panel.dataset.panel === tabName;
+						panel.classList.toggle("active", isActive);
 					});
 				}
 				function debounce(func, wait) {
@@ -584,29 +587,29 @@
 			<p>Encode and decode text using Base-95 conversion with GZip compression</p>
 		</header>
 		<div class="tab-container">
-			<div class="tab-bar">
-				<button class="tab-btn active" data-tab="encode">📝 Encode</button>
-				<button class="tab-btn" data-tab="decode">🔓 Decode</button>
+			<div class="tab-bar" role="tablist">
+				<button id="tab-encode" class="tab-btn active" data-tab="encode" role="tab" aria-controls="tab-encode" aria-selected="true">Encode</button>
+				<button id="tab-decode" class="tab-btn" data-tab="decode" role="tab" aria-controls="tab-decode" aria-selected="false">Decode</button>
 			</div>
-			<div class="tab-panel active" data-panel="encode">
+			<div class="tab-panel active" data-panel="encode" role="tabpanel" aria-labelledby="tab-encode">
 				<section class="section">
 					<div class="section-header">
 						<h3 class="section-title">Plain Text Input</h3>
 						<div class="section-actions">
-							<button class="btn" id="paste-plain">📋 Paste</button>
-							<button class="btn" id="upload-file">📁 Upload File</button>
-							<button class="btn btn-primary" id="encode-btn">🔒 Encode</button>
+							<button class="btn" id="paste-plain">Paste</button>
+							<button class="btn" id="upload-file">Upload File</button>
+							<button class="btn btn-primary" id="encode-btn">Encode</button>
 						</div>
 					</div>
 					<textarea id="plain-text" placeholder="Enter or paste your text here, or drag and drop a file..." aria-label="Plain text input for encoding" aria-describedby="plain-text-help"></textarea>
 					<div id="plain-text-help" class="sr-only">Enter the text you want to encode using Base-95 compression</div>
-					<div class="stats" id="plain-stats">
+					<div class="stats" id="plain-stats" role="status" aria-live="polite" aria-label="Plain text input statistics">
 						<div class="stat">
-							<span>📏</span>
+							<span aria-label="Length">📏</span>
 							<span id="plain-chars">0 characters</span>
 						</div>
 						<div class="stat">
-							<span>💾</span>
+							<span aria-label="Byte count">💾</span>
 							<span id="plain-bytes">0 bytes</span>
 						</div>
 					</div>
@@ -615,41 +618,41 @@
 					<div class="section-header">
 						<h3 class="section-title">Base-95 Encoded Output</h3>
 						<div class="section-actions">
-							<button class="btn btn-success" id="copy-encoded">📋 Copy</button>
-							<button class="btn" id="download-encoded">💾 Download</button>
+							<button class="btn btn-success" id="copy-encoded">Copy</button>
+							<button class="btn" id="download-encoded">Download</button>
 						</div>
 					</div>
 					<textarea id="encoded-output" readonly placeholder="Encoded text will appear here..." aria-label="Base-95 encoded output"></textarea>
-					<div class="stats" id="encoded-stats">
+					<div class="stats" id="encoded-stats" role="status" aria-live="polite" aria-label="Encoded output statistics">
 						<div class="stat">
-							<span>📏</span>
+							<span aria-label="Length">📏</span>
 							<span id="encoded-chars">0 characters</span>
 						</div>
 						<div class="stat">
-							<span>💾</span>
+							<span aria-label="Byte count">💾</span>
 							<span id="encoded-bytes">0 bytes</span>
 						</div>
 						<div class="stat">
-							<span>📊</span>
+							<span aria-label="Ratio">📊</span>
 							<span id="compression-ratio">0% compression</span>
 						</div>
 					</div>
 				</section>
 			</div>
-			<div class="tab-panel" data-panel="decode">
+			<div class="tab-panel" data-panel="decode" role="tabpanel" aria-labelledby="tab-decode">
 				<section class="section">
 					<div class="section-header">
 						<h3 class="section-title">Base-95 Encoded Input</h3>
 						<div class="section-actions">
-							<button class="btn" id="paste-encoded">📋 Paste</button>
-							<button class="btn btn-primary" id="decode-btn">🔓 Decode</button>
+							<button class="btn" id="paste-encoded">Paste</button>
+							<button class="btn btn-primary" id="decode-btn">Decode</button>
 						</div>
 					</div>
 					<textarea id="encoded-input" placeholder="Paste your Base-95 encoded text here..." aria-label="Base-95 encoded input for decoding" aria-describedby="encoded-input-help"></textarea>
 					<div id="encoded-input-help" class="sr-only">Enter the Base-95 encoded text you want to decode</div>
-					<div class="stats" id="encoded-input-stats">
+					<div class="stats" id="encoded-input-stats" role="status" aria-live="polite" aria-label="Encoded input statistics">
 						<div class="stat">
-							<span>📏</span>
+							<span aria-label="Length">📏</span>
 							<span id="encoded-input-chars">0 characters</span>
 						</div>
 					</div>
@@ -658,18 +661,18 @@
 					<div class="section-header">
 						<h3 class="section-title">Decoded Plain Text</h3>
 						<div class="section-actions">
-							<button class="btn btn-success" id="copy-decoded">📋 Copy</button>
-							<button class="btn" id="download-decoded">💾 Download</button>
+							<button class="btn btn-success" id="copy-decoded">Copy</button>
+							<button class="btn" id="download-decoded">Download</button>
 						</div>
 					</div>
 					<textarea id="decoded-output" readonly placeholder="Decoded text will appear here..." aria-label="Decoded plain text output"></textarea>
-					<div class="stats" id="decoded-stats">
+					<div class="stats" id="decoded-stats" role="status" aria-live="polite" aria-label="Plain text output statistics">
 						<div class="stat">
-							<span>📏</span>
+							<span aria-label="Length">📏</span>
 							<span id="decoded-chars">0 characters</span>
 						</div>
 						<div class="stat">
-							<span>💾</span>
+							<span aria-label="Byte count">💾</span>
 							<span id="decoded-bytes">0 bytes</span>
 						</div>
 					</div>
@@ -686,6 +689,6 @@
 			</ul>
 		</div>
 		<input type="file" id="file-input" style="display: none" accept=".txt,.md,.json,.xml,.csv"/>
-		<div id="toast-container"></div>
+		<div id="toast-container" role="alert" aria-live="assertive"></div>
 	</body>
 </html>

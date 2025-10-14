@@ -391,10 +391,11 @@
 						button.addEventListener("click", () => {
 							for (const item of tabButtons) {
 								item.classList.remove("active");
-								item.removeAttribute("aria-selected");
+								item.setAttribute("aria-selected", "false");
 							}
+							const targetId = button.getAttribute("data-href");
 							tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
-								if (tabPanel.id === button.getAttribute("data-href")) {
+								if (tabPanel.id === targetId) {
 									tabPanel.classList.remove("hidden");
 									return;
 								}
@@ -440,7 +441,7 @@
 		<noscript>
 			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
 		</noscript>
-		<div id="toast" class="toast" role="status"></div>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 		<h3>Encode/decode text using base-95 conversion and GZip compression</h3>
 		<div class="tab-container" data-default="encode-tab-panel">
 			<div class="tab-bar" role="tablist">
@@ -471,7 +472,7 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="plain-text-bytes" role="status" aria-label="Plain text input bytes">0</em>
+							<em id="plain-text-bytes" role="status" aria-live="polite" aria-label="Plain text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -488,7 +489,7 @@
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
 						<div class="cell">
-							<em role="status">Warning: The encoded text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+							<em role="status" aria-live="polite">Warning: The encoded text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
 						</div>
 					</div>
 					<div class="row">
@@ -499,8 +500,8 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="encoded-output-bytes" role="status" aria-label="Base-95 encoded output bytes">0</em>
-							<em id="plain-to-encoded-ratio" role="status" aria-label="The encoded output is"></em>
+							<em id="encoded-output-bytes" role="status" aria-live="polite" aria-label="Base-95 encoded output bytes">0</em>
+							<em id="plain-to-encoded-ratio" role="status" aria-live="polite" aria-label="The encoded output is"></em>
 						</div>
 					</div>
 				</div>
@@ -527,7 +528,7 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="cipher-text-bytes" role="status" aria-label="Base-95 encoded input bytes">0</em>
+							<em id="cipher-text-bytes" role="status" aria-live="polite" aria-label="Base-95 encoded input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -550,8 +551,8 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="decoded-output-bytes" role="status" aria-label="Plain text output bytes">0</em>
-							<em id="encoded-to-plain-ratio" role="status" aria-label="The decoded output is"></em>
+							<em id="decoded-output-bytes" role="status" aria-live="polite" aria-label="Plain text output bytes">0</em>
+							<em id="encoded-to-plain-ratio" role="status" aria-live="polite" aria-label="The decoded output is"></em>
 						</div>
 					</div>
 				</div>

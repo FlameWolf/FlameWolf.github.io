@@ -495,10 +495,11 @@
 						button.addEventListener("click", () => {
 							for (const item of tabButtons) {
 								item.classList.remove("active");
-								item.removeAttribute("aria-selected");
+								item.setAttribute("aria-selected", "false");
 							}
+							const targetId = button.getAttribute("data-href");
 							tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
-								if (tabPanel.id === button.getAttribute("data-href")) {
+								if (tabPanel.id === targetId) {
 									tabPanel.classList.remove("hidden");
 									return;
 								}
@@ -548,7 +549,7 @@
 		<noscript>
 			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
 		</noscript>
-		<div id="toast" class="toast" role="status"></div>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 		<div class="tab-container" data-default="encrypt-tab-panel">
 			<div class="tab-bar" role="tablist">
 				<button id="encrypt-tab" class="tab-btn" data-href="encrypt-tab-panel" role="tab" aria-controls="encrypt-tab-panel">Encrypt</button>
@@ -600,7 +601,7 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="plain-text-bytes" role="status" aria-label="Plain text input bytes">0</em>
+							<em id="plain-text-bytes" role="status" aria-live="polite" aria-label="Plain text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -617,7 +618,7 @@
 					</div>
 					<div id="trailing-spaces-message" class="row warning hidden">
 						<div class="cell">
-							<em role="status">Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+							<em role="status" aria-live="polite">Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
 						</div>
 					</div>
 					<div class="row">
@@ -628,8 +629,8 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="encrypted-output-bytes" role="status" aria-label="Encrypted output bytes">0</em>
-							<em id="plain-to-encrypted-ratio" role="status" aria-label="The encrypted output is"></em>
+							<em id="encrypted-output-bytes" role="status" aria-live="polite" aria-label="Encrypted output bytes">0</em>
+							<em id="plain-to-encrypted-ratio" role="status" aria-live="polite" aria-label="The encrypted output is"></em>
 						</div>
 					</div>
 				</div>
@@ -671,7 +672,7 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="cipher-text-bytes" role="status" aria-label="Cipher text input bytes">0</em>
+							<em id="cipher-text-bytes" role="status" aria-live="polite" aria-label="Cipher text input bytes">0</em>
 						</div>
 					</div>
 				</div>
@@ -694,8 +695,8 @@
 					<div class="row footer">
 						<div class="cell">
 							<em>Bytes:</em>
-							<em id="decrypted-output-bytes" role="status" aria-label="Plain text output bytes">0</em>
-							<em id="encrypted-to-plain-ratio" role="status" aria-label="The decrypted output is"></em>
+							<em id="decrypted-output-bytes" role="status" aria-live="polite" aria-label="Plain text output bytes">0</em>
+							<em id="encrypted-to-plain-ratio" role="status" aria-live="polite" aria-label="The decrypted output is"></em>
 						</div>
 					</div>
 				</div>
