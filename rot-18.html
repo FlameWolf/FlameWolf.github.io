@@ -20,6 +20,16 @@
 				max-width: 75rem;
 				padding-inline: 5%;
 			}
+			noscript {
+				display: flex;
+				justify-content: center;
+				align-content: center;
+				text-align: center;
+				padding: var(--padding) calc(var(--padding) * 4);
+				border: solid 2px red;
+				border-radius: var(--border-radius);
+				margin-block: calc(var(--margin) * 2);
+			}
 			.toast {
 				background-color: black;
 				color: white;
@@ -231,6 +241,9 @@
 		</script>
 	</head>
 	<body>
+		<noscript>
+			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
+		</noscript>
 		<div id="toast" class="toast" role="status"></div>
 		<h1>ROT-18</h1>
 		<hr/>

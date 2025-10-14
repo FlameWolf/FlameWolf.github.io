@@ -35,6 +35,16 @@
 				padding: 2rem 1rem;
 				margin: 0 auto;
 			}
+			noscript {
+				display: flex;
+				justify-content: center;
+				align-content: center;
+				text-align: center;
+				padding: var(--padding) calc(var(--padding) * 4);
+				border: solid 2px red;
+				border-radius: var(--border-radius);
+				margin-block: calc(var(--margin) * 2);
+			}
 			.toast {
 				display: flex;
 				align-items: center;
@@ -608,6 +618,9 @@
 		</script>
 	</head>
 	<body>
+		<noscript>
+			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
+		</noscript>
 		<div id="toast" class="toast" role="status"></div>
 		<div class="tab-container" data-default="encrypt-tab-panel">
 			<div class="tab-bar" role="tablist">
