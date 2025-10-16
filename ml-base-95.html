@@ -263,10 +263,10 @@
 					showToast("Sample text inserted", true);
 				};
 				const normaliseText = text => text.replace(/[^\u0001-\u007F\u0D00-\u0D7F]/gu, match => normalisationMap.get(match) || "[UNK]");
-				const encodeMalayalam = async text => {
-					const bytes = new Uint8Array(text.length);
+				const encodeMalayalam = async plainText => {
+					const bytes = new Uint8Array(plainText.length);
 					bytes.set(
-						Array.from(text).map(char => {
+						Array.from(plainText).map(char => {
 							const codePoint = char.codePointAt(0);
 							return codePoint <= malayalamBlockOffset ? codePoint + asciiCompressionOffset : codePoint - malayalamBlockOffset;
 						}),
@@ -274,8 +274,8 @@
 					);
 					return encodeBase95(await gzip(bytes));
 				};
-				const decodeMalayalam = async encoded => {
-					const bytes = await gunzip(decodeBase95(encoded));
+				const decodeMalayalam = async encodedText => {
+					const bytes = await gunzip(decodeBase95(encodedText));
 					return Array.from(bytes)
 						.map(byte => (byte > asciiCompressionOffset ? byte - asciiCompressionOffset : byte + malayalamBlockOffset))
 						.reduce((previous, current) => `${previous}${String.fromCodePoint(current)}`, emptyString);

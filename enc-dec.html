@@ -317,7 +317,7 @@
 				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
 				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
 				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
-				const decryptMessage = async (key, iv, ciphertext) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, ciphertext))));
+				const decryptMessage = async (key, iv, cipherText) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, cipherText))));
 				const withUiBlocked = async (callback, errorMessage) => {
 					try {
 						divOverlay.classList.remove("hidden");

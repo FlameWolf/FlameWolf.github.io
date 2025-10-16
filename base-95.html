@@ -238,11 +238,11 @@
 					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
 				};
-				const encodeText = async text => {
-					return encodeBase95(await gzip(encoder.encode(text)));
+				const encodeText = async plainText => {
+					return encodeBase95(await gzip(encoder.encode(plainText)));
 				};
-				const decodeText = async encoded => {
-					return decoder.decode(await gunzip(decodeBase95(encoded)));
+				const decodeText = async encodedText => {
+					return decoder.decode(await gunzip(decodeBase95(encodedText)));
 				};
 				const withUiBlocked = async (callback, errorMessage) => {
 					try {
