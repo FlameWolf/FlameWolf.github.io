@@ -215,7 +215,7 @@
 		<script type="text/javascript" src="JavaScript/qrcode.min.js"></script>
 		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
 		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
-		<script type="text/javascript" src="JavaScript/gzip.js"></script>
+		<script type="text/javascript" src="JavaScript/deflate.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
@@ -224,7 +224,8 @@
 				const emptyString = "";
 				const ivLength = 8;
 				const imgDim = 256;
-				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
+				const encoder = new TextEncoder();
+				const decoder = new TextDecoder();
 				const keyName = "AES-GCM";
 				const keyOps = ["encrypt", "decrypt"];
 				const keyFormat = "jwk";
@@ -314,10 +315,10 @@
 					await updateValue(inputElement, sampleText);
 					showToast("Sample text inserted", true);
 				};
-				const unicodeToBase95 = async input => encodeBase95(await gzip(encoder.encode(input)));
-				const base95ToUnicode = async input => decoder.decode(await gunzip(decodeBase95(input)));
-				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await gzip(encoder.encode(plainText))));
-				const decryptMessage = async (key, iv, cipherText) => decoder.decode(await gunzip(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, cipherText))));
+				const unicodeToBase95 = async input => encodeBase95(await deflate(encoder.encode(input)));
+				const base95ToUnicode = async input => decoder.decode(await inflate(decodeBase95(input)));
+				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await deflate(encoder.encode(plainText))));
+				const decryptMessage = async (key, iv, cipherText) => decoder.decode(await inflate(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, cipherText))));
 				const withUiBlocked = async (callback, errorMessage) => {
 					try {
 						divOverlay.classList.remove("hidden");

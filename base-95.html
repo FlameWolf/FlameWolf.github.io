@@ -176,14 +176,15 @@
 		</style>
 		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
 		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
-		<script type="text/javascript" src="JavaScript/gzip.js"></script>
+		<script type="text/javascript" src="JavaScript/deflate.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script type="text/javascript">
 			"use strict";
 
 			document.addEventListener("DOMContentLoaded", async () => {
 				const emptyString = "";
-				const [encoder, decoder] = [new TextEncoder(), new TextDecoder()];
+				const encoder = new TextEncoder();
+				const decoder = new TextDecoder();
 				const divToast = document.getElementById("toast");
 				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
 				const divOverlay = document.getElementById("overlay");
@@ -239,10 +240,10 @@
 					showToast("Sample text inserted", true);
 				};
 				const encodeText = async plainText => {
-					return encodeBase95(await gzip(encoder.encode(plainText)));
+					return encodeBase95(await deflate(encoder.encode(plainText)));
 				};
 				const decodeText = async encodedText => {
-					return decoder.decode(await gunzip(decodeBase95(encodedText)));
+					return decoder.decode(await inflate(decodeBase95(encodedText)));
 				};
 				const withUiBlocked = async (callback, errorMessage) => {
 					try {
@@ -442,7 +443,7 @@
 			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
 		</noscript>
 		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
-		<h3>Encode/decode text using base-95 conversion and GZip compression</h3>
+		<h3>Encode/decode text using base-95 conversion and DEFLATE compression</h3>
 		<div class="tab-container" data-default="encode-tab-panel">
 			<div class="tab-bar" role="tablist">
 				<button id="encode-tab" class="tab-btn" data-href="encode-tab-panel" role="tab" aria-controls="encode-tab-panel">Encode</button>

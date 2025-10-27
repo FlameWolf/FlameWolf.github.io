@@ -290,7 +290,7 @@
 				}
 			}
 		</style>
-		<script type="text/javascript" src="JavaScript/gzip.js"></script>
+		<script type="text/javascript" src="JavaScript/deflate.js"></script>
 		<script type="text/javascript" src="JavaScript/base-95.js"></script>
 		<script>
 			"use strict";
@@ -349,7 +349,7 @@
 					if (!text.trim()) {
 						return emptyString;
 					}
-					return encodeBase95(await gzip(encoder.encode(text)));
+					return encodeBase95(await deflate(encoder.encode(text)));
 				}
 				async function encode() {
 					if (isProcessing) {
@@ -382,7 +382,7 @@
 					if (!encoded.trim()) {
 						return emptyString;
 					}
-					return decoder.decode(await gunzip(decodeBase95(encoded)));
+					return decoder.decode(await inflate(decodeBase95(encoded)));
 				}
 				async function decode() {
 					if (isProcessing) {
@@ -584,7 +584,7 @@
 		</noscript>
 		<header class="header">
 			<h1>Base-95 Conversion Tool</h1>
-			<p>Encode and decode text using Base-95 conversion with GZip compression</p>
+			<p>Encode and decode text using Base-95 conversion with DEFLATE compression</p>
 		</header>
 		<div class="tab-container">
 			<div class="tab-bar" role="tablist">
