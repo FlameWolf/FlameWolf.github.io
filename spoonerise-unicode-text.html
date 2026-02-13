@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Spoonerise Unicode Text</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.375rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
+				--margin: 0.5rem;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				min-width: min-content;
+				max-width: 75rem;
+				padding-inline: 5%;
+			}
+			noscript {
+				display: flex;
+				justify-content: center;
+				align-content: center;
+				text-align: center;
+				padding: var(--padding) calc(var(--padding) * 4);
+				border: solid 2px red;
+				border-radius: var(--border-radius);
+				margin-block: calc(var(--margin) * 2);
+			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				opacity: 0;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					opacity: 1;
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+			}
+			button {
+				font-size: 0.9rem;
+				padding-inline: 1.5rem;
+				&:focus {
+					outline: 2px solid grey;
+					outline-offset: -4px;
+					transform: none;
+				}
+			}
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					gap: var(--margin);
+					> .cell {
+						display: flex;
+						gap: var(--margin);
+					}
+				}
+			}
+			.separator {
+				border: solid 1px var(--background-hover);
+			}
+			textarea {
+				flex: 1;
+				min-height: 32rem;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
+				resize: vertical;
+			}
+			.overlay {
+				cursor: wait;
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				left: 0;
+			}
+			.hidden {
+				display: none;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			@media (width >= 768px) {
+				.align-end {
+					justify-content: end;
+				}
+			}
+			@media (width < 768px) {
+				.grid > .row {
+					grid-auto-flow: row;
+					> .cell {
+						justify-content: center;
+						text-align: center;
+						> button {
+							flex: 1;
+						}
+					}
+				}
+			}
+			@media (width < 480px) {
+				.toast {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
+				}
+			}
+		</style>
+		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
+		<script type="text/javascript" src="JavaScript/spoonerise-unicode-text.js"></script>
+		<script type="text/javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+				const emptyString = "";
+				const divToast = document.getElementById("toast");
+				const divOverlay = document.getElementById("overlay");
+				const ancInsertSample = document.getElementById("insert-sample");
+				const btnPaste = document.getElementById("paste");
+				const btnCopy = document.getElementById("copy");
+				const txtInput = document.getElementById("input");
+				const txtOutput = document.getElementById("output");
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					divToast.classList.add(success ? "success" : "error");
+					toastTimeout = setTimeout(hideToast, 2500);
+				};
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						element.dispatchEvent(new Event("input"));
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							element.dispatchEvent(new Event("input"));
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
+					showToast("Sample text inserted", true);
+				};
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
+				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = emptyString;
+					}
+				});
+				divToast.addEventListener("click", hideToast);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("ml", txtInput);
+					}, "Failed to insert sample text");
+				});
+				ancInsertSample.addEventListener("keypress", event => {
+					if (event.key === " ") {
+						event.preventDefault();
+						ancInsertSample.click();
+					}
+				});
+				btnPaste.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							await updateValue(txtInput, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
+						}
+					}, "Failed to paste");
+				});
+				btnCopy.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const output = txtOutput.value;
+						if (!output) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(output);
+						showToast("Copied to clipboard", true);
+					}, "Failed to copy");
+				});
+				txtInput.addEventListener("input", function () {
+					txtOutput.value = spooneriseUnicodeText(txtInput.value);
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<noscript>
+			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
+		</noscript>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+		<h1>Spoonerise Unicode Text</h1>
+		<hr/>
+		<br/>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Input</strong>
+					<div class="separator"></div>
+					<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
+				</div>
+				<div class="cell align-end">
+					<button id="paste" aria-label="Paste the input">Paste</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="input" placeholder="Enter text here..." aria-label="Input text to reverse"></textarea>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="grid">
+			<div class="row">
+				<div class="cell">
+					<strong>Output</strong>
+				</div>
+				<div class="cell align-end">
+					<button id="copy" aria-label="Copy the reversed output">Copy</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="cell">
+					<textarea id="output" placeholder="Output will appear here..." readonly="readonly" aria-label="Reversed output"></textarea>
+				</div>
+			</div>
+		</div>
+		<div id="overlay" class="overlay hidden"></div>
+	</body>
+</html>
