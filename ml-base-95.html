@@ -192,6 +192,7 @@
 				const malayalamBlockOffset = 3327;
 				const asciiCompressionOffset = 128;
 				const normalisationMap = new Map([
+					["\u{00A0}", " "],
 					["\u{2010}", "-"],
 					["\u{2011}", "-"],
 					["\u{2012}", "--"],
@@ -325,13 +326,15 @@
 						const targetElement = document.getElementById(sender.dataset["target"]);
 						const file = sender.files[0];
 						if (file) {
-							const reader = new FileReader();
-							reader.onload = async progressEvent => {
-								await updateValue(targetElement, progressEvent.target.result);
-								showToast("File loaded", true);
-							};
 							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
-								reader.readAsText(file);
+								const text = await new Promise((resolve, reject) => {
+									const reader = new FileReader();
+									reader.addEventListener("load", progressEvent => resolve(progressEvent.target.result));
+									reader.addEventListener("error", () => reject(reader.error ?? new Error("File read failed")));
+									reader.readAsText(file);
+								});
+								await updateValue(targetElement, text);
+								showToast("File loaded", true);
 							} else {
 								showToast("Only text files are supported", false);
 							}
