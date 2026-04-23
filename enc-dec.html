@@ -222,7 +222,7 @@
 
 			document.addEventListener("DOMContentLoaded", async () => {
 				const emptyString = "";
-				const ivLength = 8;
+				const ivLength = 12;
 				const imgDim = 256;
 				const encoder = new TextEncoder();
 				const decoder = new TextDecoder();
@@ -295,13 +295,13 @@
 				const updateValue = async (element, value) => {
 					element.value = emptyString;
 					if (value === emptyString) {
-						element.dispatchEvent(new Event("input"));
+						element.dispatchEvent(new InputEvent("input"));
 						return;
 					}
 					await new Promise(resolve =>
 						setTimeout(() => {
 							element.value = value;
-							element.dispatchEvent(new Event("input"));
+							element.dispatchEvent(new InputEvent("input"));
 							resolve();
 						}, 250)
 					);
@@ -364,13 +364,15 @@
 						const targetElement = document.getElementById(sender.dataset["target"]);
 						const file = sender.files[0];
 						if (file) {
-							const reader = new FileReader();
-							reader.onload = async progressEvent => {
-								await updateValue(targetElement, progressEvent.target.result);
-								showToast("File loaded", true);
-							};
 							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
-								reader.readAsText(file);
+								const text = await new Promise((resolve, reject) => {
+									const reader = new FileReader();
+									reader.addEventListener("load", progressEvent => resolve(progressEvent.target.result));
+									reader.addEventListener("error", () => reject(reader.error ?? new Error("File read failed")));
+									reader.readAsText(file);
+								});
+								await updateValue(targetElement, text);
+								showToast("File loaded", true);
 							} else {
 								showToast("Only text files are supported", false);
 							}
@@ -414,15 +416,23 @@
 					const plainTextByteCount = new Blob([txtPlainText.value]).size;
 					const encryptedOutputByteCount = new Blob([encryptedOutput]).size;
 					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
-					const deccryptedOutputByteCount = new Blob([txtDecryptedOutput.value]).size;
+					const decryptedOutputByteCount = new Blob([txtDecryptedOutput.value]).size;
 					spnTrailingSpaceCount.textContent = trailingSpaceCount ?? "0";
 					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
 					emPlainTextByteCount.textContent = plainTextByteCount;
 					emEncryptedOutputByteCount.textContent = encryptedOutputByteCount;
 					emCipherTextByteCount.textContent = cipherTextByteCount;
-					emDecryptedOutputByteCount.textContent = deccryptedOutputByteCount;
+					emDecryptedOutputByteCount.textContent = decryptedOutputByteCount;
 					emPlainToEncryptedRatio.textContent = calculateRatio(plainTextByteCount, encryptedOutputByteCount);
-					emEncryptedToPlainRatio.textContent = calculateRatio(cipherTextByteCount, deccryptedOutputByteCount);
+					emEncryptedToPlainRatio.textContent = calculateRatio(cipherTextByteCount, decryptedOutputByteCount);
+				};
+				const bindShortcut = (textarea, button) => {
+					textarea.addEventListener("keydown", event => {
+						if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+							event.preventDefault();
+							button.dispatchEvent(new MouseEvent("click"));
+						}
+					});
 				};
 				divToast.addEventListener("transitionend", () => {
 					if (divToast.className === "toast") {
@@ -440,7 +450,7 @@
 						const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
 						const input = txtPlainText.value;
 						if (input) {
-							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, await unicodeToBase95(input));
+							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, input);
 							const combinedArray = new Uint8Array(ivLength + encryptedBytes.byteLength);
 							combinedArray.set(encryptIv, 0);
 							combinedArray.set(new Uint8Array(encryptedBytes), ivLength);
@@ -453,26 +463,18 @@
 				});
 				btnDecrypt.addEventListener("click", async () => {
 					await withUiBlocked(async () => {
-						const decryptKeySecret = txtDecryptKey.value;
+						const decryptKeySecret = txtDecryptKey.value.trim();
 						if (!decryptKeySecret) {
 							showToast("Key must be a non-empty string", false);
 							return;
 						}
 						const cipherText = txtCipherText.value;
 						if (cipherText) {
-							const decryptKey = await crypto.subtle.importKey(
-								keyFormat,
-								Object.assign(jwkBase, {
-									k: decryptKeySecret
-								}),
-								keyName,
-								true,
-								keyOps
-							);
+							const decryptKey = await crypto.subtle.importKey(keyFormat, { ...jwkBase, k: decryptKeySecret }, keyName, true, keyOps);
 							const combinedArray = decodeBase95(cipherText);
 							const decryptIv = combinedArray.slice(0, ivLength);
-							const decryptedBytes = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
-							await updateValue(txtDecryptedOutput, await base95ToUnicode(decryptedBytes));
+							const decryptedText = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(ivLength));
+							await updateValue(txtDecryptedOutput, decryptedText);
 							showToast("Decryption successful", true);
 						} else {
 							showToast("Nothing to decrypt", false);
@@ -482,6 +484,8 @@
 				[txtPlainText, txtEncryptedOutput, txtCipherText, txtDecryptedOutput].forEach(x => {
 					x.addEventListener("input", updateStatistics);
 				});
+				bindShortcut(txtPlainText, btnEncrypt);
+				bindShortcut(txtCipherText, btnDecrypt);
 				tmpQrCode.addEventListener("load", async () => {
 					const canQrCode = document.createElement("canvas");
 					const ctxCanQrCode = canQrCode.getContext("2d");
@@ -492,27 +496,43 @@
 				});
 				document.querySelectorAll(".tab-container").forEach(tabContainer => {
 					const tabButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
-					tabButtons.forEach(button => {
-						button.addEventListener("click", () => {
-							for (const item of tabButtons) {
-								item.classList.remove("active");
-								item.setAttribute("aria-selected", "false");
+					const activateTab = button => {
+						for (const item of tabButtons) {
+							const isActive = item === button;
+							item.classList.toggle("active", isActive);
+							item.setAttribute("aria-selected", isActive ? "true" : "false");
+							item.setAttribute("tabindex", isActive ? "0" : "-1");
+						}
+						const targetId = button.getAttribute("data-href");
+						tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
+							tabPanel.classList.toggle("hidden", tabPanel.id !== targetId);
+						});
+					};
+					tabButtons.forEach((button, index) => {
+						button.addEventListener("click", () => activateTab(button));
+						button.addEventListener("keydown", event => {
+							const lastIndex = tabButtons.length - 1;
+							let nextIndex = null;
+							if (event.key === "ArrowRight") {
+								nextIndex = index === lastIndex ? 0 : index + 1;
+							} else if (event.key === "ArrowLeft") {
+								nextIndex = index === 0 ? lastIndex : index - 1;
+							} else if (event.key === "Home") {
+								nextIndex = 0;
+							} else if (event.key === "End") {
+								nextIndex = lastIndex;
 							}
-							const targetId = button.getAttribute("data-href");
-							tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
-								if (tabPanel.id === targetId) {
-									tabPanel.classList.remove("hidden");
-									return;
-								}
-								tabPanel.classList.add("hidden");
-							});
-							button.setAttribute("aria-selected", "true");
-							button.classList.add("active");
+							if (nextIndex !== null) {
+								event.preventDefault();
+								const nextButton = tabButtons[nextIndex];
+								activateTab(nextButton);
+								nextButton.focus();
+							}
 						});
 					});
 					const defaultPanelName = tabContainer.getAttribute("data-default");
 					if (defaultPanelName) {
-						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new Event("click"));
+						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new MouseEvent("click"));
 					}
 				});
 				document.querySelectorAll("a[href=\u{22}javascript:void 0\u{22}]").forEach(ancAction => {
@@ -550,7 +570,6 @@
 		<noscript>
 			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
 		</noscript>
-		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 		<div class="tab-container" data-default="encrypt-tab-panel">
 			<div class="tab-bar" role="tablist">
 				<button id="encrypt-tab" class="tab-btn" data-href="encrypt-tab-panel" role="tab" aria-controls="encrypt-tab-panel">Encrypt</button>
@@ -703,6 +722,7 @@
 				</div>
 			</div>
 		</div>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 		<div id="overlay" class="overlay hidden"></div>
 	</body>
 </html>
