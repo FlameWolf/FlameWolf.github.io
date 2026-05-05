@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>Enc-Dec</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
+		<style type="text/css">
+			:root {
+				--padding: 0.5rem;
+				--border-radius: 0.375rem;
+				--box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.25);
+				--margin: 0.5rem;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				min-width: min-content;
+				max-width: 75rem;
+				padding-inline: 5%;
+			}
+			noscript {
+				display: flex;
+				justify-content: center;
+				align-content: center;
+				text-align: center;
+				padding: var(--padding) calc(var(--padding) * 4);
+				border: solid 2px red;
+				border-radius: var(--border-radius);
+				margin-block: calc(var(--margin) * 2);
+			}
+			.toast {
+				background-color: black;
+				color: white;
+				cursor: pointer;
+				padding: var(--padding) calc(var(--padding) * 2);
+				border-radius: var(--border-radius);
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				opacity: 0;
+				box-shadow: var(--box-shadow);
+				transform: translateX(calc(100% + 2rem));
+				transition: all 0.25s ease-in-out;
+				&.success,
+				&.error {
+					opacity: 1;
+					transform: none;
+				}
+				&.success {
+					background-color: darkgreen;
+				}
+				&.error {
+					background-color: darkred;
+				}
+			}
+			button {
+				font-size: 0.9rem;
+				padding-inline: 1.5rem;
+				&:active {
+					transform: none;
+				}
+			}
+			.tab-container {
+				> .tab-bar {
+					display: flex;
+					gap: 0.375rem;
+					background-color: var(--background);
+					padding: 0.375rem;
+					border-radius: calc(var(--border-radius) + 0.375rem);
+					> .tab-btn {
+						flex: 1;
+						&.active {
+							background-color: blue;
+							color: antiquewhite;
+							&:hover {
+								background-color: color-mix(in srgb, blue 75%, black 25%);
+							}
+						}
+					}
+				}
+			}
+			.hidden {
+				display: none;
+			}
+			.grid {
+				display: grid;
+				grid-auto-flow: row;
+				gap: var(--margin);
+				> .row {
+					display: grid;
+					grid-auto-flow: column;
+					align-items: center;
+					gap: var(--margin);
+					&.warning {
+						padding: var(--padding) calc(var(--padding) * 2);
+						border: solid 1px darkviolet;
+						border-radius: var(--border-radius);
+						> .cell > em {
+							text-align: center;
+							width: 100%;
+						}
+					}
+					&.footer {
+						color: var(--text-muted);
+						font-size: 0.8rem;
+						> .cell > em {
+							overflow-wrap: anywhere;
+						}
+					}
+					&.hidden {
+						display: none;
+					}
+					> .cell {
+						display: flex;
+						gap: var(--margin);
+					}
+				}
+			}
+			.encrypt-key-holder {
+				display: flex;
+				flex-direction: column;
+				gap: var(--margin);
+				width: 100%;
+				& > .message {
+					padding: calc(2 * var(--padding));
+					border-radius: var(--border-radius);
+					box-shadow: var(--box-shadow);
+				}
+			}
+			.separator {
+				border: solid 1px var(--background-hover);
+			}
+			textarea {
+				flex: 1;
+				min-height: 32rem;
+				padding: var(--padding);
+				border-style: solid;
+				border-radius: var(--border-radius);
+				resize: vertical;
+				&.key {
+					min-height: 4rem;
+					resize: none;
+				}
+			}
+			.overlay {
+				cursor: wait;
+				width: 100vw;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				left: 0;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.25);
+				}
+				textarea {
+					background-color: rgba(0, 0, 0, 0.25);
+					color: rgb(255, 255, 255);
+				}
+			}
+			@media (width >= 768px) {
+				.align-end {
+					justify-content: end;
+				}
+			}
+			@media (width < 768px) {
+				.grid > .row {
+					grid-auto-flow: row;
+					> .cell {
+						justify-content: center;
+						text-align: center;
+						> button {
+							flex: 1;
+							padding: var(--padding) calc(var(--padding) * 2);
+						}
+					}
+				}
+			}
+			@media (width < 480px) {
+				.toast {
+					right: unset;
+					left: unset;
+					width: 90%;
+					margin: 0 auto;
+				}
+				.grid > .row > .cell > button {
+					padding: var(--padding);
+				}
+			}
+		</style>
+		<script type="text/javascript" src="JavaScript/sample-texts.js"></script>
+		<script type="text/javascript" src="JavaScript/is-text-file.js"></script>
+		<script type="text/javascript" src="JavaScript/deflate.js"></script>
+		<script type="text/javascript" src="JavaScript/base-95.js"></script>
+		<script type="text/javascript">
+			"use strict";
+
+			document.addEventListener("DOMContentLoaded", async () => {
+				const emptyString = "";
+				const ivLength = 12;
+				const saltLength = 16;
+				const pbkdf2Iterations = 250000;
+				const encoder = new TextEncoder();
+				const decoder = new TextDecoder();
+				const keyName = "AES-GCM";
+				const keyOps = ["encrypt", "decrypt"];
+				const deriveKey = async (passphrase, salt) => {
+					const passphraseKey = await crypto.subtle.importKey("raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+					return await crypto.subtle.deriveKey(
+						{
+							name: "PBKDF2",
+							salt,
+							iterations: pbkdf2Iterations,
+							hash: "SHA-256"
+						},
+						passphraseKey,
+						{ name: keyName, length: 256 },
+						false,
+						keyOps
+					);
+				};
+				const getEncryptionParams = (key, iv, data) => [
+					{
+						name: "AES-GCM",
+						iv
+					},
+					key,
+					data
+				];
+				const divToast = document.getElementById("toast");
+				const divTrailingSpacesMessage = document.getElementById("trailing-spaces-message");
+				const divOverlay = document.getElementById("overlay");
+				const ancInsertSample = document.getElementById("insert-sample");
+				const btnEncrypt = document.getElementById("encrypt");
+				const btnDecrypt = document.getElementById("decrypt");
+				const txtEncryptKey = document.getElementById("encrypt-key");
+				const txtPlainText = document.getElementById("plain-text");
+				const txtEncryptedOutput = document.getElementById("encrypted-output");
+				const txtDecryptKey = document.getElementById("decrypt-key");
+				const txtCipherText = document.getElementById("cipher-text");
+				const txtDecryptedOutput = document.getElementById("decrypted-output");
+				const spnTrailingSpaceCount = document.getElementById("trailing-space-count");
+				const emPlainTextByteCount = document.getElementById("plain-text-bytes");
+				const emEncryptedOutputByteCount = document.getElementById("encrypted-output-bytes");
+				const emCipherTextByteCount = document.getElementById("cipher-text-bytes");
+				const emDecryptedOutputByteCount = document.getElementById("decrypted-output-bytes");
+				const emPlainToEncryptedRatio = document.getElementById("plain-to-encrypted-ratio");
+				const emEncryptedToPlainRatio = document.getElementById("encrypted-to-plain-ratio");
+				let toastTimeout = null;
+				const hideToast = () => {
+					if (toastTimeout) {
+						clearTimeout(toastTimeout);
+						toastTimeout = null;
+					}
+					divToast.className = "toast";
+				};
+				const showToast = (message, success) => {
+					hideToast();
+					divToast.textContent = message;
+					divToast.classList.add(success ? "success" : "error");
+					toastTimeout = setTimeout(hideToast, 2500);
+				};
+				const updateValue = async (element, value) => {
+					element.value = emptyString;
+					if (value === emptyString) {
+						element.dispatchEvent(new InputEvent("input"));
+						return;
+					}
+					await new Promise(resolve =>
+						setTimeout(() => {
+							element.value = value;
+							element.dispatchEvent(new InputEvent("input"));
+							resolve();
+						}, 250)
+					);
+				};
+				const insertSampleText = async (lang, inputElement) => {
+					const sampleText = sampleTexts[lang];
+					if (!sampleText) {
+						showToast("No sample text available", false);
+						return;
+					}
+					await updateValue(inputElement, sampleText);
+					showToast("Sample text inserted", true);
+				};
+				const unicodeToBase95 = async input => encodeBase95(await deflate(encoder.encode(input)));
+				const base95ToUnicode = async input => decoder.decode(await inflate(decodeBase95(input)));
+				const encryptMessage = async (key, iv, plainText) => await crypto.subtle.encrypt(...getEncryptionParams(key, iv, await deflate(encoder.encode(plainText))));
+				const decryptMessage = async (key, iv, cipherText) => decoder.decode(await inflate(await crypto.subtle.decrypt(...getEncryptionParams(key, iv, cipherText))));
+				const withUiBlocked = async (callback, errorMessage) => {
+					try {
+						divOverlay.classList.remove("hidden");
+						await callback();
+					} catch (err) {
+						showToast(errorMessage ?? `Error: ${err.message}`, false);
+					} finally {
+						divOverlay.classList.add("hidden");
+					}
+				};
+				const pasteToTarget = async event => {
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
+						const clipboardText = await navigator.clipboard.readText();
+						if (clipboardText) {
+							await updateValue(targetElement, clipboardText);
+							showToast("Pasted from clipboard", true);
+						} else {
+							showToast("Nothing to paste", false);
+						}
+					}, "Failed to paste");
+				};
+				const copyFromSource = async event => {
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (!text) {
+							showToast("Nothing to copy", false);
+							return;
+						}
+						await navigator.clipboard.writeText(text);
+						showToast("Copied to clipboard", true);
+					}, "Failed to copy");
+				};
+				const triggerUpload = async event => {
+					document.getElementById(event.target.dataset["target"]).click();
+				};
+				const uploadFile = async event => {
+					await withUiBlocked(async () => {
+						const sender = event.target;
+						const targetElement = document.getElementById(sender.dataset["target"]);
+						const file = sender.files[0];
+						if (file) {
+							if (file.type?.startsWith("text/") || (await isTextFile(file))) {
+								const text = await new Promise((resolve, reject) => {
+									const reader = new FileReader();
+									reader.addEventListener("load", progressEvent => resolve(progressEvent.target.result));
+									reader.addEventListener("error", () => reject(reader.error ?? new Error("File read failed")));
+									reader.readAsText(file);
+								});
+								await updateValue(targetElement, text);
+								showToast("File loaded", true);
+							} else {
+								showToast("Only text files are supported", false);
+							}
+						}
+						sender.value = null;
+					}, "Failed to read file");
+				};
+				const downloadFile = async event => {
+					await withUiBlocked(() => {
+						const sender = event.target;
+						const sourceElement = document.getElementById(sender.dataset["source"]);
+						const text = sourceElement.value;
+						if (text) {
+							const blob = new Blob([text], { type: "text/plain" });
+							const url = URL.createObjectURL(blob);
+							const anchorElement = document.createElement("a");
+							anchorElement.href = url;
+							anchorElement.download = `${crypto.randomUUID().replace(/\-/g, emptyString).substring(0, 16)}_${Date.now()}.txt`;
+							anchorElement.className = "hidden";
+							document.body.appendChild(anchorElement);
+							anchorElement.click();
+							document.body.removeChild(anchorElement);
+							URL.revokeObjectURL(url);
+							showToast("Download triggered", true);
+						} else {
+							showToast("Nothing to download", false);
+						}
+					}, "Failed to download");
+				};
+				const calculateRatio = (inputByteCount, outputByteCount) => {
+					const size = outputByteCount > inputByteCount ? "larger" : "smaller";
+					if (inputByteCount && outputByteCount) {
+						const ratio = Math.abs(((inputByteCount - outputByteCount) / inputByteCount) * 100).toFixed(2);
+						return `(${ratio}% ${size})`;
+					}
+					return emptyString;
+				};
+				const updateStatistics = () => {
+					const encryptedOutput = txtEncryptedOutput.value;
+					const trailingSpaceCount = encryptedOutput.match(/\s+$/)?.[0]?.length;
+					const plainTextByteCount = new Blob([txtPlainText.value]).size;
+					const encryptedOutputByteCount = new Blob([encryptedOutput]).size;
+					const cipherTextByteCount = new Blob([txtCipherText.value]).size;
+					const decryptedOutputByteCount = new Blob([txtDecryptedOutput.value]).size;
+					spnTrailingSpaceCount.textContent = trailingSpaceCount ?? "0";
+					divTrailingSpacesMessage.classList.toggle("hidden", !trailingSpaceCount);
+					emPlainTextByteCount.textContent = plainTextByteCount;
+					emEncryptedOutputByteCount.textContent = encryptedOutputByteCount;
+					emCipherTextByteCount.textContent = cipherTextByteCount;
+					emDecryptedOutputByteCount.textContent = decryptedOutputByteCount;
+					emPlainToEncryptedRatio.textContent = calculateRatio(plainTextByteCount, encryptedOutputByteCount);
+					emEncryptedToPlainRatio.textContent = calculateRatio(cipherTextByteCount, decryptedOutputByteCount);
+				};
+				const bindShortcut = (textarea, button) => {
+					textarea.addEventListener("keydown", event => {
+						if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+							event.preventDefault();
+							button.dispatchEvent(new MouseEvent("click"));
+						}
+					});
+				};
+				divToast.addEventListener("transitionend", () => {
+					if (divToast.className === "toast") {
+						divToast.textContent = emptyString;
+					}
+				});
+				divToast.addEventListener("click", hideToast);
+				ancInsertSample.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						await insertSampleText("en", txtPlainText);
+					}, "Failed to insert sample text");
+				});
+				btnEncrypt.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const passphrase = txtEncryptKey.value;
+						if (!passphrase) {
+							showToast("Passphrase must be a non-empty string", false);
+							return;
+						}
+						const input = txtPlainText.value;
+						if (input) {
+							const encryptSalt = crypto.getRandomValues(new Uint8Array(saltLength));
+							const encryptIv = crypto.getRandomValues(new Uint8Array(ivLength));
+							const encryptKey = await deriveKey(passphrase, encryptSalt);
+							const encryptedBytes = await encryptMessage(encryptKey, encryptIv, input);
+							const combinedArray = new Uint8Array(saltLength + ivLength + encryptedBytes.byteLength);
+							combinedArray.set(encryptSalt, 0);
+							combinedArray.set(encryptIv, saltLength);
+							combinedArray.set(new Uint8Array(encryptedBytes), saltLength + ivLength);
+							await updateValue(txtEncryptedOutput, encodeBase95(combinedArray));
+							showToast("Encryption successful", true);
+						} else {
+							showToast("Nothing to encrypt", false);
+						}
+					}, "Failed to encrypt");
+				});
+				btnDecrypt.addEventListener("click", async () => {
+					await withUiBlocked(async () => {
+						const passphrase = txtDecryptKey.value;
+						if (!passphrase) {
+							showToast("Passphrase must be a non-empty string", false);
+							return;
+						}
+						const cipherText = txtCipherText.value;
+						if (cipherText) {
+							const combinedArray = decodeBase95(cipherText);
+							const decryptSalt = combinedArray.slice(0, saltLength);
+							const decryptIv = combinedArray.slice(saltLength, saltLength + ivLength);
+							const decryptKey = await deriveKey(passphrase, decryptSalt);
+							const decryptedText = await decryptMessage(decryptKey, decryptIv, combinedArray.slice(saltLength + ivLength));
+							await updateValue(txtDecryptedOutput, decryptedText);
+							showToast("Decryption successful", true);
+						} else {
+							showToast("Nothing to decrypt", false);
+						}
+					}, "Failed to decrypt");
+				});
+				[txtPlainText, txtEncryptedOutput, txtCipherText, txtDecryptedOutput].forEach(x => {
+					x.addEventListener("input", updateStatistics);
+				});
+				bindShortcut(txtPlainText, btnEncrypt);
+				bindShortcut(txtCipherText, btnDecrypt);
+				bindShortcut(txtEncryptKey, btnEncrypt);
+				bindShortcut(txtDecryptKey, btnDecrypt);
+				document.querySelectorAll(".tab-container").forEach(tabContainer => {
+					const tabButtons = tabContainer.querySelectorAll("&> .tab-bar > .tab-btn");
+					const activateTab = button => {
+						for (const item of tabButtons) {
+							const isActive = item === button;
+							item.classList.toggle("active", isActive);
+							item.setAttribute("aria-selected", isActive ? "true" : "false");
+							item.setAttribute("tabindex", isActive ? "0" : "-1");
+						}
+						const targetId = button.getAttribute("data-href");
+						tabContainer.querySelectorAll("&> .tab-panel").forEach(tabPanel => {
+							tabPanel.classList.toggle("hidden", tabPanel.id !== targetId);
+						});
+					};
+					tabButtons.forEach((button, index) => {
+						button.addEventListener("click", () => activateTab(button));
+						button.addEventListener("keydown", event => {
+							const lastIndex = tabButtons.length - 1;
+							let nextIndex = null;
+							if (event.key === "ArrowRight") {
+								nextIndex = index === lastIndex ? 0 : index + 1;
+							} else if (event.key === "ArrowLeft") {
+								nextIndex = index === 0 ? lastIndex : index - 1;
+							} else if (event.key === "Home") {
+								nextIndex = 0;
+							} else if (event.key === "End") {
+								nextIndex = lastIndex;
+							}
+							if (nextIndex !== null) {
+								event.preventDefault();
+								const nextButton = tabButtons[nextIndex];
+								activateTab(nextButton);
+								nextButton.focus();
+							}
+						});
+					});
+					const defaultPanelName = tabContainer.getAttribute("data-default");
+					if (defaultPanelName) {
+						tabContainer.querySelector(`&> .tab-bar > [data-href="${defaultPanelName}"]`)?.dispatchEvent(new MouseEvent("click"));
+					}
+				});
+				document.querySelectorAll("a[href=\u{22}javascript:void 0\u{22}]").forEach(ancAction => {
+					ancAction.addEventListener("keypress", event => {
+						if (event.key === " ") {
+							event.preventDefault();
+							event.target.click();
+						}
+					});
+				});
+				document.querySelectorAll(".btn-paste").forEach(btnPaste => {
+					btnPaste.addEventListener("click", pasteToTarget);
+				});
+				document.querySelectorAll(".btn-copy").forEach(btnCopy => {
+					btnCopy.addEventListener("click", copyFromSource);
+				});
+				document.querySelectorAll(".btn-upload").forEach(btnUpload => {
+					btnUpload.addEventListener("click", triggerUpload);
+				});
+				document.querySelectorAll(".btn-download").forEach(btnDownload => {
+					btnDownload.addEventListener("click", downloadFile);
+				});
+				document.querySelectorAll('input[type="file"]').forEach(fileInput => {
+					fileInput.addEventListener("input", uploadFile);
+				});
+				txtEncryptKey.value = emptyString;
+				txtEncryptedOutput.value = emptyString;
+				txtDecryptedOutput.value = emptyString;
+				updateStatistics();
+			});
+		</script>
+	</head>
+	<body>
+		<noscript>
+			<h3>JavaScript is disabled in your browser. Enable it to use this tool.</h3>
+		</noscript>
+		<div class="tab-container" data-default="encrypt-tab-panel">
+			<div class="tab-bar" role="tablist">
+				<button id="encrypt-tab" class="tab-btn" data-href="encrypt-tab-panel" role="tab" aria-controls="encrypt-tab-panel">Encrypt</button>
+				<button id="decrypt-tab" class="tab-btn" data-href="decrypt-tab-panel" role="tab" aria-controls="decrypt-tab-panel">Decrypt</button>
+			</div>
+			<br/>
+			<div id="encrypt-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="encrypt-tab">
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Passphrase</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="encrypt-key" aria-label="Paste the encryption passphrase">Paste</button>
+							<button class="btn-copy" data-source="encrypt-key" aria-label="Copy the encryption passphrase">Copy</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<div class="encrypt-key-holder">
+								<textarea id="encrypt-key" class="key" placeholder="Enter a passphrase" aria-label="Encryption passphrase"></textarea>
+								<div class="message">
+									<span><strong>Choose a passphrase and remember it. A message can be decrypted only with the same passphrase that was used to encrypt it.</strong> Share the passphrase with the receiver via a secure channel separately from the message. The encryption uses PBKDF2 (SHA-256, 250,000 iterations) to derive a 256-bit AES-GCM key from the passphrase and a fresh random salt for every encryption.</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+							<div class="separator"></div>
+							<a id="insert-sample" href="javascript:void 0" role="button" aria-label="Insert sample text">Insert Sample</a>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="plain-text" aria-label="Paste the plain text input">Paste</button>
+							<input id="plain-text-file-input" type="file" class="hidden" data-target="plain-text"/>
+							<button class="btn-upload" data-target="plain-text-file-input" aria-label="Upload a file to encrypt">Upload File</button>
+							<button id="encrypt" aria-label="Encrypt the input">Encrypt</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="plain-text" aria-label="Plain text input to encrypt"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="plain-text-bytes" role="status" aria-live="polite" aria-label="Plain text input bytes">0</em>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Cipher Text</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-copy" data-source="encrypted-output" aria-label="Copy the encrypted output">Copy</button>
+							<button class="btn-download" data-source="encrypted-output" aria-label="Download the encrypted output">Download</button>
+						</div>
+					</div>
+					<div id="trailing-spaces-message" class="row warning hidden">
+						<div class="cell">
+							<em role="alert" aria-live="assertive">Warning: The encrypted text has <span id="trailing-space-count">0</span> trailing spaces. They will be prone to getting lost during storage/transmission.</em>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="encrypted-output" readonly="readonly" aria-label="Encrypted output"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="encrypted-output-bytes" role="status" aria-live="polite" aria-label="Encrypted output bytes">0</em>
+							<em id="plain-to-encrypted-ratio" role="status" aria-live="polite" aria-label="The encrypted output is"></em>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="decrypt-tab-panel" class="tab-panel hidden" role="tabpanel" aria-labelledby="decrypt-tab">
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Passphrase</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="decrypt-key" aria-label="Paste the decryption passphrase">Paste</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypt-key" class="key" placeholder="Enter the passphrase used to encrypt the message" aria-label="Decryption passphrase"></textarea>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Cipher Text</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-paste" data-target="cipher-text" aria-label="Paste the cipher text input">Paste</button>
+							<input id="cipher-text-file-input" type="file" class="hidden" data-target="cipher-text"/>
+							<button class="btn-upload" data-target="cipher-text-file-input" aria-label="Upload a file to decrypt">Upload File</button>
+							<button id="decrypt" aria-label="Decrypt the input">Decrypt</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="cipher-text" aria-label="Cipher text input to decrypt"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="cipher-text-bytes" role="status" aria-live="polite" aria-label="Cipher text input bytes">0</em>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="grid">
+					<div class="row">
+						<div class="cell">
+							<strong>Plain Text</strong>
+						</div>
+						<div class="cell align-end">
+							<button class="btn-copy" data-source="decrypted-output" aria-label="Copy the decrypted output">Copy</button>
+							<button class="btn-download" data-source="decrypted-output" aria-label="Download the decrypted output">Download</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">
+							<textarea id="decrypted-output" readonly="readonly" aria-label="Decrypted plain text output"></textarea>
+						</div>
+					</div>
+					<div class="row footer">
+						<div class="cell">
+							<em>Bytes:</em>
+							<em id="decrypted-output-bytes" role="status" aria-live="polite" aria-label="Plain text output bytes">0</em>
+							<em id="encrypted-to-plain-ratio" role="status" aria-live="polite" aria-label="The decrypted output is"></em>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+		<div id="overlay" class="overlay hidden"></div>
+	</body>
+</html>
