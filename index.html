@@ -1,210 +1,595 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="description" content="FlameWolf — a collection of small, client-side browser tools for text encoding, encryption, Malayalam scripts and ciphers, and Unicode text manipulation."/>
+		<meta name="color-scheme" content="light dark"/>
+		<meta name="theme-color" content="#2563eb"/>
 		<title>FlameWolf | &#x1F525;&#x1F43A;</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/tiny.css"/>
 		<style>
 			:root {
-				--margin: 1rem;
-				--border-color: #cccccc;
+				--maxw: 70rem;
+				--space: 1rem;
+				--radius: 0.625rem;
+				--radius-lg: 1rem;
+				--accent: #2563eb;
+				--accent-strong: #1d4ed8;
+				--accent-contrast: #ffffff;
+				--card-border: #e4e4e7;
+				--card-bg: rgba(0, 0, 0, 0.02);
+				--chip-bg: rgba(37, 99, 235, 0.08);
+				--chip-border: rgba(37, 99, 235, 0.22);
+				--muted: #555555;
+				--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+				--shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.1);
 			}
-			.interests-grid {
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--accent: #74a8ff;
+					--accent-strong: #93bbff;
+					--accent-contrast: #08152e;
+					--card-border: #2a2a2e;
+					--card-bg: rgba(255, 255, 255, 0.035);
+					--chip-bg: rgba(116, 168, 255, 0.12);
+					--chip-border: rgba(116, 168, 255, 0.28);
+					--muted: #a6a6ad;
+					--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+					--shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.55);
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			html {
+				scroll-behavior: smooth;
+			}
+			section[id] {
+				scroll-margin-top: 1rem;
+			}
+			body {
+				max-width: var(--maxw);
+				margin-inline: auto;
+				padding-inline: clamp(1rem, 4vw, 3rem);
+				padding-block: 1.5rem 3rem;
+			}
+			.skip-link {
+				position: absolute;
+				left: 0.5rem;
+				top: -4rem;
+				z-index: 10;
+				padding: 0.5rem 0.875rem;
+				background-color: var(--accent);
+				color: var(--accent-contrast);
+				border-radius: var(--radius);
+				text-decoration: none;
+				transition: top 0.15s ease-in-out;
+			}
+			.skip-link:focus {
+				top: 0.5rem;
+			}
+			a:focus-visible,
+			summary:focus-visible {
+				outline: 2px solid var(--accent);
+				outline-offset: 2px;
+				border-radius: 0.25rem;
+			}
+			.hero {
+				text-align: center;
+				padding-block: 1.25rem 1rem;
+				margin-bottom: 1.5rem;
+				border-bottom: 1px solid var(--card-border);
+			}
+			.hero-emoji {
+				margin: 0;
+				font-size: 2.75rem;
+				line-height: 1;
+			}
+			.hero h1 {
+				margin: 0.5rem 0 0.25rem;
+				letter-spacing: 0.02em;
+			}
+			.tagline {
+				margin: 0;
+				color: var(--muted);
+				font-style: italic;
+			}
+			.section-nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				justify-content: center;
+				margin-bottom: 2.5rem;
+			}
+			.section-nav a {
+				padding: 0.35rem 0.85rem;
+				font-size: 0.85rem;
+				color: inherit;
+				text-decoration: none;
+				background-color: var(--chip-bg);
+				border: 1px solid var(--chip-border);
+				border-radius: 999px;
+				transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+			}
+			.section-nav a:hover {
+				color: var(--accent-contrast);
+				background-color: var(--accent);
+				border-color: var(--accent);
+			}
+			section {
+				margin-bottom: 2.75rem;
+			}
+			section > h2 {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				scroll-margin-top: 1rem;
+			}
+			section > h3 {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				scroll-margin-top: 1rem;
+			}
+			.cat-icon {
+				font-size: 1.15em;
+			}
+			.tools-intro {
+				margin-block: 0 2rem;
+				color: var(--muted);
+			}
+			.chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.chips li {
+				padding: 0.4rem 0.85rem;
+				font-size: 0.9rem;
+				background-color: var(--chip-bg);
+				border: 1px solid var(--chip-border);
+				border-radius: 999px;
+			}
+			.tool-grid {
 				display: grid;
-				grid-template: auto / 1fr 1fr 1fr 1fr;
-				gap: calc(var(--margin) / 2);
-				> .cell {
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					text-align: center;
-					padding: calc(var(--margin) / 2);
-					border: dotted 1px var(--border-color);
-					border-radius: 0.375rem;
-					&:empty::before {
-						content: "\023F3";
-					}
-				}
-				@media (width < 768px) {
-					grid-template: auto / 1fr 1fr;
-					> .cell:empty {
-						display: none;
-					}
-				}
-				@media (width < 480px) {
-					grid-template: auto / 1fr;
-				}
+				grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+				gap: var(--space);
+				align-items: start;
 			}
-			.strong {
-				font-weight: bold;
+			.card {
+				position: relative;
+				overflow: hidden;
+				padding: 1.1rem 1.25rem;
+				background-color: var(--card-bg);
+				border: 1px solid var(--card-border);
+				border-radius: var(--radius-lg);
+				box-shadow: var(--shadow-sm);
+				transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 			}
-			ul {
-				list-style-type: "\2726\A0\A0";
-				list-style-position: inside;
+			.card::before {
+				content: "";
+				position: absolute;
+				inset: 0 auto 0 0;
+				width: 3px;
+				background-color: var(--accent);
+				opacity: 0;
+				transition: opacity 0.18s ease;
+			}
+			.card:hover,
+			.card:focus-within {
+				transform: translateY(-3px);
+				box-shadow: var(--shadow-lg);
+				border-color: var(--chip-border);
+			}
+			.card:hover::before,
+			.card:focus-within::before {
+				opacity: 1;
+			}
+			.card-title {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 0.5rem;
+				margin: 0 0 0.4rem;
+				font-size: 1.15rem;
+			}
+			.card-title a {
+				text-decoration: none;
+			}
+			.card-title a:hover {
+				text-decoration: underline;
+			}
+			.badge {
+				padding: 0.12rem 0.5rem;
+				font-size: 0.62rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: var(--accent-contrast);
+				background-color: var(--accent);
+				border-radius: 999px;
+			}
+			.card-summary {
+				margin: 0;
+			}
+			.card details {
+				margin-top: 0.75rem;
+			}
+			.card summary {
+				cursor: pointer;
+				font-size: 0.85rem;
+				font-weight: 600;
+				color: var(--accent);
+			}
+			.card summary:hover {
+				color: var(--accent-strong);
+			}
+			.details-body {
+				margin-top: 0.6rem;
+				font-size: 0.92rem;
+			}
+			.details-body p {
+				margin: 0.5rem 0;
+			}
+			.inline-tag {
+				font-weight: 700;
+				color: var(--accent);
+			}
+			.list-label {
+				margin: 0.75rem 0 0.25rem !important;
+				font-size: 0.74rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				color: var(--muted);
+			}
+			.details-body ul {
+				margin: 0.25rem 0 0.5rem;
 				padding-left: 0;
+				list-style: none;
+			}
+			.details-body li {
+				position: relative;
+				margin-bottom: 0.3rem;
+				padding-left: 1.15rem;
+			}
+			.details-body li::before {
+				content: "\2726";
+				position: absolute;
+				left: 0;
+				color: var(--accent);
+			}
+			code {
+				padding: 0.1rem 0.35rem;
+				font-size: 0.85em;
+				background-color: var(--chip-bg);
+				border-radius: 0.3rem;
+			}
+			footer {
+				margin-top: 3rem;
+				padding-top: 1.5rem;
+				font-size: 0.875rem;
+				text-align: center;
+				color: var(--muted);
+				border-top: 1px solid var(--card-border);
+			}
+			@media (prefers-reduced-motion: reduce) {
+				html {
+					scroll-behavior: auto;
+				}
+				*,
+				.skip-link {
+					transition: none !important;
+				}
+				.card:hover,
+				.card:focus-within {
+					transform: none;
+				}
+			}
+			@media (width < 480px) {
+				.hero-emoji {
+					font-size: 2.25rem;
+				}
 			}
 		</style>
 		<base target="_blank"/>
 	</head>
 	<body>
-		<h2>About Me</h2>
-		<p>Autistic oddball.</p>
-		<h2>Interests</h2>
-		<div class="interests-grid">
-			<div class="cell">Programming</div>
-			<div class="cell">Linguistics</div>
-			<div class="cell">Prosody</div>
-			<div class="cell">Music</div>
-			<div class="cell">Art</div>
-			<div class="cell">Creative writing</div>
-			<div class="cell">Nature</div>
-			<div class="cell">Birds</div>
-			<div class="cell">Guns</div>
-			<div class="cell">Movies</div>
-			<div class="cell">History</div>
-			<div class="cell">Philosophy</div>
-			<div class="cell">Psychology</div>
-			<div class="cell">Gender issues</div>
-			<div class="cell"></div>
-			<div class="cell"></div>
-		</div>
-		<h2>Links</h2>
-		<h3><a href="base-95.html">Base-95 Converter</a></h3>
-		<p>A web-based utility to encode and decode text. It uses a combination of GZip compression and a custom Base-95 encoding scheme. The primary goal is to represent binary data in a text format that is more compact than alternatives like Base64, especially for compressible data.</p>
-		<p class="strong">How it Works:</p>
-		<ul>
-			<li><span class="strong">Encoding:</span> The user provides plain text and clicks <code>Encode</code>. The application first compresses this text into a binary format using the GZip algorithm. This binary data is then encoded into a string using a Base-95 character set (which uses 95 printable ASCII characters).</li>
-			<li><span class="strong">Decoding:</span> The user provides the Base-95 encoded string and clicks <code>Decode</code>. The application first decodes it back into its binary GZip format. It then decompresses this data to retrieve the original plain text.</li>
-		</ul>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Tabbed UI:</span> A clean interface with separate &quot;Encode&quot; and &quot;Decode&quot; tabs.</li>
-			<li><span class="strong">Multiple Inputs:</span> Users can type text directly, paste from the clipboard, or upload a text file.</li>
-			<li><span class="strong">Output Handling:</span> The generated output can be easily copied to the clipboard or downloaded as a <code>.txt</code> file.</li>
-			<li><span class="strong">Statistics:</span> It calculates and displays the byte size of the input and output, along with the percentage change. This is useful for visualizing the efficiency of the GZip compression.</li>
-			<li><span class="strong">UX Enhancements:</span> It includes toast notifications for user actions, a loading overlay during processing, and a warning if the encoded output contains trailing spaces, which can be fragile.</li>
-			<li><span class="strong">Client-Side:</span> All operations are performed locally in the user&#39;s browser.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>The Base-95 character set might not be safe for all transmission channels if it includes special characters.</li>
-		</ul>
-		<hr/>
-		<h3><a href="brahmi.html">Brahmi Converter</a></h3>
-		<p>A tool to transliterate text written in Malayalam script to Brahmi script and vice versa. Uses Tamil Brahmi characters and one extra character, not present in the extended Brahmi character set and hence borrowed from Grantha script, for a complete representation of Malayalam script.</p>
-		<p><span class="strong">How it works:</span> The user provides input written in Malayalam or Brahmi and clicks <code>Convert</code>. The application performs transliteration across scripts by using a predefined map of equivalent characters in both.</p>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Simple Interface:</span> A clean layout with one textarea for input and another for the read-only output.</li>
-			<li><span class="strong">Clipboard Integration:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are provided for convenience.</li>
-			<li><span class="strong">User Feedback:</span> Toast notifications confirm the success or failure of clipboard operations.</li>
-		</ul>
-		<hr/>
-		<h3><a href="enc-dec.html">Text Encryption/Decryption Tool</a></h3>
-		<p>For securely encrypting messages that can only be decrypted with a secret key. The key must be shared securely with the recipient.</p>
-		<p><span class="strong">How it works:</span> This file implements a tool for symmetric encryption and decryption using the AES-GCM algorithm from the Web Crypto API.</p>
-		<ul>
-			<li><span class="strong">Encryption:</span> A new 256-bit AES key is generated on each page load and displayed as text and a QR code. The user enters the plain text input and clicks <code>Encrypt</code>. The input is first compressed with GZip, then encrypted. The resulting ciphertext is combined with the initialization vector (IV) and encoded in Base-95 for display.</li>
-			<li><span class="strong">Decryption:</span> The user provides the ciphertext along with the exact key used for encryption and clicks <code>Decrypt</code>. The tool decodes the input, separates the IV, decrypts the data, and decompresses it to get the original text.</li>
-		</ul>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Strong Encryption:</span> Uses the modern and secure AES-256-GCM standard.</li>
-			<li><span class="strong">Key Generation:</span> Automatically generates a strong key and a QR code for easy sharing.</li>
-			<li><span class="strong">Compression:</span> Uses GZip to reduce the message size before encryption.</li>
-			<li><span class="strong">Full-Featured UI:</span> Includes file I/O, clipboard support, byte counters, and user feedback notifications.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>The key is ephemeral and changes on page reload. Users must manually save and securely transmit the key for the recipient to decrypt the message. Losing the key means the data is irrecoverable.</li>
-		</ul>
-		<hr/>
-		<h3><a href="keelakam.html">Keelakam Cipher</a></h3>
-		<p>A simple Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf">FlameWolf</a>.</p>
-		<p><span class="strong">How it works:</span> The user inputs Malayalam text and clicks <code>Convert</code>. The application performs text transformation using the Keelakam substitution cipher scheme.</p>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Minimalist UI:</span> Consists of an input field, an output field, and buttons for conversion and clipboard actions.</li>
-			<li><span class="strong">Clipboard Support:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are included.</li>
-			<li><span class="strong">User Feedback:</span> Uses toast notifications to inform the user about clipboard operations.</li>
-		</ul>
-		<hr/>
-		<h3><a href="ml-base-95.html">Malayalam Base-95 Converter</a></h3>
-		<p>Optimized base-95 text conversion for encoding and compressing Malayalam text to a greater degree than a generic Unicode-to-GZip pipeline would allow.</p>
-		<p><span class="strong">How it works:</span> This is a specialized version of the <a href="base-95.html">Base-95 Converter</a> designed to efficiently handle text containing both Malayalam and ASCII characters. It uses a &quot;range compression&quot; technique:</p>
-		<ul>
-			<li><span class="strong">Encoding:</span> It maps Malayalam characters (Unicode range U+0D00&ndash;U+0D7F) and ASCII characters to a compact single-byte representation before applying GZip and Base-95 encoding.</li>
-			<li><span class="strong">Decoding:</span> It reverses the process, decoding from Base-95, decompressing with GZip, and then mapping the bytes back to their original Malayalam and ASCII characters.</li>
-		</ul>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Optimized for Malayalam:</span> The range compression technique significantly reduces the size of Malayalam text.</li>
-			<li><span class="strong">Character Normalization:</span> It attempts to replace some common non-ASCII/non-Malayalam symbols (like smart quotes) with their ASCII equivalents.</li>
-			<li><span class="strong">Rich UI:</span> Inherits all the features of base-95.html, including file I/O, clipboard support, and statistics.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>Characters outside the ASCII and Malayalam Unicode ranges will not be processed correctly and may be replaced with <code>[UNK]</code>.</li>
-		</ul>
-		<hr/>
-		<h3><a href="ml-cipher.html">Moolabhadri Cipher</a></h3>
-		<p>An implementation of Moolabhadri, an ancient Malayalam substitution cipher.</p>
-		<p><span class="strong">How it works:</span> It allows the user to choose any of the two known versions of the Moolabhadri cipher and then apply it to the input text.</p>
-		<ul>
-			<li>The page displays the defined transformation rules of the selected cipher.</li>
-			<li>When the user clicks <code>Convert</code>, the selected cipher&#39;s transformation is applied to the input text.</li>
-		</ul>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">State Persistence:</span> Remembers the last selected cipher using <code>localStorage</code>.</li>
-			<li><span class="strong">Simple UI:</span> Provides a straightforward interface for pasting, converting, and copying text.</li>
-			<li><span class="strong">Clipboard Support:</span> &quot;Paste&quot; and &quot;Copy&quot; buttons are available.</li>
-			<li><span class="strong">User Feedback:</span> Toast notifications for text transformations and clipboard actions.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>Cannot automatically differentiate between dental 'ന' and alveolar 'ന' (ഩ); so the transformation results might not align with the pronunciation. (Though it doesn't affect the involutory nature of the transformation at all: applying a transformation on the result of the same transformation will yield the original input.)</li>
-			<li>When 'ര്യ' is written using the Dot Reph ('ൎ') character, it becomes 'ൎയ' (or 'ൎയ്യ' by convention), but this edge case is not handled.</li>
-		</ul>
-		<hr/>
-		<h3><a href="navashashti.html">Navashashti Cipher</a></h3>
-		<p>Another Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf">FlameWolf</a>.</p>
-		<p><span class="strong">How it works:</span> The user inputs Malayalam text and clicks <code>Convert</code>. The application performs text transformation using the Navashashti substitution cipher scheme.</p>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Minimalist UI:</span> Clean input/output layout with conversion and clipboard buttons.</li>
-			<li><span class="strong">Clipboard Integration:</span> &quot;Paste&quot; and &quot;Copy&quot; functionality.</li>
-			<li><span class="strong">User Feedback:</span> Toast notifications for user actions.</li>
-		</ul>
-		<hr/>
-		<h3><a href="reverse-unicode-text.html">Unicode Text Reverser</a></h3>
-		<p>For correctly reversing any Unicode text, which is useful in text processing, creative text effects, or for languages written right-to-left.</p>
-		<p><span class="strong">How it works:</span> This tool reverses a string of text while correctly handling Unicode characters, including complex grapheme clusters (like characters with diacritics or emojis). A simple <code>string.split(&#39;&#39;).reverse().join(&#39;&#39;)</code> in JavaScript would break such characters. This tool uses a more sophisticated approach.</p>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Unicode-Aware:</span> Correctly handles multi-byte characters and grapheme clusters.</li>
-			<li><span class="strong">Live Update:</span> The output is updated in real-time as the user types in the input field.</li>
-			<li><span class="strong">Simple UI:</span> A very intuitive interface with input/output fields and clipboard buttons.</li>
-		</ul>
-		<p class="strong">Limitations:</p>
-		<ul>
-			<li>No options for word/character-level reversal.</li>
-		</ul>
-		<hr/>
-		<h3><a href="rot-18.html">ROT-18 Converter</a></h3>
-		<p>A simple and fun way to obscure text. It is not a secure form of encryption.</p>
-		<p><span class="strong">How it works:</span> This file provides a tool to apply the ROT-18 cipher to text. ROT-18 is a combination of ROT-13 (for letters) and ROT-5 (for numbers).</p>
-		<ul>
-			<li>Letters <code>A-Z</code> are shifted 13 places (e.g., <code>A</code> becomes <code>N</code>).</li>
-			<li>Numbers <code>0-9</code> are shifted 5 places (e.g., <code>1</code> becomes <code>6</code>).</li>
-			<li>Applying the cipher a second time restores the original text.</li>
-		</ul>
-		<p class="strong">Features:</p>
-		<ul>
-			<li><span class="strong">Live Transformation:</span> The output is updated instantly as the user types.</li>
-			<li><span class="strong">Simple and Fast:</span> The logic is straightforward and executes quickly.</li>
-			<li><span class="strong">Easy to Use:</span> A clean interface with clipboard support.</li>
-		</ul>
+		<a class="skip-link" href="#main" target="_self">Skip to content</a>
+		<header class="hero">
+			<p class="hero-emoji" aria-hidden="true">&#x1F525;&#x1F43A;</p>
+			<h1>FlameWolf</h1>
+			<p class="tagline">Autistic oddball.</p>
+		</header>
+		<nav class="section-nav" aria-label="Page sections">
+			<a href="#interests" target="_self">Interests</a>
+			<a href="#encryption" target="_self">Encryption</a>
+			<a href="#encoding" target="_self">Encoding</a>
+			<a href="#malayalam" target="_self">Malayalam scripts</a>
+			<a href="#unicode" target="_self">Unicode utilities</a>
+		</nav>
+		<main id="main">
+			<section id="interests" aria-labelledby="interests-heading">
+				<h2 id="interests-heading">Interests</h2>
+				<ul class="chips">
+					<li>Programming</li>
+					<li>Linguistics</li>
+					<li>Prosody</li>
+					<li>Music</li>
+					<li>Art</li>
+					<li>Creative writing</li>
+					<li>Nature</li>
+					<li>Birds</li>
+					<li>Guns</li>
+					<li>Movies</li>
+					<li>History</li>
+					<li>Philosophy</li>
+					<li>Psychology</li>
+					<li>Gender issues</li>
+				</ul>
+			</section>
+			<section id="tools" aria-labelledby="tools-heading">
+				<h2 id="tools-heading">Tools</h2>
+				<p class="tools-intro">A collection of small utilities I&#39;ve built. Every one of them runs entirely in your browser &mdash; nothing you type is sent to a server.</p>
+				<section id="encryption" aria-labelledby="encryption-heading">
+					<h3 id="encryption-heading"><span class="cat-icon" aria-hidden="true">&#x1F510;</span> Encryption</h3>
+					<div class="tool-grid">
+						<article class="card">
+							<h4 class="card-title"><a href="enc-dec.html" rel="noopener">Text Encryption / Decryption</a></h4>
+							<p class="card-summary">Symmetric AES-256-GCM encryption for messages that can only be read with the matching key. A fresh key is generated on every visit and shown as text and a QR code for easy sharing.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> Your message is compressed with DEFLATE, encrypted with AES-GCM using a random initialization vector (IV), then the IV and ciphertext are combined and encoded in Base-95. Decryption requires the exact key that was used to encrypt.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Modern, secure AES-256-GCM encryption.</li>
+										<li>Auto-generated key, displayed as text and a QR code for quick sharing.</li>
+										<li>DEFLATE compression to shrink messages before encrypting.</li>
+										<li>File upload/download, clipboard support, byte counters and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>The key is ephemeral and changes on every reload &mdash; you must save and securely transmit it, or the message is unrecoverable.</li>
+										<li>Only text files can be uploaded.</li>
+										<li>Trailing spaces in the output are fragile and can be lost in transit (the tool warns you).</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="enc-dec-alt.html" rel="noopener">Passphrase Encryption / Decryption</a> <span class="badge">New</span></h4>
+							<p class="card-summary">A passphrase-based take on the encryption tool. Instead of transmitting a random key, you and your recipient simply agree on a passphrase &mdash; the key is derived from it.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> A 256-bit AES-GCM key is derived from your passphrase using PBKDF2 (SHA-256, 250,000 iterations) and a random salt. The message is compressed with DEFLATE, encrypted with a random IV, and the salt, IV and ciphertext are encoded together in Base-95. Decrypting requires the same passphrase.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Passphrase-derived keys &mdash; nothing extra to transmit or store.</li>
+										<li>AES-256-GCM with a fresh salt and IV for every message.</li>
+										<li>DEFLATE compression, file I/O, clipboard support and byte/ratio statistics.</li>
+										<li>Keyboard shortcuts (<code>Ctrl</code>/<code>Cmd</code>&#8201;+&#8201;<code>Enter</code>) and full keyboard tab navigation.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Security depends entirely on passphrase strength; there is no strength meter.</li>
+										<li>Only text files can be uploaded.</li>
+										<li>Trailing spaces in the output are fragile (the tool warns you), and forgetting the passphrase makes the message unrecoverable.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+					</div>
+				</section>
+				<section id="encoding" aria-labelledby="encoding-heading">
+					<h3 id="encoding-heading"><span class="cat-icon" aria-hidden="true">&#x1F5DC;&#xFE0F;</span> Encoding &amp; Compression</h3>
+					<div class="tool-grid">
+						<article class="card">
+							<h4 class="card-title"><a href="base-95.html" rel="noopener">Base-95 Converter</a></h4>
+							<p class="card-summary">Encode and decode text using DEFLATE compression and a custom Base-95 scheme &mdash; a compact, text-safe way to represent binary data that is smaller than Base64 for compressible input.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> To encode, the text is compressed with DEFLATE and then the bytes are mapped to a string using a 95-character set of printable ASCII characters. Decoding reverses the process &mdash; decode from Base-95, then decompress.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Tabbed <code>Encode</code> / <code>Decode</code> interface.</li>
+										<li>Type, paste, upload a text file, or insert a sample as input.</li>
+										<li>Copy the output to the clipboard or download it as a <code>.txt</code> file.</li>
+										<li>Live byte counts and size-change percentage to gauge compression.</li>
+										<li>Warns when the output has trailing spaces; runs fully client-side.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>The Base-95 character set may not be safe on every transmission channel.</li>
+										<li>Trailing spaces are fragile, and uploads must be text files.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="ml-base-95.html" rel="noopener">Malayalam Base-95 Converter</a></h4>
+							<p class="card-summary">A Base-95 converter tuned for Malayalam. It range-maps Malayalam and ASCII characters to single bytes before compressing, achieving smaller output than a generic Unicode pipeline would.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> Malayalam characters (U+0D00&ndash;U+0D7F) and ASCII characters are mapped to a compact single-byte representation, compressed with DEFLATE, then encoded in Base-95. Decoding reverses each step.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Range-compression optimized specifically for Malayalam text.</li>
+										<li>Normalizes some symbols (smart quotes, dashes) to their ASCII equivalents.</li>
+										<li>Inherits the full Base-95 UI: file I/O, clipboard support and statistics.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Only ASCII and Malayalam ranges are supported; other characters become <code>[UNK]</code>.</li>
+										<li>Base-95 encoding is not encryption.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+					</div>
+				</section>
+				<section id="malayalam" aria-labelledby="malayalam-heading">
+					<h3 id="malayalam-heading"><span class="cat-icon" aria-hidden="true">&#x1F4DC;</span> Malayalam Ciphers &amp; Script Tools</h3>
+					<div class="tool-grid">
+						<article class="card">
+							<h4 class="card-title"><a href="ml-cipher.html" rel="noopener">Moolabhadri Cipher</a></h4>
+							<p class="card-summary">An implementation of Moolabhadri, an ancient Malayalam substitution cipher, offering both the standard scheme and a simplified variant.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> The input is normalized to standard character forms, then the selected scheme&#39;s substitution map is applied, matching multi-character conjuncts before single characters.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Two schemes (standard and simplified), selectable with radio buttons and remembered via <code>localStorage</code>.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Not cryptographically secure &mdash; it is a simple substitution scheme.</li>
+										<li>It can&#39;t distinguish dental &#x0D28; from alveolar &#x0D29;, so output may not match pronunciation. (This doesn&#39;t affect the involutory nature of the transform: applying it twice returns the original input.)</li>
+										<li>When &#x0D30;&#x0D4D;&#x0D2F; is written with the Dot Reph (&#x0D4E;) character, the resulting edge case is not handled.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="keelakam.html" rel="noopener">Keelakam Cipher</a></h4>
+							<p class="card-summary">A simple Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf" rel="noopener noreferrer">FlameWolf</a>.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> Malayalam character variants are normalized, then a fixed substitution map is applied to each character. Most mappings are reversible pairs, with a few one-way transforms.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Minimalist input/output layout with a <code>Convert</code> button.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Malayalam only; whitespace and punctuation pass through unchanged.</li>
+										<li>A few one-way transforms cannot be reversed automatically.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="navashashti.html" rel="noopener">Navashashti Cipher</a></h4>
+							<p class="card-summary">Another Malayalam substitution cipher designed by <a href="https://github.com/FlameWolf" rel="noopener noreferrer">FlameWolf</a>, which swaps vowels, consonants and Malayalam numerals with their paired counterparts.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> After normalizing character variants, a bidirectional map swaps vowels with paired vowels, consonants with paired consonants, and numerals with their counterparts.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Minimalist input/output layout with a <code>Convert</code> button.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Malayalam only.</li>
+										<li>One one-way transform (&#x0D57;&#x2192;&#x0D48;) cannot be reversed automatically.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="brahmi.html" rel="noopener">Brahmi Converter</a></h4>
+							<p class="card-summary">Transliterate between Malayalam and Brahmi scripts. It uses Tamil Brahmi characters plus one borrowed from Grantha for complete coverage of Malayalam.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> The input is normalized and tokenized (matching conjuncts first), then each token is mapped to its equivalent in the other script. Most mappings work both ways, though a few are one-way.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Input and read-only output with a <code>Convert</code> button.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>A few transforms (&#x0D5F;, &#x0D57;, &#x0D4E;) are one-way and cannot be converted back from Brahmi.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+					</div>
+				</section>
+				<section id="unicode" aria-labelledby="unicode-heading">
+					<h3 id="unicode-heading"><span class="cat-icon" aria-hidden="true">&#x1F524;</span> Unicode Text Utilities</h3>
+					<div class="tool-grid">
+						<article class="card">
+							<h4 class="card-title"><a href="reverse-unicode-text.html" rel="noopener">Unicode Text Reverser</a></h4>
+							<p class="card-summary">Correctly reverse any Unicode text, keeping grapheme clusters &mdash; characters with diacritics, emoji and complex scripts &mdash; intact, which a naive split-and-reverse breaks.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> The tool uses <code>Intl.Segmenter</code> to split text into grapheme clusters and reverses the clusters, so combining marks and ligatures stay attached to their base characters.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Live output that updates as you type.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>No word- or character-level reversal options.</li>
+										<li>Does not reorder bidirectional (RTL/LTR) text semantically.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="spoonerise-unicode-text.html" rel="noopener">Unicode Spoonerism</a> <span class="badge">New</span></h4>
+							<p class="card-summary">Apply spoonerisms &mdash; swap the leading sound of consecutive words &mdash; with full Unicode grapheme awareness, so diacritics and complex scripts survive intact.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> Using <code>Intl.Segmenter</code> to find grapheme boundaries, the tool swaps the first letter-grapheme between each pair of consecutive words while preserving sentence boundaries.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Live output that updates as you type.</li>
+										<li>Works across scripts (Latin, Malayalam and more).</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Only swaps within consecutive pairs, so an odd trailing word is left unchanged.</li>
+										<li>Words containing no letters are skipped; requires <code>Intl.Segmenter</code> support.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+						<article class="card">
+							<h4 class="card-title"><a href="rot-18.html" rel="noopener">ROT-18 Converter</a></h4>
+							<p class="card-summary">A simple, fun way to obscure text &mdash; ROT-13 for letters combined with ROT-5 for digits. It is reversible and not a secure form of encryption.</p>
+							<details>
+								<summary>How it works &amp; details</summary>
+								<div class="details-body">
+									<p><span class="inline-tag">How it works:</span> Letters <code>A-Z</code> are shifted 13 places and digits <code>0-9</code> are shifted 5 places. Because both shifts are self-inverse, applying ROT-18 a second time restores the original text.</p>
+									<p class="list-label">Features</p>
+									<ul>
+										<li>Live transformation that updates instantly as you type.</li>
+										<li>Clipboard paste/copy, sample-text insertion and toast feedback.</li>
+									</ul>
+									<p class="list-label">Limitations</p>
+									<ul>
+										<li>Weak obfuscation, not cryptographic security.</li>
+										<li>Only letters and digits are transformed; everything else passes through.</li>
+									</ul>
+								</div>
+							</details>
+						</article>
+					</div>
+				</section>
+			</section>
+		</main>
+		<footer>
+			<p>Built by <a href="https://github.com/FlameWolf" rel="noopener noreferrer">FlameWolf</a>. Every tool runs entirely in your browser.</p>
+		</footer>
 	</body>
 </html>
